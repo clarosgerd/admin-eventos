@@ -1,59 +1,77 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# admin-eventos — Panel de administración de eventos
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Panel de administración (el "tercer frontend" del ecosistema Pass2Go,
+junto a [`elascenso/event`](../event) y [`elascenso/delivery`](../delivery))
+para dar de alta, editar, publicar/despublicar y borrar eventos —
+categorías, form_types, souvenirs, promo codes, coordenadas, ruta,
+auspiciadores y agenda — más gestión de usuarios administradores y su
+log de auditoría.
 
-## About Laravel
+Laravel + Blade + Tailwind (CDN), sin JS de build step, mismo patrón que
+`elascenso/delivery`. **No tiene base de datos propia**: todo el estado
+de negocio (eventos, usuarios admin, audit logs) vive en
+[`ApiRestEvent`](../ApiRestEvent), que es la fuente de verdad. Este panel
+es un cliente HTTP puro de esa API (`app/Services/ApiRestEventClient.php`),
+con sesión de Laravel (`SESSION_DRIVER=file`) guardando solo el token de
+`ApiRestEvent` — el navegador nunca ve ese token, solo la cookie de sesión
+del panel.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Roles
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **`super_admin`**: ve y administra todos los eventos, gestiona usuarios
+  (`/usuarios`) y auditoría (`/auditoria`), y es el único que puede dar de
+  alta un evento nuevo (`/eventos/create`).
+- **`admin`**: scoped a un único evento asignado — sin selector de evento
+  en el dashboard, sin acceso a `/usuarios` ni `/auditoria`. Puede editar,
+  publicar y despublicar su propio evento.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+La autorización real la valida `ApiRestEvent`
+(`AuthorizesEventoScope::assertCanWriteEvento()`); los middlewares locales
+(`admin.auth`, `admin.superadmin`) son solo UX — redirect a `/login` o
+403 antes de golpear la API.
 
-## Learning Laravel
+## Correr localmente
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```
+composer install
+cp .env.example .env   # completar EXTERNAL_API_BASE si ApiRestEvent no corre en :8000
+php artisan key:generate
+php artisan serve --port=8011
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+`ApiRestEvent` debe estar corriendo (por defecto se espera en
+`http://127.0.0.1:8000/api/v1`, configurable con `EXTERNAL_API_BASE` en
+`config/services.php`). El puerto 8010 es deliberado para no chocar con
+`ApiRestEvent` (8000).
 
-## Laravel Sponsors
+## Estructura
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- `app/Services/ApiRestEventClient.php` — único punto de salida HTTP hacia
+  `ApiRestEvent`; arma el header `Authorization` desde `session('admin_token')`.
+- `app/Http/Middleware/EnsureAdminAuthenticated.php` /
+  `EnsureSuperAdminSession.php` — guardas de sesión (`admin.auth`,
+  `admin.superadmin`).
+- `app/Http/Controllers/` — un controlador por entidad (`EventoController`,
+  `CategoriaController`, `FormTypeController`, `SouvenirController`,
+  `PromoCodeController`, `CoordinateController`, `RouteController`,
+  `AuspiciadorController`, `AgendaItemController`) más
+  `AuthController`/`DashboardController`/`AdminUserController`/`AuditLogController`.
+- `resources/views/` — `auth/login`, `dashboard`, `eventos/create` (alta
+  anidada completa), `eventos/edit` (edición fila a fila de cada entidad),
+  `usuarios/`, `auditoria/`.
+- `routes/web.php` — todas las rutas de escritura viven bajo `admin.auth`;
+  usuarios/auditoría/alta de evento además bajo `admin.superadmin`.
 
-### Premium Partners
+## Estado
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Fases 0–5 del plan implementadas y verificadas (ver
+`elascenso/event/brain/PLAN-PANEL-ADMIN-EVENTOS-02082026.md`): login,
+dashboard con scope por rol, usuarios, auditoría, alta/edición núcleo de
+evento (categorías/form_types/souvenirs), y alta/edición de promo
+codes/coordenadas/ruta/auspiciadores/agenda + publicar/despublicar.
 
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Pendiente: verificación completa en navegador real (la de Fase 1 se hizo
+por HTTP/curl, no cubre JS del lado cliente), y la decisión de
+nombre/dominio de despliegue real — hosting será el mismo cPanel de
+`ApiRestEvent`/`elascenso/delivery`, con acceso solo por File Manager (sin
+SSH).
