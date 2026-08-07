@@ -36,7 +36,7 @@ La autorización real la valida `ApiRestEvent`
 composer install
 cp .env.example .env   # completar EXTERNAL_API_BASE si ApiRestEvent no corre en :8000
 php artisan key:generate
-php artisan serve --port=8011
+php artisan serve --port=8010
 ```
 
 `ApiRestEvent` debe estar corriendo (por defecto se espera en
@@ -55,10 +55,14 @@ php artisan serve --port=8011
   `CategoriaController`, `FormTypeController`, `SouvenirController`,
   `PromoCodeController`, `CoordinateController`, `RouteController`,
   `AuspiciadorController`, `AgendaItemController`) más
-  `AuthController`/`DashboardController`/`AdminUserController`/`AuditLogController`.
+  `AuthController`/`DashboardController`/`AdminUserController`/`AuditLogController`/
+  `NumeracionController`/`RegistroManualController`/`ParticipantesController`/
+  `DashboardInscripcionesController`.
 - `resources/views/` — `auth/login`, `dashboard`, `eventos/create` (alta
-  anidada completa), `eventos/edit` (edición fila a fila de cada entidad),
-  `usuarios/`, `auditoria/`.
+  anidada completa), `eventos/edit` (edición fila a fila de cada entidad, con
+  links a numeración, dashboard de inscripciones, participantes, gafetes y
+  certificados en PDF), `eventos/numeracion`, `eventos/participantes`,
+  `eventos/dashboard-inscripciones`, `usuarios/`, `auditoria/`.
 - `routes/web.php` — todas las rutas de escritura viven bajo `admin.auth`;
   usuarios/auditoría/alta de evento además bajo `admin.superadmin`.
 
@@ -69,6 +73,15 @@ Fases 0–5 del plan implementadas y verificadas (ver
 dashboard con scope por rol, usuarios, auditoría, alta/edición núcleo de
 evento (categorías/form_types/souvenirs), y alta/edición de promo
 codes/coordenadas/ruta/auspiciadores/agenda + publicar/despublicar.
+
+Agregado después (05–07/08): numeración de corredor/chip + carga masiva de
+inscripciones por CSV; **dashboard de inscripciones** (mismo conteo que se
+manda por correo al organizador, ahora dentro del panel); **edición
+restringida de datos de contacto de un participante** (nombre, alias,
+correo, teléfono, dirección, ciudad, género, fecha de nacimiento, y talla
+de camiseta solo si ya tiene una — nunca categoría/souvenirs/donación/promo);
+y links directos a los PDF de **gafetes** y **certificados** (proxy de
+solo lectura hacia `ApiRestEvent`, el navegador no ve ese host).
 
 Pendiente: verificación completa en navegador real (la de Fase 1 se hizo
 por HTTP/curl, no cubre JS del lado cliente), y la decisión de

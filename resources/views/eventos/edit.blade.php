@@ -3,7 +3,37 @@
 @section('title', 'Editar evento — Admin Eventos')
 
 @section('content')
-<h1 class="text-lg font-bold mb-4">Editar: {{ $evento['name'] }}</h1>
+<div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+    <h1 class="text-lg font-bold">Editar: {{ $evento['name'] }}</h1>
+    <div class="flex gap-2 flex-wrap">
+        @if ((session('admin_user')['rol'] ?? null) === 'super_admin')
+            <a href="{{ route('registro-manual.index', $evento['id']) }}"
+               class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+                Carga masiva de inscripciones
+            </a>
+        @endif
+        <a href="{{ route('numeracion.index', $evento['id']) }}"
+           class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+            Numeración de corredor y chip
+        </a>
+        <a href="{{ route('eventos.dashboard', $evento['id']) }}"
+           class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+            Dashboard de inscripciones
+        </a>
+        <a href="{{ route('participantes.index', $evento['id']) }}"
+           class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+            Participantes
+        </a>
+        <a href="{{ route('eventos.gafetes-pdf', $evento['id']) }}" target="_blank"
+           class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+            Gafetes (PDF)
+        </a>
+        <a href="{{ route('eventos.certificados-pdf', $evento['id']) }}" target="_blank"
+           class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+            Certificados (PDF)
+        </a>
+    </div>
+</div>
 
 {{-- 1. Datos del evento --}}
 <section class="bg-white rounded-lg shadow p-6 mb-6">
@@ -47,6 +77,32 @@
                 <select name="status" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
                     @foreach (['open','closed','coming_soon'] as $opt)
                         <option value="{{ $opt }}" @selected(old('status', $evento['status']) === $opt)>{{ $opt }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">
+                    Tipo de evento <span class="font-normal text-slate-500">(disciplina, o "Congreso / No aplica")</span>
+                </label>
+                <select name="tipo_evento_id" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                    <option value="">Seleccionar…</option>
+                    @foreach ($tiposEvento as $tipo)
+                        <option value="{{ $tipo['id'] }}" @selected((string) old('tipo_evento_id', $evento['tipoEventoId'] ?? '') === (string) $tipo['id'])>
+                            {{ $tipo['icono'] }} {{ $tipo['nombre'] }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">Subtipo</label>
+                <select name="subtipo_evento_id" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                    <option value="">Seleccionar…</option>
+                    @foreach ($tiposEvento as $tipo)
+                        @foreach ($tipo['subtipos'] as $sub)
+                            <option value="{{ $sub['id'] }}" @selected((string) old('subtipo_evento_id', $evento['subtipoEventoId'] ?? '') === (string) $sub['id'])>
+                                {{ $tipo['nombre'] }} — {{ $sub['nombre'] }}
+                            </option>
+                        @endforeach
                     @endforeach
                 </select>
             </div>

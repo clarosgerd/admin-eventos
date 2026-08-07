@@ -17,9 +17,22 @@ use Illuminate\View\View;
  */
 class EventoController extends Controller
 {
-    public function create(): View
+    public function create(ApiRestEventClient $client): View
     {
-        return view('eventos.create');
+        return view('eventos.create', ['tiposEvento' => $this->tiposEvento($client)]);
+    }
+
+    /**
+     * Catálogo de disciplinas (Carrera de Ruta, Trail Running, ...,
+     * "Congreso / No aplica") para el select de tipo/subtipo — ver
+     * brain/PLAN-ENDPOINT-CONSUMO-05082026.md. Público del lado de
+     * ApiRestEvent, sin datos sensibles.
+     */
+    private function tiposEvento(ApiRestEventClient $client): array
+    {
+        $response = $client->forward('GET', '/tipos-evento');
+
+        return $response?->json('tiposEvento') ?? [];
     }
 
     public function store(Request $request, ApiRestEventClient $client): RedirectResponse
@@ -73,7 +86,8 @@ class EventoController extends Controller
         $payload = array_merge(
             $request->only(
                 'name', 'description', 'longDescription', 'date', 'localTime', 'location',
-                'status', 'video', 'image', 'colorHex', 'deslinde', 'deslinde_pdf_url'
+                'status', 'video', 'image', 'colorHex', 'deslinde', 'deslinde_pdf_url',
+                'tipo_evento_id', 'subtipo_evento_id'
             ),
             [
                 'hasDonation'   => $request->boolean('hasDonation'),
@@ -147,7 +161,47 @@ class EventoController extends Controller
 
         abort_if(!$eventoData, 404);
 
-        return view('eventos.edit', ['evento' => $eventoData]);
+        return view('eventos.edit', ['evento' => $eventoData, 'tiposEvento' => $this->tiposEvento($client)]);
+    }
+
+    /**
+     * Gafetes/credenciales en bulk (uno por participante, con QR) — proxy
+     * de GET /event/{event}/gafetes-pdf. Ese endpoint es público del lado
+     * de ApiRestEvent (no requiere el token de admin), pero el panel igual
+     * lo sirve a través de su propio dominio en vez de linkear directo a
+     * ApiRestEvent — mismo criterio de no exponer el host externo que usa
+     * elascenso/event (ver api/agenda_pdf.php ahí, mismo patrón de stream).
+     * Timeout más largo que el resto de las llamadas: dompdf puede tardar
+     * con eventos grandes.
+     */
+    public function gafetesPdf(int $evento, ApiRestEventClient $client)
+    {
+        $this->assertCanViewEvento($evento);
+
+        $response = $client->forward('GET', "/event/{$evento}/gafetes-pdf", timeoutSeconds: 30, retries: 0);
+        abort_if(!$response || !$response->successful(), 502, 'No se pudo generar el PDF de gafetes.');
+
+        return response($response->body(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="gafetes-evento-'.$evento.'.pdf"',
+        ]);
+    }
+
+    /**
+     * Certificados de asistencia/participación en bulk — proxy de
+     * GET /event/{event}/certificados-pdf, mismo criterio que gafetesPdf().
+     */
+    public function certificadosPdf(int $evento, ApiRestEventClient $client)
+    {
+        $this->assertCanViewEvento($evento);
+
+        $response = $client->forward('GET', "/event/{$evento}/certificados-pdf", timeoutSeconds: 30, retries: 0);
+        abort_if(!$response || !$response->successful(), 502, 'No se pudo generar el PDF de certificados.');
+
+        return response($response->body(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="certificados-evento-'.$evento.'.pdf"',
+        ]);
     }
 
     /**
@@ -176,7 +230,8 @@ class EventoController extends Controller
         $payload = array_merge(
             $request->only(
                 'name', 'description', 'longDescription', 'date', 'localTime', 'location',
-                'status', 'video', 'image', 'colorHex', 'deslinde', 'deslinde_pdf_url'
+                'status', 'video', 'image', 'colorHex', 'deslinde', 'deslinde_pdf_url',
+                'tipo_evento_id', 'subtipo_evento_id'
             ),
             ['hasDonation' => $request->boolean('hasDonation')]
         );

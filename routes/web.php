@@ -8,9 +8,13 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\CoordinateController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardInscripcionesController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\FormTypeController;
+use App\Http\Controllers\NumeracionController;
+use App\Http\Controllers\ParticipantesController;
 use App\Http\Controllers\PromoCodeController;
+use App\Http\Controllers\RegistroManualController;
 use App\Http\Controllers\RouteController as PanelRouteController;
 use App\Http\Controllers\SouvenirController;
 use Illuminate\Support\Facades\Route;
@@ -72,10 +76,38 @@ Route::middleware('admin.auth')->group(function () {
 
     Route::patch('/eventos/{evento}/despublicar', [EventoController::class, 'despublicar'])->name('eventos.despublicar');
 
+    // Numeración de corredor/chip por evento — manual y por CSV. Mismo
+    // criterio de permisos que el resto del bloque: super_admin o el
+    // admin scoped a su propio evento (ApiRestEvent valida el scoping
+    // real vía AuthorizesEventoScope, esto es solo la UX del panel).
+    Route::get('/eventos/{evento}/numeracion', [NumeracionController::class, 'index'])->name('numeracion.index');
+    Route::get('/eventos/{evento}/numeracion/csv', [NumeracionController::class, 'csvDownload'])->name('numeracion.csv.download');
+    Route::post('/eventos/{evento}/numeracion/csv', [NumeracionController::class, 'csvUpload'])->name('numeracion.csv.upload');
+    Route::patch('/numeracion/{referencia}/{participante}', [NumeracionController::class, 'update'])->name('numeracion.update');
+
+    // Dashboard de inscripciones (mismo conteo que ya se manda por correo
+    // al organizador) y edición restringida de datos de contacto del
+    // participante — mismo criterio de permisos que el resto del bloque:
+    // super_admin o el admin scoped a su propio evento.
+    Route::get('/eventos/{evento}/dashboard', [DashboardInscripcionesController::class, 'show'])->name('eventos.dashboard');
+    Route::get('/eventos/{evento}/participantes', [ParticipantesController::class, 'index'])->name('participantes.index');
+    Route::patch('/eventos/{evento}/participantes/{participante}', [ParticipantesController::class, 'update'])->name('participantes.update');
+
+    // Gafetes/credenciales y certificados en PDF — proxy de solo lectura,
+    // mismo criterio de permisos que el resto (super_admin o admin scoped).
+    Route::get('/eventos/{evento}/gafetes-pdf', [EventoController::class, 'gafetesPdf'])->name('eventos.gafetes-pdf');
+    Route::get('/eventos/{evento}/certificados-pdf', [EventoController::class, 'certificadosPdf'])->name('eventos.certificados-pdf');
+
     Route::middleware('admin.superadmin')->group(function () {
         Route::resource('usuarios', AdminUserController::class)->except(['show']);
         Route::get('/auditoria', [AuditLogController::class, 'index'])->name('auditoria.index');
         Route::get('/eventos/create', [EventoController::class, 'create'])->name('eventos.create');
         Route::post('/eventos', [EventoController::class, 'store'])->name('eventos.store');
+
+        // Carga masiva de inscripciones por CSV — solo super_admin (ver
+        // brain/PLAN-REGISTRO-MANUAL-CSV-05082026.md).
+        Route::get('/eventos/{evento}/registro-manual', [RegistroManualController::class, 'index'])->name('registro-manual.index');
+        Route::get('/eventos/{evento}/registro-manual/plantilla', [RegistroManualController::class, 'plantilla'])->name('registro-manual.plantilla');
+        Route::post('/eventos/{evento}/registro-manual', [RegistroManualController::class, 'store'])->name('registro-manual.store');
     });
 });

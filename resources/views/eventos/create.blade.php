@@ -54,6 +54,32 @@
                     <option value="coming_soon" @selected(old('status', 'coming_soon') === 'coming_soon')>coming_soon</option>
                 </select>
             </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">
+                    Tipo de evento <span class="font-normal text-slate-500">(disciplina, o "Congreso / No aplica")</span>
+                </label>
+                <select name="tipo_evento_id" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                    <option value="">Seleccionar…</option>
+                    @foreach ($tiposEvento as $tipo)
+                        <option value="{{ $tipo['id'] }}" @selected((string) old('tipo_evento_id') === (string) $tipo['id'])>
+                            {{ $tipo['icono'] }} {{ $tipo['nombre'] }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">Subtipo</label>
+                <select name="subtipo_evento_id" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                    <option value="">Seleccionar…</option>
+                    @foreach ($tiposEvento as $tipo)
+                        @foreach ($tipo['subtipos'] as $sub)
+                            <option value="{{ $sub['id'] }}" @selected((string) old('subtipo_evento_id') === (string) $sub['id'])>
+                                {{ $tipo['nombre'] }} — {{ $sub['nombre'] }}
+                            </option>
+                        @endforeach
+                    @endforeach
+                </select>
+            </div>
             <div class="flex items-end">
                 <label class="inline-flex items-center gap-2 text-sm">
                     <input type="checkbox" name="hasDonation" value="1" {{ old('hasDonation') ? 'checked' : '' }}>

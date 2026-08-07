@@ -62,6 +62,14 @@
                             <a href="{{ route('eventos.edit', $evento['id']) }}" class="text-xs text-brand-600 hover:underline">
                                 Editar
                             </a>
+                            <a href="{{ route('numeracion.index', $evento['id']) }}" class="text-xs text-brand-600 hover:underline">
+                                Numeración
+                            </a>
+                            @if ($admin['rol'] === 'super_admin')
+                                <a href="{{ route('registro-manual.index', $evento['id']) }}" class="text-xs text-brand-600 hover:underline">
+                                    Carga masiva
+                                </a>
+                            @endif
                             @unless ($evento['publicado'])
                                 <form method="POST" action="{{ route('eventos.publicar', $evento['id']) }}" class="inline"
                                       onsubmit="return confirm('¿Publicar este evento?\n\nEsto envía un correo REAL al organizador con el link de su dashboard, y no se puede deshacer ni reintentar.')">
