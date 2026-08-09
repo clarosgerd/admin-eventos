@@ -230,7 +230,7 @@ class EventoController extends Controller
         $payload = array_merge(
             $request->only(
                 'name', 'description', 'longDescription', 'date', 'localTime', 'location',
-                'status', 'video', 'image', 'colorHex', 'deslinde', 'deslinde_pdf_url',
+                'status', 'video', 'image', 'colorHex', 'chronotrackEventId', 'deslinde', 'deslinde_pdf_url',
                 'tipo_evento_id', 'subtipo_evento_id'
             ),
             ['hasDonation' => $request->boolean('hasDonation')]

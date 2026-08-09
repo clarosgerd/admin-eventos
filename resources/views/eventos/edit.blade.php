@@ -20,6 +20,10 @@
            class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
             Dashboard de inscripciones
         </a>
+        <a href="{{ route('chronotrack.index', $evento['id']) }}"
+           class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+            Resultados / ChronoTrack
+        </a>
         <a href="{{ route('participantes.index', $evento['id']) }}"
            class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
             Participantes

@@ -6,6 +6,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuspiciadorController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\ChronoTrackController;
 use App\Http\Controllers\CoordinateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardInscripcionesController;
@@ -92,6 +93,12 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/eventos/{evento}/dashboard', [DashboardInscripcionesController::class, 'show'])->name('eventos.dashboard');
     Route::get('/eventos/{evento}/participantes', [ParticipantesController::class, 'index'])->name('participantes.index');
     Route::patch('/eventos/{evento}/participantes/{participante}', [ParticipantesController::class, 'update'])->name('participantes.update');
+
+    // Sync de resultados desde ChronoTrack — ver
+    // brain/groovy-chasing-ladybug.md Parte B. Mismo criterio de permisos
+    // que el resto del bloque.
+    Route::get('/eventos/{evento}/resultados', [ChronoTrackController::class, 'index'])->name('chronotrack.index');
+    Route::post('/eventos/{evento}/resultados/sincronizar', [ChronoTrackController::class, 'sincronizar'])->name('chronotrack.sincronizar');
 
     // Gafetes/credenciales y certificados en PDF — proxy de solo lectura,
     // mismo criterio de permisos que el resto (super_admin o admin scoped).

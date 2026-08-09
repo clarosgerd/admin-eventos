@@ -29,6 +29,7 @@ class DashboardInscripcionesController extends Controller
             'evento' => $eventoData,
             'totalGeneral' => $response->json('totalGeneral'),
             'porCategoria' => $response->json('porCategoria'),
+            'nombresCategorias' => $response->json('nombresCategorias'),
             'porFormulario' => $response->json('porFormulario'),
             'nombresFormTypes' => $response->json('nombresFormTypes'),
             'estados' => $response->json('estados'),

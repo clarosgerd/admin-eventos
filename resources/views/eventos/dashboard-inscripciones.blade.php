@@ -57,7 +57,7 @@
         <tbody>
             @forelse ($porCategoria as $categoria => $counts)
                 <tr class="border-t border-slate-100">
-                    <td class="px-3 py-2">{{ $categoria }}</td>
+                    <td class="px-3 py-2">{{ $nombresCategorias[$categoria] ?? $categoria }}</td>
                     @foreach ($estados as $estado)
                         <td class="px-3 py-2 text-right">{{ $counts[$estado] }}</td>
                     @endforeach
