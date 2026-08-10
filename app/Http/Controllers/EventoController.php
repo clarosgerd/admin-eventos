@@ -48,6 +48,10 @@ class EventoController extends Controller
                 $ft['requiere_categoria'] = isset($ft['requiere_categoria']);
                 $ft['hasTeam'] = isset($ft['hasTeam']);
                 $ft['hasDelivery'] = isset($ft['hasDelivery']);
+                // hasDonation/hasPromoCode pasaron de evento a form_type
+                // (QA visual, 10/08) — mismo criterio que hasTeam/hasDelivery.
+                $ft['hasDonation'] = isset($ft['hasDonation']);
+                $ft['hasPromoCode'] = isset($ft['hasPromoCode']);
                 $ft['souvenirs'] = collect($ft['souvenirs'] ?? [])
                     ->filter(fn ($s) => filled($s['name'] ?? null))
                     ->values()
@@ -90,7 +94,6 @@ class EventoController extends Controller
                 'tipo_evento_id', 'subtipo_evento_id'
             ),
             [
-                'hasDonation'   => $request->boolean('hasDonation'),
                 'categories'    => $categories,
                 'formTypes'     => $formTypes,
                 'coordinates'   => $coordinates,
@@ -227,13 +230,14 @@ class EventoController extends Controller
      */
     public function update(Request $request, int $evento, ApiRestEventClient $client): RedirectResponse
     {
-        $payload = array_merge(
-            $request->only(
-                'name', 'description', 'longDescription', 'date', 'localTime', 'location',
-                'status', 'video', 'image', 'colorHex', 'chronotrackEventId', 'deslinde', 'deslinde_pdf_url',
-                'tipo_evento_id', 'subtipo_evento_id'
-            ),
-            ['hasDonation' => $request->boolean('hasDonation')]
+        // hasDonation ya no es un campo escalar del evento (pasó a
+        // form_type, QA visual 10/08) — este endpoint no toca form_types,
+        // así que no hay nada que sumar acá; se administra vía
+        // FormTypeController.
+        $payload = $request->only(
+            'name', 'description', 'longDescription', 'date', 'localTime', 'location',
+            'status', 'video', 'image', 'colorHex', 'chronotrackEventId', 'deslinde', 'deslinde_pdf_url',
+            'tipo_evento_id', 'subtipo_evento_id'
         );
 
         $response = $client->forward('PUT', "/event/{$evento}", body: $payload);

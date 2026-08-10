@@ -110,12 +110,6 @@
                     @endforeach
                 </select>
             </div>
-            <div class="flex items-end">
-                <label class="inline-flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="hasDonation" value="1" {{ old('hasDonation', $evento['hasDonation']) ? 'checked' : '' }}>
-                    Permite donación
-                </label>
-            </div>
             <div>
                 <label class="block text-sm font-semibold mb-1">Video (URL)</label>
                 <input type="text" name="video" value="{{ old('video', $evento['video']) }}"
@@ -273,6 +267,14 @@
                         <input type="checkbox" name="has_delivery" value="1" {{ ($formType['hasDelivery'] ?? false) ? 'checked' : '' }}>
                         Con delivery de kit
                     </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="has_donation" value="1" {{ ($formType['hasDonation'] ?? false) ? 'checked' : '' }}>
+                        Permite donación
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="has_promo_code" value="1" {{ ($formType['hasPromoCode'] ?? false) ? 'checked' : '' }}>
+                        Admite código promocional
+                    </label>
                 </div>
                 <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded">Guardar</button>
             </form>
@@ -351,6 +353,14 @@
                 <label class="inline-flex items-center gap-2 text-sm">
                     <input type="checkbox" name="has_delivery" value="1">
                     Con delivery de kit
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="has_donation" value="1">
+                    Permite donación
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="has_promo_code" value="1">
+                    Admite código promocional
                 </label>
             </div>
             <button type="submit" class="text-sm bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-md">Agregar tipo de formulario</button>

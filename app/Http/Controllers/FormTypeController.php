@@ -32,6 +32,8 @@ class FormTypeController extends Controller
                 'requiere_categoria' => $request->boolean('requiere_categoria'),
                 'has_team'           => $request->boolean('has_team'),
                 'has_delivery'       => $request->boolean('has_delivery'),
+                'has_donation'       => $request->boolean('has_donation'),
+                'has_promo_code'     => $request->boolean('has_promo_code'),
             ]
         );
 
@@ -52,6 +54,8 @@ class FormTypeController extends Controller
                 'requiere_categoria' => $request->boolean('requiere_categoria'),
                 'has_team'           => $request->boolean('has_team'),
                 'has_delivery'       => $request->boolean('has_delivery'),
+                'has_donation'       => $request->boolean('has_donation'),
+                'has_promo_code'     => $request->boolean('has_promo_code'),
             ]
         );
 

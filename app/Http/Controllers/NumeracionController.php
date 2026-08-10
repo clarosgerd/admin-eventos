@@ -66,6 +66,13 @@ class NumeracionController extends Controller
 
         $categoria = $request->query('categoria', '');
 
+        // `categoria` viaja como ID (ver nota en NumeracionController::index)
+        // — se resuelve el nombre acá solo para que la columna del CSV y el
+        // nombre del archivo sean legibles, el filtro real ya se aplicó
+        // arriba comparando por ID.
+        $eventoResponse = $client->forward('GET', "/event/{$evento}");
+        $categoriasPorId = collect($eventoResponse?->json('eventos.categories') ?? [])->keyBy(fn ($c) => (string) $c['id']);
+
         $response = $client->forward('GET', "/event/{$evento}/participantes", query: array_filter([
             'categoria' => $categoria !== '' ? $categoria : null,
         ]));
@@ -80,7 +87,8 @@ class NumeracionController extends Controller
         fputcsv($handle, ['numero_documento', 'nombre', 'apellido', 'categoria', 'numero_corredor', 'chip']);
         foreach ($participantes as $p) {
             fputcsv($handle, [
-                $p['numeroDocumento'], $p['nombre'], $p['apellido'], $p['categoria'],
+                $p['numeroDocumento'], $p['nombre'], $p['apellido'],
+                $categoriasPorId[$p['categoria']]['name'] ?? $p['categoria'],
                 $p['numeroCorredor'], $p['chip'],
             ]);
         }
@@ -88,7 +96,8 @@ class NumeracionController extends Controller
         $csv = stream_get_contents($handle);
         fclose($handle);
 
-        $filename = 'numeracion-evento-'.$evento.($categoria !== '' ? '-'.\Illuminate\Support\Str::slug($categoria) : '').'.csv';
+        $categoriaLabel = $categoriasPorId[$categoria]['name'] ?? $categoria;
+        $filename = 'numeracion-evento-'.$evento.($categoria !== '' ? '-'.\Illuminate\Support\Str::slug($categoriaLabel) : '').'.csv';
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',

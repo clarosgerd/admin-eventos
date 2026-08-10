@@ -80,12 +80,6 @@
                     @endforeach
                 </select>
             </div>
-            <div class="flex items-end">
-                <label class="inline-flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="hasDonation" value="1" {{ old('hasDonation') ? 'checked' : '' }}>
-                    Permite donación
-                </label>
-            </div>
             <div>
                 <label class="block text-sm font-semibold mb-1">Video (URL)</label>
                 <input type="text" name="video" value="{{ old('video') }}"
@@ -305,6 +299,14 @@
             <label class="inline-flex items-center gap-2 text-sm">
                 <input type="checkbox" name="formTypes[__FT_INDEX__][hasDelivery]" value="1">
                 Con delivery de kit
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" name="formTypes[__FT_INDEX__][hasDonation]" value="1">
+                Permite donación
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" name="formTypes[__FT_INDEX__][hasPromoCode]" value="1">
+                Admite código promocional
             </label>
         </div>
         <div class="border-t border-slate-100 pt-2">

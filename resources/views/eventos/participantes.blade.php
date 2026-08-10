@@ -3,6 +3,9 @@
 @section('title', 'Participantes — '.$evento['name'])
 
 @section('content')
+{{-- Ver el mismo comentario en eventos/numeracion.blade.php: `categoria`
+     guarda el ID, no el nombre — este mapa solo resuelve el display. --}}
+@php($categoriasPorId = collect($evento['categories'] ?? [])->keyBy(fn ($c) => (string) $c['id']))
 <div class="flex justify-between items-start mb-4 flex-wrap gap-2">
     <div>
         <h1 class="text-lg font-bold">Participantes</h1>
@@ -28,7 +31,7 @@
                 class="border border-slate-300 rounded-md px-3 py-2 text-sm min-w-[200px]">
             <option value="" @selected($categoriaSeleccionada === '')>Todas las categorías</option>
             @foreach ($evento['categories'] ?? [] as $cat)
-                <option value="{{ $cat['name'] }}" @selected($categoriaSeleccionada === $cat['name'])>{{ $cat['name'] }}</option>
+                <option value="{{ $cat['id'] }}" @selected($categoriaSeleccionada === (string) $cat['id'])>{{ $cat['name'] }}</option>
             @endforeach
         </select>
     </div>
@@ -59,7 +62,7 @@
             <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
                 <div class="text-sm">
                     <span class="font-semibold">{{ $p['nombre'] }} {{ $p['apellido'] }}</span>
-                    <span class="text-slate-500"> · Doc. {{ $p['numeroDocumento'] }} · {{ $p['categoria'] }}</span>
+                    <span class="text-slate-500"> · Doc. {{ $p['numeroDocumento'] }} · {{ $categoriasPorId[$p['categoria']]['name'] ?? $p['categoria'] }}</span>
                 </div>
                 <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-md font-semibold">
                     Guardar

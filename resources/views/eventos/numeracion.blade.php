@@ -3,6 +3,16 @@
 @section('title', 'Numeración — '.$evento['name'])
 
 @section('content')
+{{--
+    `participantes.categoria` guarda el ID de la categoría (no el nombre —
+    ver RegistrationController::importarBulk en ApiRestEvent y el bug real
+    de 10/08/2026 documentado ahí: antes de ese fix, la carga masiva por CSV
+    guardaba el nombre, y este filtro comparaba por nombre, así que solo
+    "funcionaba" para esos participantes y quedaba roto para el resto). Este
+    mapa resuelve ID→nombre para mostrar algo legible sin tocar el filtro,
+    que sigue viajando como ID.
+--}}
+@php($categoriasPorId = collect($evento['categories'] ?? [])->keyBy(fn ($c) => (string) $c['id']))
 <div class="flex justify-between items-start mb-4 flex-wrap gap-2">
     <div>
         <h1 class="text-lg font-bold">Numeración de corredor y chip</h1>
@@ -21,7 +31,7 @@
                 class="border border-slate-300 rounded-md px-3 py-2 text-sm min-w-[200px]">
             <option value="" @selected($categoriaSeleccionada === '')>Todas las categorías</option>
             @foreach ($evento['categories'] ?? [] as $cat)
-                <option value="{{ $cat['name'] }}" @selected($categoriaSeleccionada === $cat['name'])>{{ $cat['name'] }}</option>
+                <option value="{{ $cat['id'] }}" @selected($categoriaSeleccionada === (string) $cat['id'])>{{ $cat['name'] }}</option>
             @endforeach
         </select>
     </div>
@@ -45,7 +55,7 @@
     <div class="grid sm:grid-cols-2 gap-5">
         <div>
             <p class="text-xs text-slate-600 mb-2">
-                Descargá la lista {{ $categoriaSeleccionada !== '' ? '(categoría: '.$categoriaSeleccionada.')' : '(todas las categorías)' }},
+                Descargá la lista {{ $categoriaSeleccionada !== '' ? '(categoría: '.($categoriasPorId[$categoriaSeleccionada]['name'] ?? $categoriaSeleccionada).')' : '(todas las categorías)' }},
                 completá <code class="bg-slate-100 px-1 rounded">numero_corredor</code> y
                 <code class="bg-slate-100 px-1 rounded">chip</code>, y volvé a subir el mismo archivo.
                 No cambies la columna <code class="bg-slate-100 px-1 rounded">numero_documento</code> — es la que identifica a cada participante.
@@ -100,7 +110,7 @@
                     {{ $p['nombre'] }} {{ $p['apellido'] }}
                 </div>
                 <div class="col-span-2 text-sm text-slate-600 truncate">{{ $p['numeroDocumento'] }}</div>
-                <div class="col-span-2 text-sm text-slate-600 truncate">{{ $p['categoria'] }}</div>
+                <div class="col-span-2 text-sm text-slate-600 truncate">{{ $categoriasPorId[$p['categoria']]['name'] ?? $p['categoria'] }}</div>
                 <div class="col-span-2">
                     <input type="text" name="numero_corredor" value="{{ $p['numeroCorredor'] }}" maxlength="50"
                            class="w-full border border-slate-300 rounded px-2 py-1 text-sm font-mono">
