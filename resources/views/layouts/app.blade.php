@@ -23,6 +23,7 @@
             @if (($admin['rol'] ?? null) === 'super_admin')
                 <a class="hover:underline" href="{{ route('usuarios.index') }}">Usuarios</a>
                 <a class="hover:underline" href="{{ route('auditoria.index') }}">Auditoría</a>
+                <a class="hover:underline" href="{{ route('socios.index') }}">Socios</a>
             @endif
         </nav>
         <form method="POST" action="{{ route('logout') }}">

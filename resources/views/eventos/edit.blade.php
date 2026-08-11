@@ -11,6 +11,10 @@
                class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
                 Carga masiva de inscripciones
             </a>
+            <a href="{{ route('liquidacion.show', $evento['id']) }}"
+               class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+                Liquidación
+            </a>
         @endif
         <a href="{{ route('numeracion.index', $evento['id']) }}"
            class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">

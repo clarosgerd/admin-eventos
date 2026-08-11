@@ -13,11 +13,13 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardInscripcionesController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\FormTypeController;
+use App\Http\Controllers\LiquidacionController;
 use App\Http\Controllers\NumeracionController;
 use App\Http\Controllers\ParticipantesController;
 use App\Http\Controllers\PromoCodeController;
 use App\Http\Controllers\RegistroManualController;
 use App\Http\Controllers\RouteController as PanelRouteController;
+use App\Http\Controllers\SocioController;
 use App\Http\Controllers\SouvenirController;
 use Illuminate\Support\Facades\Route;
 
@@ -125,5 +127,12 @@ Route::middleware('admin.auth')->group(function () {
         Route::get('/eventos/{evento}/registro-manual', [RegistroManualController::class, 'index'])->name('registro-manual.index');
         Route::get('/eventos/{evento}/registro-manual/plantilla', [RegistroManualController::class, 'plantilla'])->name('registro-manual.plantilla');
         Route::post('/eventos/{evento}/registro-manual', [RegistroManualController::class, 'store'])->name('registro-manual.store');
+
+        // Consolidación financiera (liquidación de utilidades) — solo
+        // super_admin, ver elascenso/event/brain/ (sesión 11/08/2026).
+        // Socios es config global; la liquidación es por evento.
+        Route::resource('socios', SocioController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::get('/eventos/{evento}/liquidacion', [LiquidacionController::class, 'show'])->name('liquidacion.show');
+        Route::post('/eventos/{evento}/liquidacion', [LiquidacionController::class, 'store'])->name('liquidacion.store');
     });
 });
