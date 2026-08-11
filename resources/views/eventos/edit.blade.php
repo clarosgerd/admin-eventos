@@ -16,6 +16,10 @@
            class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
             Numeración de corredor y chip
         </a>
+        <a href="{{ route('acreditacion.index', $evento['id']) }}"
+           class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+            Acreditación
+        </a>
         <a href="{{ route('eventos.dashboard', $evento['id']) }}"
            class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
             Dashboard de inscripciones

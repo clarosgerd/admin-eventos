@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AcreditacionController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AgendaItemController;
 use App\Http\Controllers\AuditLogController;
@@ -85,6 +86,14 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/eventos/{evento}/numeracion/csv', [NumeracionController::class, 'csvDownload'])->name('numeracion.csv.download');
     Route::post('/eventos/{evento}/numeracion/csv', [NumeracionController::class, 'csvUpload'])->name('numeracion.csv.upload');
     Route::patch('/numeracion/{referencia}/{participante}', [NumeracionController::class, 'update'])->name('numeracion.update');
+
+    // Acreditación (check-in) escaneando el QR de referencia — mismo
+    // criterio de permisos que Numeración (super_admin o admin scoped a
+    // su propio evento). lookup/checkin son endpoints JSON (llamados por
+    // fetch desde la pantalla, no navegación de página completa).
+    Route::get('/eventos/{evento}/acreditacion', [AcreditacionController::class, 'index'])->name('acreditacion.index');
+    Route::post('/eventos/{evento}/acreditacion/lookup', [AcreditacionController::class, 'lookup'])->name('acreditacion.lookup');
+    Route::patch('/eventos/{evento}/acreditacion/{participante}', [AcreditacionController::class, 'checkin'])->name('acreditacion.checkin');
 
     // Dashboard de inscripciones (mismo conteo que ya se manda por correo
     // al organizador) y edición restringida de datos de contacto del

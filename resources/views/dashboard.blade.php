@@ -65,6 +65,9 @@
                             <a href="{{ route('numeracion.index', $evento['id']) }}" class="text-xs text-brand-600 hover:underline">
                                 Numeración
                             </a>
+                            <a href="{{ route('acreditacion.index', $evento['id']) }}" class="text-xs text-brand-600 hover:underline">
+                                Acreditación
+                            </a>
                             @if ($admin['rol'] === 'super_admin')
                                 <a href="{{ route('registro-manual.index', $evento['id']) }}" class="text-xs text-brand-600 hover:underline">
                                     Carga masiva
