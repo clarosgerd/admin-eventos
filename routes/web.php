@@ -7,16 +7,24 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuspiciadorController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\CategoryPricePeriodController;
 use App\Http\Controllers\ChronoTrackController;
 use App\Http\Controllers\CoordinateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardInscripcionesController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\FormTypeController;
+use App\Http\Controllers\ItemStockController;
+use App\Http\Controllers\ListaEsperaController;
 use App\Http\Controllers\LiquidacionController;
 use App\Http\Controllers\NumeracionController;
+use App\Http\Controllers\OrganizadorController;
 use App\Http\Controllers\ParticipantesController;
+use App\Http\Controllers\PresupuestoCategoriaController;
+use App\Http\Controllers\PresupuestoController;
 use App\Http\Controllers\PromoCodeController;
+use App\Http\Controllers\AsistenciaSesionController;
+use App\Http\Controllers\SesionCongresoController;
 use App\Http\Controllers\RegistroManualController;
 use App\Http\Controllers\RouteController as PanelRouteController;
 use App\Http\Controllers\SocioController;
@@ -47,6 +55,14 @@ Route::middleware('admin.auth')->group(function () {
     Route::put('/categorias/{categoria}', [CategoriaController::class, 'update'])->name('categorias.update');
     Route::delete('/categorias/{categoria}', [CategoriaController::class, 'destroy'])->name('categorias.destroy');
 
+    // Precios por período (12/08/2026) — ver
+    // ApiRestEvent/brain/api_rest_event/PRD-precios-periodos-fechas.md.
+    // Mismo criterio de permisos que el resto del bloque.
+    Route::get('/categorias/{category}/periodos', [CategoryPricePeriodController::class, 'index'])->name('categorias.periodos.index');
+    Route::post('/categorias/{category}/periodos', [CategoryPricePeriodController::class, 'store'])->name('categorias.periodos.store');
+    Route::put('/categorias-periodos/{categoryPricePeriod}', [CategoryPricePeriodController::class, 'update'])->name('categorias.periodos.update');
+    Route::delete('/categorias-periodos/{categoryPricePeriod}', [CategoryPricePeriodController::class, 'destroy'])->name('categorias.periodos.destroy');
+
     Route::post('/eventos/{evento}/formtypes', [FormTypeController::class, 'store'])->name('formtypes.store');
     Route::put('/formtypes/{form_type}', [FormTypeController::class, 'update'])->name('formtypes.update');
     Route::delete('/formtypes/{form_type}', [FormTypeController::class, 'destroy'])->name('formtypes.destroy');
@@ -54,6 +70,17 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('/formtypes/{form_type}/souvenirs', [SouvenirController::class, 'store'])->name('souvenirs.store');
     Route::put('/souvenirs/{souvenir}', [SouvenirController::class, 'update'])->name('souvenirs.update');
     Route::delete('/souvenirs/{souvenir}', [SouvenirController::class, 'destroy'])->name('souvenirs.destroy');
+
+    // Kit/tallas/stock (11/08/2026) — stock por talla/sexo de un ítem del
+    // kit, y lista de espera del evento. Mismo criterio de permisos que
+    // el resto del bloque (super_admin o admin scoped a su propio
+    // evento). Ver PRD-kit-tallas-stock-lista-espera.md.
+    Route::get('/souvenirs/{souvenir}/stock', [ItemStockController::class, 'index'])->name('souvenirs.stock.index');
+    Route::post('/souvenirs/{souvenir}/stock', [ItemStockController::class, 'store'])->name('souvenirs.stock.store');
+    Route::put('/item-stock/{item_stock}', [ItemStockController::class, 'update'])->name('souvenirs.stock.update');
+    Route::delete('/item-stock/{item_stock}', [ItemStockController::class, 'destroy'])->name('souvenirs.stock.destroy');
+
+    Route::get('/eventos/{evento}/lista-espera', [ListaEsperaController::class, 'index'])->name('lista-espera.index');
 
     // Fase 5 — promo codes, coordenadas, ruta, auspiciadores, agenda de un
     // evento existente, más despublicar. Mismo criterio de permisos que el
@@ -105,6 +132,28 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/eventos/{evento}/participantes', [ParticipantesController::class, 'index'])->name('participantes.index');
     Route::patch('/eventos/{evento}/participantes/{participante}', [ParticipantesController::class, 'update'])->name('participantes.update');
 
+    // Presupuesto de un evento (control financiero del organizador) —
+    // mismo criterio de permisos que Numeración/Participantes: super_admin
+    // o el admin scoped a su propio evento. Ver elascenso/event/brain/
+    // (sesión 11/08/2026).
+    Route::get('/eventos/{evento}/presupuesto', [PresupuestoController::class, 'index'])->name('presupuesto.index');
+    Route::post('/eventos/{evento}/presupuesto', [PresupuestoController::class, 'store'])->name('presupuesto.store');
+    Route::put('/eventos/{evento}/presupuesto/{presupuesto}', [PresupuestoController::class, 'update'])->name('presupuesto.update');
+    Route::delete('/eventos/{evento}/presupuesto/{presupuesto}', [PresupuestoController::class, 'destroy'])->name('presupuesto.destroy');
+
+    // Agenda y sesiones de congreso — mismo criterio de permisos que
+    // Presupuesto/Numeración: super_admin o el admin scoped a su propio
+    // evento. Ver elascenso/event/brain/ (sesión 11/08/2026).
+    Route::get('/eventos/{evento}/sesiones', [SesionCongresoController::class, 'index'])->name('sesiones.index');
+    Route::post('/eventos/{evento}/sesiones', [SesionCongresoController::class, 'store'])->name('sesiones.store');
+    Route::put('/eventos/{evento}/sesiones/{sesion}', [SesionCongresoController::class, 'update'])->name('sesiones.update');
+    Route::delete('/eventos/{evento}/sesiones/{sesion}', [SesionCongresoController::class, 'destroy'])->name('sesiones.destroy');
+    Route::get('/eventos/{evento}/sesiones-reporte', [AsistenciaSesionController::class, 'reporte'])->name('sesiones.reporte');
+    Route::get('/eventos/{evento}/sesiones/{sesion}/acreditacion', [AsistenciaSesionController::class, 'index'])->name('sesiones.acreditacion.index');
+    Route::post('/eventos/{evento}/sesiones/{sesion}/acreditacion/lookup', [AsistenciaSesionController::class, 'lookup'])->name('sesiones.acreditacion.lookup');
+    Route::patch('/eventos/{evento}/sesiones/{sesion}/acreditacion/{participante}', [AsistenciaSesionController::class, 'checkin'])->name('sesiones.acreditacion.checkin');
+    Route::post('/eventos/{evento}/sesiones/{sesion}/acreditacion/checkin-bulk', [AsistenciaSesionController::class, 'checkinBulk'])->name('sesiones.acreditacion.checkin-bulk');
+
     // Sync de resultados desde ChronoTrack — ver
     // brain/groovy-chasing-ladybug.md Parte B. Mismo criterio de permisos
     // que el resto del bloque.
@@ -132,7 +181,15 @@ Route::middleware('admin.auth')->group(function () {
         // super_admin, ver elascenso/event/brain/ (sesión 11/08/2026).
         // Socios es config global; la liquidación es por evento.
         Route::resource('socios', SocioController::class)->only(['index', 'store', 'update', 'destroy']);
+
+        // CRUD de organizadores — config global (dueños de eventos), solo
+        // super_admin. Ver PRD-organizadores-crud.md (sesión 11/08/2026).
+        Route::resource('organizadores', OrganizadorController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('/eventos/{evento}/liquidacion', [LiquidacionController::class, 'show'])->name('liquidacion.show');
         Route::post('/eventos/{evento}/liquidacion', [LiquidacionController::class, 'store'])->name('liquidacion.store');
+
+        // Catálogo de rubros del presupuesto — solo super_admin (config
+        // global, igual que Socios).
+        Route::resource('presupuesto-categorias', PresupuestoCategoriaController::class)->only(['index', 'store', 'update', 'destroy']);
     });
 });

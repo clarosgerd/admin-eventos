@@ -33,6 +33,9 @@ class DashboardInscripcionesController extends Controller
             'porFormulario' => $response->json('porFormulario'),
             'nombresFormTypes' => $response->json('nombresFormTypes'),
             'estados' => $response->json('estados'),
+            // Balance del presupuesto — ver BalanceEventoData del lado
+            // ApiRestEvent, sesión 11/08/2026.
+            'balance' => $response->json('balance'),
         ]);
     }
 

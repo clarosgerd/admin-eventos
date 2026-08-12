@@ -16,9 +16,18 @@ class SouvenirController extends Controller
 {
     public function store(Request $request, int $form_type, ApiRestEventClient $client): RedirectResponse
     {
+        // Kit/tallas/stock (11/08/2026) — ver
+        // PRD-kit-tallas-stock-lista-espera.md. Los checkboxes no mandan
+        // nada si están destildados, por eso el default explícito acá
+        // (no en ApiRestEvent, que ya trata su ausencia como false).
         $payload = array_merge(
-            $request->only('name', 'icon', 'price'),
-            ['form_types_id' => $form_type]
+            $request->only('name', 'icon', 'price', 'foto_url'),
+            [
+                'form_types_id'  => $form_type,
+                'incluido'       => $request->boolean('incluido'),
+                'requiere_talla' => $request->boolean('requiere_talla'),
+                'requiere_sexo'  => $request->boolean('requiere_sexo'),
+            ]
         );
 
         $response = $client->forward('POST', '/souvenir', body: $payload);
@@ -27,18 +36,27 @@ class SouvenirController extends Controller
             return back()->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Souvenir creado correctamente.');
+        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Ítem creado correctamente.');
     }
 
     public function update(Request $request, int $souvenir, ApiRestEventClient $client): RedirectResponse
     {
-        $response = $client->forward('PUT', "/souvenir/{$souvenir}", body: $request->only('name', 'icon', 'price'));
+        $payload = array_merge(
+            $request->only('name', 'icon', 'price', 'foto_url'),
+            [
+                'incluido'       => $request->boolean('incluido'),
+                'requiere_talla' => $request->boolean('requiere_talla'),
+                'requiere_sexo'  => $request->boolean('requiere_sexo'),
+            ]
+        );
+
+        $response = $client->forward('PUT', "/souvenir/{$souvenir}", body: $payload);
 
         if (!$response || !$response->json('success')) {
             return back()->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Souvenir actualizado correctamente.');
+        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Ítem actualizado correctamente.');
     }
 
     public function destroy(Request $request, int $souvenir, ApiRestEventClient $client): RedirectResponse

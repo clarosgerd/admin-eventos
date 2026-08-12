@@ -24,6 +24,20 @@
            class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
             Acreditación
         </a>
+        <a href="{{ route('presupuesto.index', $evento['id']) }}"
+           class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+            Presupuesto
+        </a>
+        <a href="{{ route('lista-espera.index', $evento['id']) }}"
+           class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+            Lista de espera
+        </a>
+        @if (($evento['tipoEvento'] ?? null) === 'Congreso / No aplica')
+            <a href="{{ route('sesiones.index', $evento['id']) }}"
+               class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
+                Sesiones de congreso
+            </a>
+        @endif
         <a href="{{ route('eventos.dashboard', $evento['id']) }}"
            class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
             Dashboard de inscripciones
@@ -119,6 +133,33 @@
                 </select>
             </div>
             <div>
+                {{-- CRUD de organizadores (11/08/2026) — solo super_admin
+                     puede reasignarlo, y solo mientras el evento sea
+                     borrador (una vez publicado, ApiRestEvent lo rechaza
+                     con 422 — ver EventoController::update() ahí). Fuera
+                     de ese caso se muestra como texto de solo lectura, así
+                     un admin scoped o un evento ya publicado igual pueden
+                     ver quién es el organizador sin poder tocarlo. --}}
+                <label class="block text-sm font-semibold mb-1">Organizador</label>
+                @if ((session('admin_user')['rol'] ?? null) === 'super_admin' && !$evento['publicado'])
+                    <select name="organizador_id" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                        <option value="">Sin organizador asignado</option>
+                        @foreach ($organizadores as $org)
+                            <option value="{{ $org['id'] }}" @selected((string) old('organizador_id', $evento['organizadorId'] ?? '') === (string) $org['id'])>
+                                {{ $org['nombre'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                @else
+                    <p class="text-sm text-slate-700 border border-slate-200 rounded-md px-3 py-2 bg-slate-50">
+                        {{ $evento['organizador']['nombre'] ?? 'Sin organizador asignado' }}
+                        @if ($evento['publicado'])
+                            <span class="text-xs text-slate-400">(no editable — evento publicado)</span>
+                        @endif
+                    </p>
+                @endif
+            </div>
+            <div>
                 <label class="block text-sm font-semibold mb-1">Video (URL)</label>
                 <input type="text" name="video" value="{{ old('video', $evento['video']) }}"
                        class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
@@ -135,6 +176,23 @@
                 <input type="color" name="colorHex" value="{{ old('colorHex', $evento['colorHex'] ?: '#022858') }}"
                        class="w-full h-9 border border-slate-300 rounded-md">
             </div>
+            @if ((session('admin_user')['rol'] ?? null) === 'super_admin')
+                {{-- Cargo de servicio (11/08/2026) — solo super_admin: es
+                     cuánto se queda la plataforma, no un dato interno del
+                     organizador. Antes 5% fijo hardcodeado en
+                     elascenso/event, ver PRD-cargo-servicio-por-evento.md.
+                     Se guarda como fracción en la API (0.05), pero el
+                     input muestra/recibe un porcentaje (5) porque es lo
+                     que un humano espera escribir acá. --}}
+                <div>
+                    <label class="block text-sm font-semibold mb-1">
+                        Cargo de servicio (%) <span class="font-normal text-slate-500">(5% por default)</span>
+                    </label>
+                    <input type="number" name="feePctPorcentaje" step="0.01" min="0" max="20"
+                           value="{{ old('feePctPorcentaje', number_format(($evento['fee_pct'] ?? 0.05) * 100, 2)) }}"
+                           class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                </div>
+            @endif
             <div class="col-span-2">
                 <label class="block text-sm font-semibold mb-1">Deslinde de responsabilidad</label>
                 <textarea name="deslinde" rows="2"
@@ -179,13 +237,26 @@
                     <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-2 py-1 rounded">Guardar</button>
                 </div>
             </form>
-            <form method="POST" action="{{ route('categorias.destroy', $categoria['id']) }}" class="mt-1"
+            <form method="POST" action="{{ route('categorias.destroy', $categoria['id']) }}" class="mt-1 inline"
                   onsubmit="return confirm('¿Eliminar esta categoría?')">
                 @csrf
                 @method('DELETE')
                 <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
                 <button type="submit" class="text-xs text-red-600 hover:underline">Eliminar categoría</button>
             </form>
+            {{-- Precios por período (12/08/2026) — ver
+                 ApiRestEvent/brain/api_rest_event/PRD-precios-periodos-fechas.md.
+                 precio_vigente/periodo_vigente_nombre vienen de
+                 CategoryResource; ausentes en una respuesta cacheada vieja,
+                 se cae al price crudo sin período. --}}
+            <p class="text-xs text-slate-500 mt-1">
+                Precio vigente hoy: <strong>Bs {{ number_format($categoria['precio_vigente'] ?? $categoria['price'], 2) }}</strong>
+                @if (!empty($categoria['periodo_vigente_nombre']))
+                    <span class="text-red-600 font-semibold">({{ $categoria['periodo_vigente_nombre'] }})</span>
+                @endif
+                ·
+                <a href="{{ route('categorias.periodos.index', $categoria['id']) }}?evento_id={{ $evento['id'] }}" class="text-brand-600 hover:underline">Períodos de precio →</a>
+            </p>
         </div>
     @endforeach
 
@@ -294,27 +365,52 @@
                 <button type="submit" class="text-xs text-red-600 hover:underline">Eliminar tipo de formulario</button>
             </form>
 
-            {{-- Souvenirs de este form_type --}}
+            {{-- Ítems del kit de este form_type — el modelo sigue siendo
+                 Souvenir (no se renombra, ver decisión de terminología en
+                 PRD-kit-tallas-stock-lista-espera.md), pero acá se le
+                 dice "ítem" al organizador. --}}
             <div class="border-t border-slate-100 mt-3 pt-2">
-                <span class="text-xs font-semibold text-slate-500">Souvenirs</span>
+                <span class="text-xs font-semibold text-slate-500">Ítems del kit</span>
                 @foreach ($formType['souvenirs'] as $souvenir)
-                    <div class="grid grid-cols-5 gap-2 items-end mt-1">
-                        <form method="POST" action="{{ route('souvenirs.update', $souvenir['id']) }}" class="col-span-4 grid grid-cols-4 gap-2 items-end">
-                            @csrf
-                            @method('PUT')
-                            <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
-                            <input type="text" name="name" value="{{ $souvenir['name'] }}" placeholder="Nombre" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
-                            <input type="text" name="icon" value="{{ $souvenir['icon'] }}" placeholder="Ícono" maxlength="10" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
-                            <input type="number" step="0.01" min="0" name="price" value="{{ $souvenir['price'] }}" placeholder="Precio" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
-                            <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-2 py-1 rounded">Guardar</button>
-                        </form>
-                        <form method="POST" action="{{ route('souvenirs.destroy', $souvenir['id']) }}"
-                              onsubmit="return confirm('¿Eliminar este souvenir?')">
-                            @csrf
-                            @method('DELETE')
-                            <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
-                            <button type="submit" class="text-xs text-red-600 hover:underline">Eliminar</button>
-                        </form>
+                    <div class="border border-slate-200 rounded p-2 mt-1">
+                        <div class="grid grid-cols-5 gap-2 items-end">
+                            <form method="POST" action="{{ route('souvenirs.update', $souvenir['id']) }}" class="col-span-4 grid grid-cols-4 gap-2 items-end" id="souvenir-form-{{ $souvenir['id'] }}">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
+                                <input type="text" name="name" value="{{ $souvenir['name'] }}" placeholder="Nombre" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                                <input type="text" name="icon" value="{{ $souvenir['icon'] }}" placeholder="Ícono" maxlength="10" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                                <input type="number" step="0.01" min="0" name="price" value="{{ $souvenir['price'] }}" placeholder="Precio" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                                <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-2 py-1 rounded">Guardar</button>
+                            </form>
+                            <form method="POST" action="{{ route('souvenirs.destroy', $souvenir['id']) }}"
+                                  onsubmit="return confirm('¿Eliminar este ítem?')">
+                                @csrf
+                                @method('DELETE')
+                                <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
+                                <button type="submit" class="text-xs text-red-600 hover:underline">Eliminar</button>
+                            </form>
+                        </div>
+                        {{-- Foto + flags — mismos <input>/<checkbox> pero mandados con el
+                             form de arriba (name/icon/price) via el atributo form="..." --}}
+                        <div class="grid grid-cols-5 gap-2 items-center mt-2">
+                            <input type="url" name="foto_url" value="{{ $souvenir['foto_url'] ?? '' }}" placeholder="URL de foto (opcional)" form="souvenir-form-{{ $souvenir['id'] }}" class="col-span-2 w-full border border-slate-300 rounded px-2 py-1 text-xs">
+                            <label class="text-xs flex items-center gap-1">
+                                <input type="checkbox" name="incluido" form="souvenir-form-{{ $souvenir['id'] }}" value="1" @checked($souvenir['incluido'] ?? false)>
+                                Incluido en el kit
+                            </label>
+                            <label class="text-xs flex items-center gap-1">
+                                <input type="checkbox" name="requiere_talla" form="souvenir-form-{{ $souvenir['id'] }}" value="1" @checked($souvenir['requiere_talla'] ?? false)>
+                                Talla
+                            </label>
+                            <label class="text-xs flex items-center gap-1">
+                                <input type="checkbox" name="requiere_sexo" form="souvenir-form-{{ $souvenir['id'] }}" value="1" @checked($souvenir['requiere_sexo'] ?? false)>
+                                Sexo
+                            </label>
+                        </div>
+                        @if ($souvenir['requiere_talla'] ?? false)
+                            <a href="{{ route('souvenirs.stock.index', $souvenir['id']) }}?evento_id={{ $evento['id'] }}&nombre={{ urlencode($souvenir['name']) }}" class="text-xs text-brand-600 hover:underline">Stock por talla/sexo →</a>
+                        @endif
                     </div>
                 @endforeach
 
@@ -324,7 +420,7 @@
                     <input type="text" name="name" placeholder="Nombre" class="col-span-2 w-full border border-slate-300 rounded px-2 py-1 text-sm">
                     <input type="text" name="icon" placeholder="Ícono" maxlength="10" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                     <input type="number" step="0.01" min="0" name="price" placeholder="Precio" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
-                    <button type="submit" class="text-xs text-brand-600 hover:underline">+ Agregar souvenir</button>
+                    <button type="submit" class="text-xs text-brand-600 hover:underline">+ Agregar ítem</button>
                 </form>
             </div>
         </div>

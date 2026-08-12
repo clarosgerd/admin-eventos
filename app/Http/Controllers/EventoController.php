@@ -19,7 +19,10 @@ class EventoController extends Controller
 {
     public function create(ApiRestEventClient $client): View
     {
-        return view('eventos.create', ['tiposEvento' => $this->tiposEvento($client)]);
+        return view('eventos.create', [
+            'tiposEvento' => $this->tiposEvento($client),
+            'organizadores' => $this->organizadores($client),
+        ]);
     }
 
     /**
@@ -33,6 +36,23 @@ class EventoController extends Controller
         $response = $client->forward('GET', '/tipos-evento');
 
         return $response?->json('tiposEvento') ?? [];
+    }
+
+    /**
+     * Catálogo de organizadores para el select de "crear/editar evento" —
+     * ver OrganizadorController (ApiRestEvent, CRUD real) y
+     * PRD-organizadores-crud.md. Este endpoint es solo super_admin del lado
+     * de la API, pero create()/edit() lo llaman siempre igual que
+     * tiposEvento(): un admin scoped a su evento nunca alcanza la pantalla
+     * de "crear evento" (route eventos.create está bajo admin.superadmin),
+     * y en edit() simplemente no se usa la lista si no es super_admin (la
+     * vista muestra el organizador ya asignado como texto).
+     */
+    private function organizadores(ApiRestEventClient $client): array
+    {
+        $response = $client->forward('GET', '/organizadores');
+
+        return $response?->json('data') ?? [];
     }
 
     public function store(Request $request, ApiRestEventClient $client): RedirectResponse
@@ -91,7 +111,7 @@ class EventoController extends Controller
             $request->only(
                 'name', 'description', 'longDescription', 'date', 'localTime', 'location',
                 'status', 'video', 'image', 'colorHex', 'deslinde', 'deslinde_pdf_url',
-                'tipo_evento_id', 'subtipo_evento_id'
+                'tipo_evento_id', 'subtipo_evento_id', 'organizador_id'
             ),
             [
                 'categories'    => $categories,
@@ -103,6 +123,14 @@ class EventoController extends Controller
                 'agenda'        => $agenda,
             ]
         );
+
+        // El <select> de organizador tiene una opción "Sin organizador
+        // asignado" (value=""), pero StoreEventosRequest valida
+        // organizador_id como nullable|integer — un string vacío no pasa
+        // "integer" (nullable solo exime el valor `null` real, no "").
+        if (($payload['organizador_id'] ?? null) === '') {
+            $payload['organizador_id'] = null;
+        }
 
         $response = $client->forward('POST', '/event', body: $payload);
 
@@ -164,7 +192,11 @@ class EventoController extends Controller
 
         abort_if(!$eventoData, 404);
 
-        return view('eventos.edit', ['evento' => $eventoData, 'tiposEvento' => $this->tiposEvento($client)]);
+        return view('eventos.edit', [
+            'evento' => $eventoData,
+            'tiposEvento' => $this->tiposEvento($client),
+            'organizadores' => $this->organizadores($client),
+        ]);
     }
 
     /**
@@ -234,11 +266,32 @@ class EventoController extends Controller
         // form_type, QA visual 10/08) — este endpoint no toca form_types,
         // así que no hay nada que sumar acá; se administra vía
         // FormTypeController.
+        // organizador_id se manda solo si vino en el body — la vista solo
+        // renderiza ese <select> para super_admin y con el evento todavía
+        // en borrador (ver eventos/edit.blade.php), ApiRestEvent igual
+        // rechaza cualquier otro caso (403 si no es super_admin, 422 si el
+        // evento ya está publicado — ver EventoController::update() ahí).
         $payload = $request->only(
             'name', 'description', 'longDescription', 'date', 'localTime', 'location',
             'status', 'video', 'image', 'colorHex', 'chronotrackEventId', 'deslinde', 'deslinde_pdf_url',
-            'tipo_evento_id', 'subtipo_evento_id'
+            'tipo_evento_id', 'subtipo_evento_id', 'organizador_id'
         );
+
+        // Mismo motivo que en store(): el value="" de "Sin organizador
+        // asignado" no pasa la validación "integer" de UpdateEventosRequest
+        // si se manda tal cual — se normaliza a null real.
+        if (($payload['organizador_id'] ?? null) === '') {
+            $payload['organizador_id'] = null;
+        }
+
+        // Cargo de servicio (11/08/2026) — el campo del formulario es un
+        // porcentaje humano ("5"), la API espera una fracción ("0.05").
+        // No se manda nada si el campo no vino (la vista solo lo muestra
+        // a super_admin) — ApiRestEvent igual lo rechazaría con 403 si
+        // llegara de alguien más, esto solo evita el viaje de red.
+        if ($request->filled('feePctPorcentaje')) {
+            $payload['feePct'] = round(((float) $request->input('feePctPorcentaje')) / 100, 4);
+        }
 
         $response = $client->forward('PUT', "/event/{$evento}", body: $payload);
 

@@ -81,6 +81,19 @@
                 </select>
             </div>
             <div>
+                <label class="block text-sm font-semibold mb-1">
+                    Organizador <span class="font-normal text-slate-500">(no editable una vez publicado)</span>
+                </label>
+                <select name="organizador_id" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                    <option value="">Sin organizador asignado</option>
+                    @foreach ($organizadores as $org)
+                        <option value="{{ $org['id'] }}" @selected((string) old('organizador_id') === (string) $org['id'])>
+                            {{ $org['nombre'] }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="block text-sm font-semibold mb-1">Video (URL)</label>
                 <input type="text" name="video" value="{{ old('video') }}"
                        class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">

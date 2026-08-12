@@ -41,6 +41,34 @@
     </div>
 </div>
 
+{{-- Balance del presupuesto --}}
+<div class="flex justify-between items-center mb-2">
+    <h2 class="font-bold text-sm text-brand-600">Balance del evento</h2>
+    <a href="{{ route('presupuesto.index', $evento['id']) }}" class="text-sm text-brand-600 hover:underline">
+        Ver/editar presupuesto →
+    </a>
+</div>
+@if ($balance)
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xl font-bold text-brand-600">${{ number_format($balance['ingresosInscripciones'], 2) }}</div>
+        <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Ingreso por inscripciones</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xl font-bold text-brand-600">${{ number_format($balance['ingresosManuales'], 2) }}</div>
+        <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Ingresos manuales</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xl font-bold text-red-600">${{ number_format($balance['gastosManuales'], 2) }}</div>
+        <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Gastos</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xl font-bold text-green-600">${{ number_format($balance['utilidadNeta'], 2) }}</div>
+        <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Utilidad neta</div>
+    </div>
+</div>
+@endif
+
 {{-- Por categoría --}}
 <h2 class="font-bold text-sm text-brand-600 mb-2">Por categoría</h2>
 <div class="overflow-x-auto mb-6">
