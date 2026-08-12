@@ -23,33 +23,38 @@ class CategoriaController extends Controller
 
         $response = $client->forward('POST', '/category', body: $payload);
 
+        // Mejora de visualización (12/08/2026) — eventos/edit.blade.php pasó
+        // a tabs; '#categorias' hace que al volver se reabra la pestaña de
+        // Categorías en vez de caer siempre en "Datos" (la primera).
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $evento) . '#categorias')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $evento)->with('status', 'Categoría creada correctamente.');
+        return redirect(route('eventos.edit', $evento) . '#categorias')->with('status', 'Categoría creada correctamente.');
     }
 
     public function update(Request $request, int $categoria, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('PUT', "/category/{$categoria}", body: $request->only('name', 'price', 'description', 'color'));
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#categorias')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Categoría actualizada correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#categorias')->with('status', 'Categoría actualizada correctamente.');
     }
 
     public function destroy(Request $request, int $categoria, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('DELETE', "/category/{$categoria}");
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#categorias')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Categoría eliminada correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#categorias')->with('status', 'Categoría eliminada correctamente.');
     }
 
     private function extractErrors($response): array

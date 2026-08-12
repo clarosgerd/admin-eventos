@@ -8,7 +8,9 @@
 @section('content')
 <div class="mb-4">
     @if ($eventoId)
-        <a href="{{ route('eventos.edit', $eventoId) }}" class="text-sm text-brand-600 hover:underline">← Volver al evento</a>
+        {{-- #categorias (12/08/2026) — eventos/edit.blade.php pasó a tabs,
+             esto abre directo la pestaña de Categorías en vez de la primera. --}}
+        <a href="{{ route('eventos.edit', $eventoId) }}#categorias" class="text-sm text-brand-600 hover:underline">← Volver al evento</a>
     @endif
     <h1 class="text-lg font-bold mt-1">Períodos de precio — {{ $categoria['name'] ?? 'Categoría' }}</h1>
     <p class="text-sm text-slate-500">

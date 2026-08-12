@@ -21,33 +21,38 @@ class AuspiciadorController extends Controller
 
         $response = $client->forward('POST', '/auspiciador', body: $payload);
 
+        // Mejora de visualización (12/08/2026) — eventos/edit.blade.php pasó
+        // a tabs; '#auspiciadores' hace que al volver se reabra esa
+        // pestaña en vez de caer siempre en "Datos" (la primera).
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $evento) . '#auspiciadores')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $evento)->with('status', 'Auspiciador creado correctamente.');
+        return redirect(route('eventos.edit', $evento) . '#auspiciadores')->with('status', 'Auspiciador creado correctamente.');
     }
 
     public function update(Request $request, int $auspiciador, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('PUT', "/auspiciador/{$auspiciador}", body: $request->only('nombre', 'logo_url', 'contacto', 'orden'));
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#auspiciadores')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Auspiciador actualizado correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#auspiciadores')->with('status', 'Auspiciador actualizado correctamente.');
     }
 
     public function destroy(Request $request, int $auspiciador, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('DELETE', "/auspiciador/{$auspiciador}");
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#auspiciadores')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Auspiciador eliminado correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#auspiciadores')->with('status', 'Auspiciador eliminado correctamente.');
     }
 
     private function extractErrors($response): array

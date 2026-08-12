@@ -39,11 +39,14 @@ class FormTypeController extends Controller
 
         $response = $client->forward('POST', '/form-type', body: $payload);
 
+        // Mejora de visualización (12/08/2026) — eventos/edit.blade.php pasó
+        // a tabs; '#tipos' hace que al volver se reabra la pestaña de Tipos
+        // de formulario en vez de caer siempre en "Datos" (la primera).
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $evento) . '#tipos')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $evento)->with('status', 'Tipo de formulario creado correctamente.');
+        return redirect(route('eventos.edit', $evento) . '#tipos')->with('status', 'Tipo de formulario creado correctamente.');
     }
 
     public function update(Request $request, int $form_type, ApiRestEventClient $client): RedirectResponse
@@ -61,22 +64,24 @@ class FormTypeController extends Controller
 
         $response = $client->forward('PUT', "/form-type/{$form_type}", body: $payload);
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#tipos')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Tipo de formulario actualizado correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#tipos')->with('status', 'Tipo de formulario actualizado correctamente.');
     }
 
     public function destroy(Request $request, int $form_type, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('DELETE', "/form-type/{$form_type}");
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#tipos')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Tipo de formulario eliminado correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#tipos')->with('status', 'Tipo de formulario eliminado correctamente.');
     }
 
     private function extractErrors($response): array

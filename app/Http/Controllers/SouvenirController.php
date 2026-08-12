@@ -32,11 +32,15 @@ class SouvenirController extends Controller
 
         $response = $client->forward('POST', '/souvenir', body: $payload);
 
+        // Mejora de visualización (12/08/2026) — eventos/edit.blade.php pasó
+        // a tabs; '#tipos' porque los ítems del kit viven anidados dentro
+        // de la pestaña "Tipos de formulario", no tienen pestaña propia.
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#tipos')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Ítem creado correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#tipos')->with('status', 'Ítem creado correctamente.');
     }
 
     public function update(Request $request, int $souvenir, ApiRestEventClient $client): RedirectResponse
@@ -52,22 +56,24 @@ class SouvenirController extends Controller
 
         $response = $client->forward('PUT', "/souvenir/{$souvenir}", body: $payload);
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#tipos')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Ítem actualizado correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#tipos')->with('status', 'Ítem actualizado correctamente.');
     }
 
     public function destroy(Request $request, int $souvenir, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('DELETE', "/souvenir/{$souvenir}");
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#tipos')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Souvenir eliminado correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#tipos')->with('status', 'Souvenir eliminado correctamente.');
     }
 
     private function extractErrors($response): array

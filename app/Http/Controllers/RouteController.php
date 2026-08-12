@@ -21,33 +21,37 @@ class RouteController extends Controller
 
         $response = $client->forward('POST', '/route', body: $payload);
 
+        // Mejora de visualización (12/08/2026) — eventos/edit.blade.php pasó
+        // a tabs; '#mapa' agrupa Coordenadas + Ruta en una sola pestaña.
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $evento) . '#mapa')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $evento)->with('status', 'Punto de ruta creado correctamente.');
+        return redirect(route('eventos.edit', $evento) . '#mapa')->with('status', 'Punto de ruta creado correctamente.');
     }
 
     public function update(Request $request, int $route, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('PUT', "/route/{$route}", body: $request->only('lat', 'lng', 'label'));
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#mapa')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Punto de ruta actualizado correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#mapa')->with('status', 'Punto de ruta actualizado correctamente.');
     }
 
     public function destroy(Request $request, int $route, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('DELETE', "/route/{$route}");
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#mapa')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Punto de ruta eliminado correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#mapa')->with('status', 'Punto de ruta eliminado correctamente.');
     }
 
     private function extractErrors($response): array

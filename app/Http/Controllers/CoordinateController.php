@@ -21,33 +21,37 @@ class CoordinateController extends Controller
 
         $response = $client->forward('POST', '/coordinate', body: $payload);
 
+        // Mejora de visualización (12/08/2026) — eventos/edit.blade.php pasó
+        // a tabs; '#mapa' agrupa Coordenadas + Ruta en una sola pestaña.
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $evento) . '#mapa')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $evento)->with('status', 'Coordenada creada correctamente.');
+        return redirect(route('eventos.edit', $evento) . '#mapa')->with('status', 'Coordenada creada correctamente.');
     }
 
     public function update(Request $request, int $coordinate, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('PUT', "/coordinate/{$coordinate}", body: $request->only('lat', 'lng'));
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#mapa')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Coordenada actualizada correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#mapa')->with('status', 'Coordenada actualizada correctamente.');
     }
 
     public function destroy(Request $request, int $coordinate, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('DELETE', "/coordinate/{$coordinate}");
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#mapa')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Coordenada eliminada correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#mapa')->with('status', 'Coordenada eliminada correctamente.');
     }
 
     private function extractErrors($response): array

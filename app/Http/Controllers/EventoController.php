@@ -295,11 +295,14 @@ class EventoController extends Controller
 
         $response = $client->forward('PUT', "/event/{$evento}", body: $payload);
 
+        // Mejora de visualización (12/08/2026) — '#datos' es la primera
+        // pestaña de todos modos (fallback si no hay hash), pero se deja
+        // explícito por si el orden de pestañas cambia más adelante.
         if (!$response || !$response->json('success')) {
-            return back()->withInput()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $evento) . '#datos')->withInput()->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $evento)->with('status', 'Evento actualizado correctamente.');
+        return redirect(route('eventos.edit', $evento) . '#datos')->with('status', 'Evento actualizado correctamente.');
     }
 
     public function destroy(int $evento, ApiRestEventClient $client): RedirectResponse

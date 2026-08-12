@@ -8,7 +8,10 @@
 @section('content')
 <div class="mb-4">
     @if ($eventoId)
-        <a href="{{ route('eventos.edit', $eventoId) }}" class="text-sm text-brand-600 hover:underline">← Volver al evento</a>
+        {{-- #tipos (12/08/2026) — eventos/edit.blade.php pasó a tabs, esto
+             abre directo la pestaña de Tipos de formulario (donde viven
+             los ítems del kit) en vez de la primera. --}}
+        <a href="{{ route('eventos.edit', $eventoId) }}#tipos" class="text-sm text-brand-600 hover:underline">← Volver al evento</a>
     @endif
     <h1 class="text-lg font-bold mt-1">Stock — {{ $nombre }}</h1>
     <p class="text-sm text-slate-500">

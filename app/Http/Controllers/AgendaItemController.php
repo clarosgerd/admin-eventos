@@ -26,33 +26,38 @@ class AgendaItemController extends Controller
 
         $response = $client->forward('POST', '/agenda-item', body: $payload);
 
+        // Mejora de visualización (12/08/2026) — eventos/edit.blade.php pasó
+        // a tabs; '#agenda' hace que al volver se reabra esa pestaña en vez
+        // de caer siempre en "Datos" (la primera).
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $evento) . '#agenda')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $evento)->with('status', 'Ítem de agenda creado correctamente.');
+        return redirect(route('eventos.edit', $evento) . '#agenda')->with('status', 'Ítem de agenda creado correctamente.');
     }
 
     public function update(Request $request, int $agenda_item, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('PUT', "/agenda-item/{$agenda_item}", body: $request->only(self::FIELDS));
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#agenda')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Ítem de agenda actualizado correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#agenda')->with('status', 'Ítem de agenda actualizado correctamente.');
     }
 
     public function destroy(Request $request, int $agenda_item, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('DELETE', "/agenda-item/{$agenda_item}");
 
+        $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
-            return back()->withErrors($this->extractErrors($response));
+            return redirect(route('eventos.edit', $eventoId) . '#agenda')->withErrors($this->extractErrors($response));
         }
 
-        return redirect()->route('eventos.edit', $request->input('evento_id'))->with('status', 'Ítem de agenda eliminado correctamente.');
+        return redirect(route('eventos.edit', $eventoId) . '#agenda')->with('status', 'Ítem de agenda eliminado correctamente.');
     }
 
     private function extractErrors($response): array
