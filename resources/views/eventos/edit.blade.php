@@ -44,6 +44,7 @@
                     <a href="{{ route('registro-manual.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Carga masiva de inscripciones</a>
                 @endif
                 <a href="{{ route('lista-espera.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Lista de espera</a>
+                <a href="{{ route('delivery.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Delivery</a>
                 @if (($evento['tipoEvento'] ?? null) === 'Congreso / No aplica')
                     <a href="{{ route('sesiones.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Sesiones de congreso</a>
                 @endif
@@ -404,6 +405,11 @@
                      dice "ítem" al organizador. --}}
                 <div class="border-t border-slate-100 mt-3 pt-2">
                     <span class="text-xs font-semibold text-slate-500">Ítems del kit</span>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Marcá "Incluido" en un ítem (ej. la polera del kit) para que
+                        ya venga en el precio base — no se le cobra aparte ni se le
+                        pide confirmarlo, solo elige talla/sexo si aplica.
+                    </p>
                     @foreach ($formType['souvenirs'] as $souvenir)
                         <div class="border border-slate-200 rounded p-2 mt-1">
                             <div class="grid grid-cols-5 gap-2 items-end">

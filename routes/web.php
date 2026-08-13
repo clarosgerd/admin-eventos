@@ -12,6 +12,7 @@ use App\Http\Controllers\ChronoTrackController;
 use App\Http\Controllers\CoordinateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardInscripcionesController;
+use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\FormTypeController;
 use App\Http\Controllers\ItemStockController;
@@ -81,6 +82,10 @@ Route::middleware('admin.auth')->group(function () {
     Route::delete('/item-stock/{item_stock}', [ItemStockController::class, 'destroy'])->name('souvenirs.stock.destroy');
 
     Route::get('/eventos/{evento}/lista-espera', [ListaEsperaController::class, 'index'])->name('lista-espera.index');
+
+    // Mapa de ubicación de delivery (12/08/2026) — vista de solo lectura,
+    // mismo criterio de permisos que lista-espera.
+    Route::get('/eventos/{evento}/delivery', [DeliveryController::class, 'index'])->name('delivery.index');
 
     // Fase 5 — promo codes, coordenadas, ruta, auspiciadores, agenda de un
     // evento existente, más despublicar. Mismo criterio de permisos que el
