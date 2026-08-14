@@ -321,6 +321,14 @@
                 <input type="checkbox" name="formTypes[__FT_INDEX__][hasPromoCode]" value="1">
                 Admite código promocional
             </label>
+            <label class="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" name="formTypes[__FT_INDEX__][esStaff]" value="1">
+                Es Staff/Ayudante <span class="text-slate-400">(asignable a sesiones de congreso)</span>
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" name="formTypes[__FT_INDEX__][esPonente]" value="1">
+                Es Ponente/Expositor <span class="text-slate-400">(vinculable a sesiones de congreso)</span>
+            </label>
         </div>
         <div class="border-t border-slate-100 pt-2">
             <div class="flex justify-between items-center mb-2">

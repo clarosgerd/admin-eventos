@@ -72,6 +72,10 @@ class EventoController extends Controller
                 // (QA visual, 10/08) — mismo criterio que hasTeam/hasDelivery.
                 $ft['hasDonation'] = isset($ft['hasDonation']);
                 $ft['hasPromoCode'] = isset($ft['hasPromoCode']);
+                // Ver brain/PLAN-ASIGNACION-STAFF-SESIONES-CONGRESO-13082026.md
+                $ft['esStaff'] = isset($ft['esStaff']);
+                // Ver brain/PLAN-VINCULACION-PONENTES-SESIONES-CONGRESO-13082026.md
+                $ft['esPonente'] = isset($ft['esPonente']);
                 $ft['souvenirs'] = collect($ft['souvenirs'] ?? [])
                     ->filter(fn ($s) => filled($s['name'] ?? null))
                     ->values()

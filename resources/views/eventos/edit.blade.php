@@ -388,6 +388,14 @@
                             <input type="checkbox" name="has_promo_code" value="1" {{ ($formType['hasPromoCode'] ?? false) ? 'checked' : '' }}>
                             Admite código promocional
                         </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="es_staff" value="1" {{ ($formType['esStaff'] ?? false) ? 'checked' : '' }}>
+                            Es Staff/Ayudante <span class="text-slate-400">(asignable a sesiones de congreso)</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="es_ponente" value="1" {{ ($formType['esPonente'] ?? false) ? 'checked' : '' }}>
+                            Es Ponente/Expositor <span class="text-slate-400">(vinculable a sesiones de congreso)</span>
+                        </label>
                     </div>
                     <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded">Guardar</button>
                 </form>
@@ -504,6 +512,14 @@
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="has_promo_code" value="1">
                         Admite código promocional
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="es_staff" value="1">
+                        Es Staff/Ayudante <span class="text-slate-400">(asignable a sesiones de congreso)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="es_ponente" value="1">
+                        Es Ponente/Expositor <span class="text-slate-400">(vinculable a sesiones de congreso)</span>
                     </label>
                 </div>
                 <button type="submit" class="text-sm bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-md">Agregar tipo de formulario</button>

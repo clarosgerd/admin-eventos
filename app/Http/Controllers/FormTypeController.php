@@ -34,6 +34,10 @@ class FormTypeController extends Controller
                 'has_delivery'       => $request->boolean('has_delivery'),
                 'has_donation'       => $request->boolean('has_donation'),
                 'has_promo_code'     => $request->boolean('has_promo_code'),
+                // Ver brain/PLAN-ASIGNACION-STAFF-SESIONES-CONGRESO-13082026.md
+                'es_staff'           => $request->boolean('es_staff'),
+                // Ver brain/PLAN-VINCULACION-PONENTES-SESIONES-CONGRESO-13082026.md
+                'es_ponente'         => $request->boolean('es_ponente'),
             ]
         );
 
@@ -59,6 +63,10 @@ class FormTypeController extends Controller
                 'has_delivery'       => $request->boolean('has_delivery'),
                 'has_donation'       => $request->boolean('has_donation'),
                 'has_promo_code'     => $request->boolean('has_promo_code'),
+                // Ver brain/PLAN-ASIGNACION-STAFF-SESIONES-CONGRESO-13082026.md
+                'es_staff'           => $request->boolean('es_staff'),
+                // Ver brain/PLAN-VINCULACION-PONENTES-SESIONES-CONGRESO-13082026.md
+                'es_ponente'         => $request->boolean('es_ponente'),
             ]
         );
 

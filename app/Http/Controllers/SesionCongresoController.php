@@ -27,9 +27,23 @@ class SesionCongresoController extends Controller
         $sesionesResponse = $client->forward('GET', "/event/{$evento}/sesiones");
         $sesiones = $sesionesResponse?->json('data') ?? [];
 
+        // Staff disponible (13/08/2026) — participantes de form_types con
+        // es_staff=true, para el selector "+ Asignar ayudante" de cada
+        // sesión. Ver brain/PLAN-ASIGNACION-STAFF-SESIONES-CONGRESO-13082026.md.
+        $staffResponse = $client->forward('GET', "/event/{$evento}/staff-disponible");
+        $staffDisponible = $staffResponse?->json('data') ?? [];
+
+        // Ponentes disponibles (13/08/2026, mismo día) — mismo mecanismo,
+        // participantes con es_ponente=true. Ver
+        // brain/PLAN-VINCULACION-PONENTES-SESIONES-CONGRESO-13082026.md.
+        $ponentesResponse = $client->forward('GET', "/event/{$evento}/staff-disponible", query: ['rol' => 'ponente']);
+        $ponentesDisponibles = $ponentesResponse?->json('data') ?? [];
+
         return view('eventos.sesiones.index', [
             'evento' => $eventoData,
             'sesiones' => $sesiones,
+            'staffDisponible' => $staffDisponible,
+            'ponentesDisponibles' => $ponentesDisponibles,
         ]);
     }
 
@@ -61,6 +75,53 @@ class SesionCongresoController extends Controller
         }
 
         return redirect()->route('sesiones.index', $evento)->with('status', 'Sesión actualizada correctamente.');
+    }
+
+    /**
+     * Vinculación de staff/ayudantes o ponentes a sesiones (13/08/2026) —
+     * decisión del organizador, hecha después del registro. `rol` viaja en
+     * el body (`staff` por default, mantiene compatibilidad con el primer
+     * alcance del feature) — ver
+     * brain/PLAN-ASIGNACION-STAFF-SESIONES-CONGRESO-13082026.md y
+     * brain/PLAN-VINCULACION-PONENTES-SESIONES-CONGRESO-13082026.md.
+     */
+    public function assignStaff(Request $request, int $evento, int $sesion, ApiRestEventClient $client): RedirectResponse
+    {
+        $this->assertCanViewEvento($evento);
+
+        $data = $request->validate([
+            'participante_id' => 'required|integer',
+            'rol' => 'sometimes|nullable|string|in:staff,ponente',
+        ]);
+        $rol = $data['rol'] ?? 'staff';
+
+        $response = $client->forward('POST', "/event/{$evento}/sesiones/{$sesion}/staff", body: $data);
+
+        if (!$response || !$response->json('success')) {
+            return back()->withErrors($this->extractErrors($response));
+        }
+
+        $mensaje = $rol === 'ponente' ? 'Ponente vinculado correctamente.' : 'Ayudante asignado correctamente.';
+
+        return redirect()->route('sesiones.index', $evento)->with('status', $mensaje);
+    }
+
+    public function unassignStaff(Request $request, int $evento, int $sesion, int $participante, ApiRestEventClient $client): RedirectResponse
+    {
+        $this->assertCanViewEvento($evento);
+
+        // input() en vez de query(): el formulario manda `rol` como campo
+        // del POST (con `_method=DELETE` spoofed), no como querystring.
+        $rol = $request->input('rol', 'staff');
+        $response = $client->forward('DELETE', "/event/{$evento}/sesiones/{$sesion}/staff/{$participante}", body: ['rol' => $rol]);
+
+        if (!$response || !$response->json('success')) {
+            return back()->withErrors($this->extractErrors($response));
+        }
+
+        $mensaje = $rol === 'ponente' ? 'Ponente desvinculado.' : 'Ayudante desasignado.';
+
+        return redirect()->route('sesiones.index', $evento)->with('status', $mensaje);
     }
 
     public function destroy(int $evento, int $sesion, ApiRestEventClient $client): RedirectResponse

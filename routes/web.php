@@ -158,6 +158,10 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('/eventos/{evento}/sesiones/{sesion}/acreditacion/lookup', [AsistenciaSesionController::class, 'lookup'])->name('sesiones.acreditacion.lookup');
     Route::patch('/eventos/{evento}/sesiones/{sesion}/acreditacion/{participante}', [AsistenciaSesionController::class, 'checkin'])->name('sesiones.acreditacion.checkin');
     Route::post('/eventos/{evento}/sesiones/{sesion}/acreditacion/checkin-bulk', [AsistenciaSesionController::class, 'checkinBulk'])->name('sesiones.acreditacion.checkin-bulk');
+    // Asignación de staff/ayudantes (13/08/2026) — ver
+    // elascenso/event/brain/PLAN-ASIGNACION-STAFF-SESIONES-CONGRESO-13082026.md.
+    Route::post('/eventos/{evento}/sesiones/{sesion}/staff', [SesionCongresoController::class, 'assignStaff'])->name('sesiones.staff.store');
+    Route::delete('/eventos/{evento}/sesiones/{sesion}/staff/{participante}', [SesionCongresoController::class, 'unassignStaff'])->name('sesiones.staff.destroy');
 
     // Sync de resultados desde ChronoTrack — ver
     // brain/groovy-chasing-ladybug.md Parte B. Mismo criterio de permisos
