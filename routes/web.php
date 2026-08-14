@@ -15,6 +15,7 @@ use App\Http\Controllers\DashboardInscripcionesController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\FormTypeController;
+use App\Http\Controllers\ItemBodegaController;
 use App\Http\Controllers\ItemStockController;
 use App\Http\Controllers\ListaEsperaController;
 use App\Http\Controllers\LiquidacionController;
@@ -82,6 +83,14 @@ Route::middleware('admin.auth')->group(function () {
     Route::delete('/item-stock/{item_stock}', [ItemStockController::class, 'destroy'])->name('souvenirs.stock.destroy');
 
     Route::get('/eventos/{evento}/lista-espera', [ListaEsperaController::class, 'index'])->name('lista-espera.index');
+
+    // Bodega de stock por evento (14/08/2026) — ver
+    // ApiRestEvent/brain/api_rest_event/PLAN-BODEGA-STOCK-EVENTO-14082026.md.
+    Route::get('/eventos/{evento}/bodega', [ItemBodegaController::class, 'index'])->name('bodega.index');
+    Route::post('/eventos/{evento}/bodega', [ItemBodegaController::class, 'store'])->name('bodega.store');
+    Route::put('/eventos/{evento}/bodega/{item_bodega}', [ItemBodegaController::class, 'update'])->name('bodega.update');
+    Route::delete('/eventos/{evento}/bodega/{item_bodega}', [ItemBodegaController::class, 'destroy'])->name('bodega.destroy');
+    Route::post('/eventos/{evento}/bodega/{item_bodega}/asignar', [ItemBodegaController::class, 'asignar'])->name('bodega.asignar');
 
     // Mapa de ubicación de delivery (12/08/2026) — vista de solo lectura,
     // mismo criterio de permisos que lista-espera.

@@ -44,6 +44,7 @@
                     <a href="{{ route('registro-manual.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Carga masiva de inscripciones</a>
                 @endif
                 <a href="{{ route('lista-espera.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Lista de espera</a>
+                <a href="{{ route('bodega.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Bodega de stock</a>
                 <a href="{{ route('delivery.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Delivery</a>
                 @if (($evento['tipoEvento'] ?? null) === 'Congreso / No aplica')
                     <a href="{{ route('sesiones.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Sesiones de congreso</a>
@@ -455,9 +456,13 @@
                                     Sexo
                                 </label>
                             </div>
-                            @if ($souvenir['requiere_talla'] ?? false)
-                                <a href="{{ route('souvenirs.stock.index', $souvenir['id']) }}?evento_id={{ $evento['id'] }}&nombre={{ urlencode($souvenir['name']) }}" class="text-xs text-brand-600 hover:underline">Stock por talla/sexo →</a>
-                            @endif
+                            {{-- Gestionar stock aplica a CUALQUIER ítem, tenga o no talla/sexo
+                                 (ej. una medalla): sin filas ahí, el ítem queda con
+                                 "disponibilidad no controlada" — ver stock.blade.php. Antes este
+                                 link solo aparecía si requiere_talla estaba tildado, dejando a
+                                 los ítems simples sin forma de cargarles stock desde el panel
+                                 (gap detectado 13/08/2026). --}}
+                            <a href="{{ route('souvenirs.stock.index', $souvenir['id']) }}?evento_id={{ $evento['id'] }}&nombre={{ urlencode($souvenir['name']) }}" class="text-xs text-brand-600 hover:underline">Gestionar stock →</a>
                         </div>
                     @endforeach
 
