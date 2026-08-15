@@ -17,28 +17,29 @@
     Mismo conteo que se le manda por correo al organizador cuando se publica el evento.
 </p>
 
-{{-- Tarjetas de totales --}}
+{{-- Tarjetas de totales — clicables (15/08/2026), llevan al detalle
+     fila-por-fila filtrado por estado (ver ParticipantesDetalleController). --}}
 <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-    <div class="bg-white rounded-lg shadow p-4 text-center">
+    <a href="{{ route('participantes.detalle', $evento['id']) }}" class="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition-shadow">
         <div class="text-2xl font-bold text-brand-600">{{ $totalGeneral['total'] }}</div>
         <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Total inscritos</div>
-    </div>
-    <div class="bg-white rounded-lg shadow p-4 text-center">
+    </a>
+    <a href="{{ route('participantes.detalle', ['evento' => $evento['id'], 'pago_status' => 'paid']) }}" class="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition-shadow">
         <div class="text-2xl font-bold text-green-600">{{ $totalGeneral['paid'] }}</div>
         <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Pagados</div>
-    </div>
-    <div class="bg-white rounded-lg shadow p-4 text-center">
+    </a>
+    <a href="{{ route('participantes.detalle', ['evento' => $evento['id'], 'pago_status' => 'pending']) }}" class="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition-shadow">
         <div class="text-2xl font-bold text-amber-600">{{ $totalGeneral['pending'] }}</div>
         <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Pendientes</div>
-    </div>
-    <div class="bg-white rounded-lg shadow p-4 text-center">
+    </a>
+    <a href="{{ route('participantes.detalle', ['evento' => $evento['id'], 'pago_status' => 'cancelled']) }}" class="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition-shadow">
         <div class="text-2xl font-bold text-red-600">{{ $totalGeneral['cancelled'] }}</div>
         <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Cancelados</div>
-    </div>
-    <div class="bg-white rounded-lg shadow p-4 text-center">
+    </a>
+    <a href="{{ route('participantes.detalle', ['evento' => $evento['id'], 'pago_status' => 'failed']) }}" class="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition-shadow">
         <div class="text-2xl font-bold text-red-600">{{ $totalGeneral['failed'] }}</div>
         <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Fallidos</div>
-    </div>
+    </a>
 </div>
 
 {{-- Balance del presupuesto --}}
@@ -126,4 +127,100 @@
         </tbody>
     </table>
 </div>
+
+@if ($reporteInscritos)
+<p class="text-xs text-slate-500 mb-4 mt-8">
+    Las 3 tablas de abajo solo cuentan inscripciones <strong>pagadas</strong> — son un reporte de
+    recaudación, no de estado (eso ya está arriba).
+</p>
+
+{{-- Recaudación por modalidad (tipo de formulario) --}}
+<h2 class="font-bold text-sm text-brand-600 mb-2">Inscritos por modalidad</h2>
+<div class="overflow-x-auto mb-6">
+    <table class="w-full bg-white rounded-lg shadow text-sm">
+        <thead>
+            <tr class="bg-brand-600 text-white text-left">
+                <th class="px-3 py-2 font-semibold">Modalidad</th>
+                <th class="px-3 py-2 font-semibold text-right">Cantidad</th>
+                <th class="px-3 py-2 font-semibold text-right">Recaudación</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($reporteInscritos['porModalidad']['filas'] as $fila)
+                <tr class="border-t border-slate-100">
+                    <td class="px-3 py-2">{{ $fila['nombre'] }}</td>
+                    <td class="px-3 py-2 text-right">{{ $fila['cantidad'] }}</td>
+                    <td class="px-3 py-2 text-right">${{ number_format($fila['recaudacion'], 2) }}</td>
+                </tr>
+            @empty
+                <tr><td class="px-3 py-2 text-slate-500" colspan="3">Todavía no hay inscripciones pagadas.</td></tr>
+            @endforelse
+            <tr class="border-t border-slate-200 font-semibold bg-slate-50">
+                <td class="px-3 py-2">Total</td>
+                <td class="px-3 py-2 text-right">{{ $reporteInscritos['porModalidad']['totalCantidad'] }}</td>
+                <td class="px-3 py-2 text-right">${{ number_format($reporteInscritos['porModalidad']['totalRecaudacion'], 2) }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+{{-- Recaudación por categoría / distancia --}}
+<h2 class="font-bold text-sm text-brand-600 mb-2">Inscritos por categoría / distancia</h2>
+<div class="overflow-x-auto mb-6">
+    <table class="w-full bg-white rounded-lg shadow text-sm">
+        <thead>
+            <tr class="bg-brand-600 text-white text-left">
+                <th class="px-3 py-2 font-semibold">Categoría</th>
+                <th class="px-3 py-2 font-semibold text-right">Cantidad</th>
+                <th class="px-3 py-2 font-semibold text-right">Recaudación</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($reporteInscritos['porCategoria']['filas'] as $fila)
+                <tr class="border-t border-slate-100">
+                    <td class="px-3 py-2">{{ $fila['nombre'] }}</td>
+                    <td class="px-3 py-2 text-right">{{ $fila['cantidad'] }}</td>
+                    <td class="px-3 py-2 text-right">${{ number_format($fila['recaudacion'], 2) }}</td>
+                </tr>
+            @empty
+                <tr><td class="px-3 py-2 text-slate-500" colspan="3">Todavía no hay inscripciones pagadas.</td></tr>
+            @endforelse
+            <tr class="border-t border-slate-200 font-semibold bg-slate-50">
+                <td class="px-3 py-2">Total</td>
+                <td class="px-3 py-2 text-right">{{ $reporteInscritos['porCategoria']['totalCantidad'] }}</td>
+                <td class="px-3 py-2 text-right">${{ number_format($reporteInscritos['porCategoria']['totalRecaudacion'], 2) }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+{{-- Poleras (sexo/talla) --}}
+<h2 class="font-bold text-sm text-brand-600 mb-2">Reporte de poleras</h2>
+<div class="overflow-x-auto">
+    <table class="w-full bg-white rounded-lg shadow text-sm max-w-md">
+        <thead>
+            <tr class="bg-brand-600 text-white text-left">
+                <th class="px-3 py-2 font-semibold">Sexo</th>
+                <th class="px-3 py-2 font-semibold">Talla</th>
+                <th class="px-3 py-2 font-semibold text-right">Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($reporteInscritos['poleras']['filas'] as $fila)
+                <tr class="border-t border-slate-100">
+                    <td class="px-3 py-2">{{ $fila['sexo'] }}</td>
+                    <td class="px-3 py-2">{{ $fila['talla'] }}</td>
+                    <td class="px-3 py-2 text-right">{{ $fila['cantidad'] }}</td>
+                </tr>
+            @empty
+                <tr><td class="px-3 py-2 text-slate-500" colspan="3">Nadie pagado eligió polera todavía.</td></tr>
+            @endforelse
+            <tr class="border-t border-slate-200 font-semibold bg-slate-50">
+                <td class="px-3 py-2" colspan="2">Total</td>
+                <td class="px-3 py-2 text-right">{{ $reporteInscritos['poleras']['total'] }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+@endif
 @endsection

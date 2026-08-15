@@ -36,6 +36,10 @@ class DashboardInscripcionesController extends Controller
             // Balance del presupuesto — ver BalanceEventoData del lado
             // ApiRestEvent, sesión 11/08/2026.
             'balance' => $response->json('balance'),
+            // Reporte de inscritos por modalidad/categoría + poleras — ver
+            // App\Support\ReporteInscritosData del lado ApiRestEvent,
+            // sesión 15/08/2026.
+            'reporteInscritos' => $response->json('reporteInscritos'),
         ]);
     }
 

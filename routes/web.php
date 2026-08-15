@@ -23,6 +23,7 @@ use App\Http\Controllers\LiquidacionController;
 use App\Http\Controllers\NumeracionController;
 use App\Http\Controllers\OrganizadorController;
 use App\Http\Controllers\ParticipantesController;
+use App\Http\Controllers\ParticipantesDetalleController;
 use App\Http\Controllers\PresupuestoCategoriaController;
 use App\Http\Controllers\PresupuestoController;
 use App\Http\Controllers\PromoCodeController;
@@ -165,6 +166,12 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::get('/eventos/{evento}/dashboard', [DashboardInscripcionesController::class, 'show'])->name('eventos.dashboard');
     Route::get('/eventos/{evento}/participantes', [ParticipantesController::class, 'index'])->name('participantes.index');
     Route::patch('/eventos/{evento}/participantes/{participante}', [ParticipantesController::class, 'update'])->name('participantes.update');
+    // Reporte detallado de inscritos (15/08/2026) — drill-down desde las
+    // tarjetas del Dashboard, ver ParticipantesDetalleController. Rutas
+    // separadas a propósito de `participantes.index` (esa es la pantalla
+    // de edición de contacto, otra UX/contrato).
+    Route::get('/eventos/{evento}/participantes/detalle', [ParticipantesDetalleController::class, 'index'])->name('participantes.detalle');
+    Route::get('/eventos/{evento}/participantes/detalle/csv', [ParticipantesDetalleController::class, 'csvDownload'])->name('participantes.detalle.csv');
 
     // Presupuesto de un evento (control financiero del organizador) —
     // mismo criterio de permisos que Numeración/Participantes: super_admin
