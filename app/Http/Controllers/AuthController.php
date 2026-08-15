@@ -35,6 +35,15 @@ class AuthController extends Controller
             'admin_user'  => $data['admin'],
         ]);
 
+        // Caja de cobro presencial (14/08/2026) — un cajero no tiene
+        // dashboard, va directo a su módulo. Ver
+        // ApiRestEvent/brain/api_rest_event/PLAN-CAJA-COBRO-PRESENCIAL-14082026.md.
+        if (($data['admin']['rol'] ?? null) === 'cajero') {
+            return $data['admin']['evento_id']
+                ? redirect()->route('caja.index', $data['admin']['evento_id'])
+                : redirect()->route('login')->withErrors(['email' => 'Tu usuario cajero no tiene un evento asignado — contactá a un administrador.']);
+        }
+
         return redirect()->route('dashboard');
     }
 

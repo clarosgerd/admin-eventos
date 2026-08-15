@@ -31,11 +31,15 @@
         </div>
         <div>
             <label class="block text-sm font-semibold mb-1" for="rol">Rol</label>
-            <select name="rol" id="rol" required onchange="document.getElementById('evento_id_wrap').classList.toggle('hidden', this.value !== 'admin')"
+            <select name="rol" id="rol" required onchange="document.getElementById('evento_id_wrap').classList.toggle('hidden', this.value === 'super_admin')"
                     class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
                 @php($rolActual = old('rol', $usuario['rol'] ?? 'admin'))
                 <option value="admin" @selected($rolActual === 'admin')>admin (scoped a un evento)</option>
                 <option value="super_admin" @selected($rolActual === 'super_admin')>super_admin (ve todo)</option>
+                {{-- Caja de cobro presencial (14/08/2026) — permisos mínimos,
+                     solo el módulo de Caja de su evento asignado. Ver
+                     ApiRestEvent/brain/api_rest_event/PLAN-CAJA-COBRO-PRESENCIAL-14082026.md. --}}
+                <option value="cajero" @selected($rolActual === 'cajero')>cajero (solo caja, scoped a un evento)</option>
             </select>
         </div>
         <div id="evento_id_wrap" class="{{ $rolActual === 'super_admin' ? 'hidden' : '' }}">

@@ -45,6 +45,8 @@
                 @endif
                 <a href="{{ route('lista-espera.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Lista de espera</a>
                 <a href="{{ route('bodega.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Bodega de stock</a>
+                <a href="{{ route('caja.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Caja de cobro presencial</a>
+                <a href="{{ route('caja.cierres', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Cierres de caja</a>
                 <a href="{{ route('delivery.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Delivery</a>
                 @if (($evento['tipoEvento'] ?? null) === 'Congreso / No aplica')
                     <a href="{{ route('sesiones.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Sesiones de congreso</a>

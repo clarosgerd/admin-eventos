@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAdminAuthenticated;
 use App\Http\Middleware\EnsureSuperAdminSession;
+use App\Http\Middleware\RestrictCajeroToCaja;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin.auth'       => EnsureAdminAuthenticated::class,
             'admin.superadmin' => EnsureSuperAdminSession::class,
+            'admin.restrict-cajero' => RestrictCajeroToCaja::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

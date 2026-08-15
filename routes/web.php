@@ -6,6 +6,7 @@ use App\Http\Controllers\AgendaItemController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuspiciadorController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\CategoryPricePeriodController;
 use App\Http\Controllers\ChronoTrackController;
@@ -36,9 +37,28 @@ use Illuminate\Support\Facades\Route;
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware('admin.auth')->group(function () {
+Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Caja de cobro presencial (14/08/2026) — ver
+    // ApiRestEvent/brain/api_rest_event/PLAN-CAJA-COBRO-PRESENCIAL-14082026.md.
+    // Accesible por admin/cajero/super_admin — el scoping real (cajero
+    // solo su propio evento) lo valida ApiRestEvent.
+    Route::get('/eventos/{evento}/caja', [CajaController::class, 'index'])->name('caja.index');
+    Route::post('/eventos/{evento}/caja/turno/abrir', [CajaController::class, 'abrirTurno'])->name('caja.turno.abrir');
+    Route::post('/eventos/{evento}/caja/turno/{turno}/cerrar', [CajaController::class, 'cerrarTurno'])->name('caja.turno.cerrar');
+    Route::get('/eventos/{evento}/caja/nueva', [CajaController::class, 'nueva'])->name('caja.nueva');
+    Route::post('/eventos/{evento}/caja/nueva', [CajaController::class, 'storeNueva'])->name('caja.nueva.store');
+    Route::get('/eventos/{evento}/caja/buscar', [CajaController::class, 'buscarPage'])->name('caja.buscar');
+    Route::get('/eventos/{evento}/caja/buscar/resultados', [CajaController::class, 'buscar'])->name('caja.buscar.resultados');
+    Route::post('/eventos/{evento}/caja/registrations/{referencia}/cobrar-pendiente', [CajaController::class, 'cobrarPendiente'])->name('caja.cobrar-pendiente');
+    Route::get('/eventos/{evento}/caja/registrations/{referencia}/editar', [CajaController::class, 'editar'])->name('caja.editar');
+    Route::post('/eventos/{evento}/caja/registrations/{referencia}/editar', [CajaController::class, 'storeEditar'])->name('caja.editar.store');
+    // Cierres de caja — el control pedido por el stakeholder; solo
+    // admin/super_admin en la práctica (ApiRestEvent rechaza a un cajero
+    // con 403, ver assertCanWriteEvento()).
+    Route::get('/eventos/{evento}/caja/cierres', [CajaController::class, 'cierres'])->name('caja.cierres');
 
     // Publicar: alcanzable por super_admin y por un admin scoped a su
     // propio evento — el scoping real lo valida ApiRestEvent
