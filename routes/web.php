@@ -8,6 +8,12 @@ use App\Http\Controllers\AuspiciadorController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\CiudadController;
+use App\Http\Controllers\PaisController;
+use App\Http\Controllers\RelacionContactoController;
+use App\Http\Controllers\SexoController;
+use App\Http\Controllers\SubtipoEventoController;
+use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\CategoryPricePeriodController;
 use App\Http\Controllers\ChronoTrackController;
 use App\Http\Controllers\CoordinateController;
@@ -236,5 +242,19 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
         // Catálogo de rubros del presupuesto — solo super_admin (config
         // global, igual que Socios).
         Route::resource('presupuesto-categorias', PresupuestoCategoriaController::class)->only(['index', 'store', 'update', 'destroy']);
+
+        // Catálogos globales (15/08/2026) — País/Ciudad/Sexo/Tipo de
+        // evento/Subtipo de evento/Relación de contacto, todos config
+        // global, solo super_admin. Ver
+        // elascenso/event/brain/PLAN-CATALOGOS-GLOBALES-15082026.md.
+        Route::view('/catalogos', 'catalogos.index')->name('catalogos.index');
+        Route::prefix('catalogos')->name('catalogos.')->group(function () {
+            Route::resource('paises', PaisController::class)->only(['index', 'store', 'update', 'destroy']);
+            Route::resource('ciudades', CiudadController::class)->only(['index', 'store', 'update', 'destroy']);
+            Route::resource('sexos', SexoController::class)->only(['index', 'store', 'update', 'destroy']);
+            Route::resource('tipos-evento', TipoEventoController::class)->only(['index', 'store', 'update', 'destroy']);
+            Route::resource('subtipos-evento', SubtipoEventoController::class)->only(['index', 'store', 'update', 'destroy']);
+            Route::resource('relaciones-contacto', RelacionContactoController::class)->only(['index', 'store', 'update', 'destroy']);
+        });
     });
 });

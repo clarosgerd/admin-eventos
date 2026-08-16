@@ -26,6 +26,7 @@
                 <a class="hover:underline" href="{{ route('socios.index') }}">Socios</a>
                 <a class="hover:underline" href="{{ route('organizadores.index') }}">Organizadores</a>
                 <a class="hover:underline" href="{{ route('presupuesto-categorias.index') }}">Categorías de presupuesto</a>
+                <a class="hover:underline" href="{{ route('catalogos.index') }}">Catálogos</a>
             @endif
         </nav>
         <form method="POST" action="{{ route('logout') }}">
