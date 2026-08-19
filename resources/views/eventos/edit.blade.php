@@ -246,6 +246,24 @@
                                value="{{ old('feePctPorcentaje', number_format(($evento['fee_pct'] ?? 0.05) * 100, 2)) }}"
                                class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
                     </div>
+
+                    {{-- Cargo de servicio sobre talleres (19/08/2026) — pedido:
+                         "necesito una opción que no apliquemos el fee a los
+                         talleres". Default true (mantiene el comportamiento
+                         recién confirmado: fee sobre inscripción + talleres);
+                         el super_admin lo puede apagar por evento. Souvenirs y
+                         donación nunca entraron a la base del fee, esto no
+                         cambia eso. --}}
+                    <div class="col-span-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold">
+                            <input type="checkbox" name="feeIncluyeTalleres" value="1"
+                                   {{ old('feeIncluyeTalleres', $evento['feeIncluyeTalleres'] ?? true) ? 'checked' : '' }}>
+                            Aplicar el cargo de servicio también a los talleres
+                            <span class="font-normal text-slate-500">
+                                (si se destilda, el cargo se calcula solo sobre la inscripción — igual que souvenirs/donación, que nunca lo incluyen)
+                            </span>
+                        </label>
+                    </div>
                 @endif
 
                 {{-- Inscripción en BOB y USD (18/08/2026) — ver

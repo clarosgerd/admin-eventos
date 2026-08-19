@@ -305,6 +305,15 @@ class EventoController extends Controller
         // llegara de alguien más, esto solo evita el viaje de red.
         if ($request->filled('feePctPorcentaje')) {
             $payload['feePct'] = round(((float) $request->input('feePctPorcentaje')) / 100, 4);
+
+            // Cargo de servicio sobre talleres (19/08/2026) — mismo campo
+            // super_admin-only, vive en el mismo bloque @if de la vista
+            // que feePctPorcentaje, así que se usa esa presencia como
+            // señal de "esta request sí incluye esta sección". El
+            // checkbox solo llega si está tildado; si no vino, forzamos
+            // false para que destildear también persista (mismo criterio
+            // que aceptaUsd/talleresConCosto).
+            $payload['feeIncluyeTalleres'] = $request->boolean('feeIncluyeTalleres');
         }
 
         // Inscripción en BOB y USD (18/08/2026) — ver
