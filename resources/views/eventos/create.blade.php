@@ -41,7 +41,7 @@
             </div>
             <div class="col-span-2">
                 <label class="block text-sm font-semibold mb-1">Descripción larga</label>
-                <textarea name="longDescription" rows="3"
+                <textarea name="longDescription" rows="8" maxlength="10000"
                           class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">{{ old('longDescription') }}</textarea>
             </div>
             <div>

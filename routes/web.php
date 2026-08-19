@@ -10,6 +10,7 @@ use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\CiudadController;
 use App\Http\Controllers\PaisController;
+use App\Http\Controllers\FormasPagoController;
 use App\Http\Controllers\RelacionContactoController;
 use App\Http\Controllers\SexoController;
 use App\Http\Controllers\SubtipoEventoController;
@@ -245,6 +246,12 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
         // CRUD de organizadores — config global (dueños de eventos), solo
         // super_admin. Ver PRD-organizadores-crud.md (sesión 11/08/2026).
         Route::resource('organizadores', OrganizadorController::class)->only(['index', 'store', 'update', 'destroy']);
+
+        // Formas de pago activas por organizador (19/08/2026) — ver
+        // elascenso/event/brain/PLAN-INTEGRACION-PAGO-MERU-19082026.md.
+        Route::get('/organizadores/{organizador}/formas-pago', [OrganizadorController::class, 'formasPago'])->name('organizadores.formas-pago');
+        Route::put('/organizadores/{organizador}/formas-pago', [OrganizadorController::class, 'updateFormasPago'])->name('organizadores.formas-pago.update');
+
         Route::get('/eventos/{evento}/liquidacion', [LiquidacionController::class, 'show'])->name('liquidacion.show');
         Route::post('/eventos/{evento}/liquidacion', [LiquidacionController::class, 'store'])->name('liquidacion.store');
 
@@ -264,6 +271,10 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
             Route::resource('tipos-evento', TipoEventoController::class)->only(['index', 'store', 'update', 'destroy']);
             Route::resource('subtipos-evento', SubtipoEventoController::class)->only(['index', 'store', 'update', 'destroy']);
             Route::resource('relaciones-contacto', RelacionContactoController::class)->only(['index', 'store', 'update', 'destroy']);
+
+            // Formas de pago (19/08/2026) — ver
+            // elascenso/event/brain/PLAN-INTEGRACION-PAGO-MERU-19082026.md.
+            Route::resource('formas-pago', FormasPagoController::class)->only(['index', 'store', 'update', 'destroy']);
         });
     });
 });

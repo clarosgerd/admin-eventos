@@ -134,7 +134,7 @@
                 </div>
                 <div class="col-span-2">
                     <label class="block text-sm font-semibold mb-1">Descripción larga</label>
-                    <textarea name="longDescription" rows="3"
+                    <textarea name="longDescription" rows="8" maxlength="10000"
                               class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">{{ old('longDescription', $evento['longDescription']) }}</textarea>
                 </div>
                 <div>
@@ -263,6 +263,22 @@
                         <span class="font-normal text-slate-500">
                             (cuando está activo, el participante elige BOB o USD en el paso de pago;
                             USD solo funciona con QR / Multipago)
+                        </span>
+                    </label>
+                </div>
+
+                {{-- Congresos con talleres (19/08/2026) — sin esto, el flag solo se
+                     podía prender escribiendo directo en la BD; sin él, cualquier
+                     taller con precio cargado se cobra $0 igual
+                     (ResolverPrecioTallerData, ApiRestEvent). --}}
+                <div class="col-span-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold">
+                        <input type="checkbox" name="talleresConCosto" value="1"
+                               {{ !empty($evento['talleresConCosto']) ? 'checked' : '' }}>
+                        Talleres con costo
+                        <span class="font-normal text-slate-500">
+                            (si está apagado, todos los talleres del evento son gratis aunque
+                            tengan un precio cargado en la pestaña "Talleres")
                         </span>
                     </label>
                 </div>

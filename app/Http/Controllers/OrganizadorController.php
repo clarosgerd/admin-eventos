@@ -57,6 +57,44 @@ class OrganizadorController extends Controller
         return redirect()->route('organizadores.index')->with('status', 'Organizador eliminado correctamente.');
     }
 
+    /**
+     * Formas de pago activas para este organizador (19/08/2026) — ver
+     * elascenso/event/brain/PLAN-INTEGRACION-PAGO-MERU-19082026.md. Llama a
+     * /organizadores/{id}/formas-pago de ApiRestEvent, que ya devuelve el
+     * catálogo completo (sistema + propias) con el estado de selección de
+     * cada una, para no tener que cruzar nada acá.
+     */
+    public function formasPago(ApiRestEventClient $client, int $organizador): View
+    {
+        $orgResponse = $client->forward('GET', "/organizadores/{$organizador}");
+        $organizadorData = $orgResponse?->json('data') ?? ['id' => $organizador, 'razon_social' => "Organizador #{$organizador}"];
+
+        $fpResponse = $client->forward('GET', "/organizadores/{$organizador}/formas-pago");
+        $formasPago = $fpResponse?->json('data') ?? [];
+        $usandoDefault = $fpResponse?->json('usandoDefaultDelSistema') ?? false;
+
+        return view('organizadores.formas-pago', [
+            'organizadorData' => $organizadorData,
+            'organizadorId' => $organizador,
+            'formasPago' => $formasPago,
+            'usandoDefault' => $usandoDefault,
+        ]);
+    }
+
+    public function updateFormasPago(Request $request, ApiRestEventClient $client, int $organizador): RedirectResponse
+    {
+        $response = $client->forward('PUT', "/organizadores/{$organizador}/formas-pago", body: [
+            'forma_pago_ids' => $request->input('forma_pago_ids', []),
+        ]);
+
+        if (!$response || !$response->json('success')) {
+            return back()->withErrors($this->extractErrors($response));
+        }
+
+        return redirect()->route('organizadores.formas-pago', $organizador)
+            ->with('status', 'Formas de pago actualizadas correctamente.');
+    }
+
     private function payload(Request $request): array
     {
         $data = $request->only(

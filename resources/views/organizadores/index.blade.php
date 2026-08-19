@@ -70,6 +70,7 @@
                             @method('PUT')
                         </form>
                         <button type="submit" form="org-form-{{ $org['id'] }}" class="text-brand-600 hover:underline">Guardar</button>
+                        <a href="{{ route('organizadores.formas-pago', $org['id']) }}" class="text-brand-600 hover:underline">Formas de pago</a>
                         <form method="POST" action="{{ route('organizadores.destroy', $org['id']) }}" class="inline"
                               onsubmit="return confirm('¿Eliminar este organizador? Solo se puede si no tiene eventos asociados.')">
                             @csrf

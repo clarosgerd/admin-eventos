@@ -141,6 +141,11 @@ class EventoController extends Controller
         // si no viene en el form (eventos nuevos nacen BOB-only).
         $payload['aceptaUsd'] = $request->boolean('aceptaUsd');
 
+        // Congresos con talleres (19/08/2026) — sin checkbox en create.blade.php
+        // a propósito (los talleres se cargan después de crear el evento, vía
+        // la pestaña "Talleres"); default false, igual que aceptaUsd.
+        $payload['talleresConCosto'] = $request->boolean('talleresConCosto');
+
         $response = $client->forward('POST', '/event', body: $payload);
 
         if (!$response || !$response->json('success')) {
@@ -310,6 +315,12 @@ class EventoController extends Controller
         // tipos de admin pueden mandarlo (a diferencia de feePct, que es
         // super_admin-only).
         $payload['aceptaUsd'] = $request->boolean('aceptaUsd');
+
+        // Congresos con talleres (19/08/2026) — mismo motivo que aceptaUsd:
+        // sin el checkbox marcado no se distingue "no vino el campo" de "lo
+        // destildaron", así que se manda siempre (forzando false si no
+        // vino tildado) para que destildear también persista.
+        $payload['talleresConCosto'] = $request->boolean('talleresConCosto');
 
         $response = $client->forward('PUT', "/event/{$evento}", body: $payload);
 

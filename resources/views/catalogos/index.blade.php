@@ -34,5 +34,9 @@
         <div class="font-semibold">Relación de contacto</div>
         <div class="text-xs text-slate-500 mt-1">Relación del contacto de emergencia del participante.</div>
     </a>
+    <a href="{{ route('catalogos.formas-pago.index') }}" class="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+        <div class="font-semibold">Formas de pago</div>
+        <div class="text-xs text-slate-500 mt-1">Catálogo del sistema (SIP, Multipago, Meru...). Activarlas por organizador se hace desde Organizadores.</div>
+    </a>
 </div>
 @endsection
