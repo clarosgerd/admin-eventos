@@ -19,7 +19,7 @@ use Illuminate\Http\Request;
 class FormTypeController extends Controller
 {
     private const FIELDS = [
-        'name', 'icon', 'description', 'tipo', 'cupo_total', 'precio_base',
+        'name', 'icon', 'imagen_url', 'description', 'tipo', 'cupo_total', 'precio_base',
         'costo_edicion', 'tiempo_expiracion_min', 'color',
     ];
 

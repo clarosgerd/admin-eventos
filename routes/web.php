@@ -35,6 +35,7 @@ use App\Http\Controllers\PresupuestoController;
 use App\Http\Controllers\PromoCodeController;
 use App\Http\Controllers\AsistenciaSesionController;
 use App\Http\Controllers\SesionCongresoController;
+use App\Http\Controllers\TallerCongresoController;
 use App\Http\Controllers\RegistroManualController;
 use App\Http\Controllers\RouteController as PanelRouteController;
 use App\Http\Controllers\SocioController;
@@ -204,6 +205,14 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     // elascenso/event/brain/PLAN-ASIGNACION-STAFF-SESIONES-CONGRESO-13082026.md.
     Route::post('/eventos/{evento}/sesiones/{sesion}/staff', [SesionCongresoController::class, 'assignStaff'])->name('sesiones.staff.store');
     Route::delete('/eventos/{evento}/sesiones/{sesion}/staff/{participante}', [SesionCongresoController::class, 'unassignStaff'])->name('sesiones.staff.destroy');
+
+    // Congresos con talleres (18/08/2026) — ver
+    // brain/PLAN-CONGRESOS-TALLERES-HORARIOS-IMPLEMENTACION.md. Mismo
+    // criterio de permisos que sesiones (super_admin o admin scoped).
+    Route::get('/eventos/{evento}/talleres', [TallerCongresoController::class, 'index'])->name('talleres.index');
+    Route::post('/eventos/{evento}/talleres', [TallerCongresoController::class, 'store'])->name('talleres.store');
+    Route::put('/eventos/{evento}/talleres/{taller}', [TallerCongresoController::class, 'update'])->name('talleres.update');
+    Route::delete('/eventos/{evento}/talleres/{taller}', [TallerCongresoController::class, 'destroy'])->name('talleres.destroy');
 
     // Sync de resultados desde ChronoTrack — ver
     // brain/groovy-chasing-ladybug.md Parte B. Mismo criterio de permisos

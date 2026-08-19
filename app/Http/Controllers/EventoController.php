@@ -115,7 +115,7 @@ class EventoController extends Controller
             $request->only(
                 'name', 'description', 'longDescription', 'date', 'localTime', 'location',
                 'status', 'video', 'image', 'colorHex', 'deslinde', 'deslinde_pdf_url',
-                'tipo_evento_id', 'subtipo_evento_id', 'organizador_id'
+                'tipo_evento_id', 'subtipo_evento_id', 'organizador_id', 'url_slug'
             ),
             [
                 'categories'    => $categories,
@@ -135,6 +135,11 @@ class EventoController extends Controller
         if (($payload['organizador_id'] ?? null) === '') {
             $payload['organizador_id'] = null;
         }
+
+        // Inscripción en BOB y USD (18/08/2026) — ver
+        // brain/PLAN-INSCRIPCION-BOB-USD-IMPLEMENTACION.md. Default false
+        // si no viene en el form (eventos nuevos nacen BOB-only).
+        $payload['aceptaUsd'] = $request->boolean('aceptaUsd');
 
         $response = $client->forward('POST', '/event', body: $payload);
 
@@ -296,6 +301,15 @@ class EventoController extends Controller
         if ($request->filled('feePctPorcentaje')) {
             $payload['feePct'] = round(((float) $request->input('feePctPorcentaje')) / 100, 4);
         }
+
+        // Inscripción en BOB y USD (18/08/2026) — ver
+        // brain/PLAN-INSCRIPCION-BOB-USD-IMPLEMENTACION.md. El checkbox
+        // del formulario solo llega si el usuario lo tildó; si no viene,
+        // forzamos false para que uncheckear también persista (en update
+        // no se distingue "no mandó el campo" de "lo destildó"). Ambos
+        // tipos de admin pueden mandarlo (a diferencia de feePct, que es
+        // super_admin-only).
+        $payload['aceptaUsd'] = $request->boolean('aceptaUsd');
 
         $response = $client->forward('PUT', "/event/{$evento}", body: $payload);
 

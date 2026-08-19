@@ -22,6 +22,19 @@
                        class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
             </div>
             <div class="col-span-2">
+                <label class="block text-sm font-semibold mb-1">
+                    Link directo (slug)
+                    <span class="font-normal text-slate-500">(opcional — si lo dejás vacío se genera solo desde el nombre)</span>
+                </label>
+                <input type="text" name="url_slug" value="{{ old('url_slug') }}"
+                       placeholder="ej. maraton-santa-cruz-2026" pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                       title="Solo minúsculas, números y guiones (sin espacios ni acentos)"
+                       class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                <p class="text-xs text-slate-500 mt-1">
+                    Se usa para el link que compartís del evento (?evento=slug) en vez del id numérico.
+                </p>
+            </div>
+            <div class="col-span-2">
                 <label class="block text-sm font-semibold mb-1">Descripción corta</label>
                 <input type="text" name="description" value="{{ old('description') }}" required maxlength="500"
                        class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
@@ -257,6 +270,13 @@
             <div>
                 <label class="block text-xs font-semibold mb-1">Ícono (emoji)</label>
                 <input type="text" name="formTypes[__FT_INDEX__][icon]" value="🏃" maxlength="10"
+                       class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">
+                    Imagen (URL) <span class="font-normal text-slate-500">(opcional, reemplaza al ícono)</span>
+                </label>
+                <input type="text" name="formTypes[__FT_INDEX__][imagen_url]" placeholder="https://…"
                        class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
             </div>
             <div class="col-span-2">

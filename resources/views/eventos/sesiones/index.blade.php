@@ -10,6 +10,10 @@
         <p class="text-sm text-slate-500">Ponencias/talleres con sala, horario y cupo propios.</p>
     </div>
     <div class="flex gap-2">
+        {{-- Congresos con talleres (18/08/2026) — ver brain/PLAN-CONGRESOS-TALLERES-HORARIOS-IMPLEMENTACION.md --}}
+        <a href="{{ route('talleres.index', $evento['id']) }}" class="text-sm text-brand-600 hover:underline self-center">
+            Gestionar talleres →
+        </a>
         <a href="{{ route('sesiones.reporte', $evento['id']) }}" class="text-sm text-brand-600 hover:underline self-center">
             Ver reporte de asistencia →
         </a>
@@ -24,11 +28,13 @@
         <thead class="bg-slate-50 text-left">
             <tr>
                 <th class="px-4 py-2">Título</th>
+                <th class="px-4 py-2">Taller</th>
                 <th class="px-4 py-2">Ponente</th>
                 <th class="px-4 py-2">Sala</th>
                 <th class="px-4 py-2">Fecha</th>
                 <th class="px-4 py-2">Horario</th>
                 <th class="px-4 py-2">Cupo</th>
+                <th class="px-4 py-2">Precio</th>
                 <th class="px-4 py-2">Staff asignado</th>
                 <th class="px-4 py-2">Ponentes vinculados</th>
                 <th class="px-4 py-2"></th>
@@ -46,11 +52,30 @@
                 @endphp
                 <tr class="border-t border-slate-100 align-top">
                     <td class="px-4 py-2 font-semibold">{{ $sesion['titulo'] }}</td>
+                    {{-- Congresos con talleres (18/08/2026) — columna Taller --}}
+                    <td class="px-4 py-2">
+                        @if (!empty($sesion['taller_id']))
+                            @php $tallerDeSesion = collect($talleres ?? [])->firstWhere('id', $sesion['taller_id']); @endphp
+                            {{ $tallerDeSesion['nombre'] ?? ('#'.$sesion['taller_id']) }}
+                        @else
+                            <span class="text-xs text-slate-400">—</span>
+                        @endif
+                    </td>
                     <td class="px-4 py-2">{{ $sesion['ponente'] ?? '—' }}</td>
                     <td class="px-4 py-2">{{ $sesion['sala'] ?? '—' }}</td>
                     <td class="px-4 py-2">{{ \Carbon\Carbon::parse($sesion['fecha'])->format('d/m/Y') }}</td>
                     <td class="px-4 py-2">{{ substr($sesion['hora_inicio'], 0, 5) }}–{{ substr($sesion['hora_fin'], 0, 5) }}</td>
                     <td class="px-4 py-2">{{ $sesion['cupo'] ?? 'Sin límite' }}</td>
+                    {{-- Override de precio por sesión (si null, hereda del taller) --}}
+                    <td class="px-4 py-2">
+                        @if ($sesion['precio'] !== null)
+                            Bs. {{ number_format((float) $sesion['precio'], 2) }}
+                        @elseif (!empty($sesion['taller_id']))
+                            <span class="text-xs text-slate-500">del taller</span>
+                        @else
+                            <span class="text-xs text-slate-400">—</span>
+                        @endif
+                    </td>
                     <td class="px-4 py-2">
                         {{-- Asignación de staff/ayudantes (13/08/2026) — ver
                              brain/PLAN-ASIGNACION-STAFF-SESIONES-CONGRESO-13082026.md --}}
@@ -163,6 +188,18 @@
                        class="border border-slate-300 rounded px-2 py-1.5 w-full">
             </div>
         </div>
+        {{-- Congresos con talleres (18/08/2026) — selector de taller (opcional). --}}
+        <div>
+            <label class="block text-sm font-medium mb-1">Taller <span class="text-slate-400">(opcional; dejar vacío = ponencia suelta)</span></label>
+            <select name="taller_id" class="border border-slate-300 rounded px-2 py-1.5 w-full">
+                <option value="">— Sin taller —</option>
+                @foreach (($talleres ?? []) as $taller)
+                    <option value="{{ $taller['id'] }}" @selected(old('taller_id') == $taller['id'])>
+                        {{ $taller['nombre'] }} ({{ $taller['modalidad'] === 'REQUIRED' ? 'Obligatorio' : 'Opcional' }})
+                    </option>
+                @endforeach
+            </select>
+        </div>
         <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="block text-sm font-medium mb-1">Sala / track</label>
@@ -174,6 +211,12 @@
                 <input type="number" name="cupo" min="1" value="{{ old('cupo') }}"
                        class="border border-slate-300 rounded px-2 py-1.5 w-full">
             </div>
+        </div>
+        {{-- Override de precio por sesión (si se deja vacío, hereda del taller). --}}
+        <div>
+            <label class="block text-sm font-medium mb-1">Precio <span class="text-slate-400">(opcional; hereda del taller)</span></label>
+            <input type="number" step="0.01" min="0" name="precio" value="{{ old('precio') }}"
+                   class="border border-slate-300 rounded px-2 py-1.5 w-full">
         </div>
         <div class="grid grid-cols-3 gap-3">
             <div>

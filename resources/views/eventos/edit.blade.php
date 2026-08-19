@@ -115,6 +115,19 @@
                            class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
                 </div>
                 <div class="col-span-2">
+                    <label class="block text-sm font-semibold mb-1">
+                        Link directo (slug)
+                        <span class="font-normal text-slate-500">(dejalo vacío para no tocarlo)</span>
+                    </label>
+                    <input type="text" name="url_slug" value="{{ old('url_slug', $evento['urlSlug'] ?? '') }}"
+                           placeholder="ej. maraton-santa-cruz-2026" pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                           title="Solo minúsculas, números y guiones (sin espacios ni acentos)"
+                           class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                    <p class="text-xs text-slate-500 mt-1">
+                        Se usa para el link que compartís del evento (?evento=slug) en vez del id numérico.
+                    </p>
+                </div>
+                <div class="col-span-2">
                     <label class="block text-sm font-semibold mb-1">Descripción corta</label>
                     <input type="text" name="description" value="{{ old('description', $evento['description']) }}" required maxlength="500"
                            class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
@@ -234,6 +247,25 @@
                                class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
                     </div>
                 @endif
+
+                {{-- Inscripción en BOB y USD (18/08/2026) — ver
+                     brain/PLAN-INSCRIPCION-BOB-USD-IMPLEMENTACION.md. El
+                     organizador habilita pago en USD (extranjeros). Default
+                     off: eventos existentes siguen BOB-only sin cambio.
+                     El frontend solo renderiza el selector USD si esto es
+                     true; el backend (ApiRestEvent CrearInscripcionAction)
+                     lo enforcea por las dudas. --}}
+                <div class="col-span-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold">
+                        <input type="checkbox" name="aceptaUsd" value="1"
+                               {{ !empty($evento['aceptaUsd']) ? 'checked' : '' }}>
+                        Acepta pago en USD (extranjeros)
+                        <span class="font-normal text-slate-500">
+                            (cuando está activo, el participante elige BOB o USD en el paso de pago;
+                            USD solo funciona con QR / Multipago)
+                        </span>
+                    </label>
+                </div>
                 <div class="col-span-2">
                     <label class="block text-sm font-semibold mb-1">Deslinde de responsabilidad</label>
                     <textarea name="deslinde" rows="2"
@@ -336,6 +368,12 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1">Ícono</label>
                             <input type="text" name="icon" value="{{ $formType['icon'] }}" maxlength="10" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">
+                                Imagen (URL) <span class="font-normal text-slate-500">(reemplaza al ícono)</span>
+                            </label>
+                            <input type="text" name="imagen_url" value="{{ $formType['imagenUrl'] ?? '' }}" placeholder="https://…" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                         </div>
                         <div class="col-span-2">
                             <label class="block text-xs font-semibold mb-1">Descripción</label>

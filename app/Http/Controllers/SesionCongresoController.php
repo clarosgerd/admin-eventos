@@ -27,6 +27,12 @@ class SesionCongresoController extends Controller
         $sesionesResponse = $client->forward('GET', "/event/{$evento}/sesiones");
         $sesiones = $sesionesResponse?->json('data') ?? [];
 
+        // Congresos con talleres (18/08/2026) — ver
+        // brain/PLAN-CONGRESOS-TALLERES-HORARIOS-IMPLEMENTACION.md. Lista
+        // de talleres del evento para el selector del formulario de sesión.
+        $talleresResponse = $client->forward('GET', "/event/{$evento}/talleres");
+        $talleres = $talleresResponse?->json('data') ?? [];
+
         // Staff disponible (13/08/2026) — participantes de form_types con
         // es_staff=true, para el selector "+ Asignar ayudante" de cada
         // sesión. Ver brain/PLAN-ASIGNACION-STAFF-SESIONES-CONGRESO-13082026.md.
@@ -42,6 +48,7 @@ class SesionCongresoController extends Controller
         return view('eventos.sesiones.index', [
             'evento' => $eventoData,
             'sesiones' => $sesiones,
+            'talleres' => $talleres,
             'staffDisponible' => $staffDisponible,
             'ponentesDisponibles' => $ponentesDisponibles,
         ]);
@@ -51,9 +58,19 @@ class SesionCongresoController extends Controller
     {
         $this->assertCanViewEvento($evento);
 
-        $response = $client->forward('POST', "/event/{$evento}/sesiones", body: $request->only(
-            'titulo', 'ponente', 'ponente_cargo', 'sala', 'fecha', 'hora_inicio', 'hora_fin', 'cupo', 'requiere_inscripcion'
-        ));
+        // Congresos con talleres (18/08/2026) — ver
+        // brain/PLAN-CONGRESOS-TALLERES-HORARIOS-IMPLEMENTACION.md. Se
+        // agregan taller_id y precio (override por sesión) al payload
+        // que se reenvía a ApiRestEvent. Se serializa el checkbox de
+        // taller a '' si no viene para permitir desvincular.
+        $body = $request->only(
+            'titulo', 'ponente', 'ponente_cargo', 'sala', 'fecha',
+            'hora_inicio', 'hora_fin', 'cupo', 'requiere_inscripcion'
+        );
+        $body['taller_id'] = $request->input('taller_id') ?: null;
+        $body['precio']    = $request->input('precio');
+
+        $response = $client->forward('POST', "/event/{$evento}/sesiones", body: $body);
 
         if (!$response || !$response->json('success')) {
             return back()->withInput()->withErrors($this->extractErrors($response));
@@ -66,9 +83,14 @@ class SesionCongresoController extends Controller
     {
         $this->assertCanViewEvento($evento);
 
-        $response = $client->forward('PUT', "/event/{$evento}/sesiones/{$sesion}", body: $request->only(
-            'titulo', 'ponente', 'ponente_cargo', 'sala', 'fecha', 'hora_inicio', 'hora_fin', 'cupo', 'requiere_inscripcion', 'activa'
-        ));
+        $body = $request->only(
+            'titulo', 'ponente', 'ponente_cargo', 'sala', 'fecha',
+            'hora_inicio', 'hora_fin', 'cupo', 'requiere_inscripcion', 'activa'
+        );
+        $body['taller_id'] = $request->input('taller_id') ?: null;
+        $body['precio']    = $request->input('precio');
+
+        $response = $client->forward('PUT', "/event/{$evento}/sesiones/{$sesion}", body: $body);
 
         if (!$response || !$response->json('success')) {
             return back()->withInput()->withErrors($this->extractErrors($response));
