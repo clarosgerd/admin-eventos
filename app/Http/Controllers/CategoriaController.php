@@ -17,7 +17,7 @@ class CategoriaController extends Controller
     public function store(Request $request, int $evento, ApiRestEventClient $client): RedirectResponse
     {
         $payload = array_merge(
-            $request->only('name', 'price', 'description', 'color'),
+            $request->only('name', 'price', 'price_usd', 'description', 'color'),
             ['event_id' => $evento]
         );
 
@@ -35,7 +35,7 @@ class CategoriaController extends Controller
 
     public function update(Request $request, int $categoria, ApiRestEventClient $client): RedirectResponse
     {
-        $response = $client->forward('PUT', "/category/{$categoria}", body: $request->only('name', 'price', 'description', 'color'));
+        $response = $client->forward('PUT', "/category/{$categoria}", body: $request->only('name', 'price', 'price_usd', 'description', 'color'));
 
         $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {

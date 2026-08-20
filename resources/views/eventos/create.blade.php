@@ -226,7 +226,7 @@
 
 {{-- Templates: __CAT_INDEX__ / __FT_INDEX__ / __S_INDEX__ se reemplazan por JS al clonar --}}
 <template id="category-template">
-    <div class="category-row border border-slate-200 rounded-md p-3 mb-2 grid grid-cols-5 gap-2 items-end">
+    <div class="category-row border border-slate-200 rounded-md p-3 mb-2 grid grid-cols-6 gap-2 items-end">
         <div class="col-span-1">
             <label class="block text-xs font-semibold mb-1">Nombre</label>
             <input type="text" name="categories[__CAT_INDEX__][name]" required
@@ -235,6 +235,13 @@
         <div class="col-span-1">
             <label class="block text-xs font-semibold mb-1">Precio</label>
             <input type="number" step="0.01" min="0" name="categories[__CAT_INDEX__][price]" required
+                   class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+        </div>
+        <div class="col-span-1">
+            <label class="block text-xs font-semibold mb-1">
+                Precio USD <span class="font-normal text-slate-500">(opcional)</span>
+            </label>
+            <input type="number" step="0.01" min="0" name="categories[__CAT_INDEX__][price_usd]"
                    class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
         </div>
         <div class="col-span-2">

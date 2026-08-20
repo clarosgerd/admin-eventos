@@ -285,6 +285,27 @@
                     </label>
                 </div>
 
+                {{-- Precio USD fijo, sin tipo de cambio (19/08/2026) — ver
+                     brain/PLAN-PRECIO-USD-FIJO-19082026.md. Modo alternativo al de
+                     arriba (que convierte el precio BOB con la tasa del día):
+                     acá el organizador carga un precio en USD fijo por categoría
+                     (pestaña Categorías → campo "Precio USD"), sin tasa de por
+                     medio. Solo tiene efecto si "Acepta pago en USD" también está
+                     tildado. Alcance: solo categoría/inscripción — souvenirs,
+                     talleres, donación y camiseta no tienen precio USD fijo, y la
+                     inscripción se rechaza si el participante trae alguno. --}}
+                <div class="col-span-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold">
+                        <input type="checkbox" name="usdPrecioFijo" value="1"
+                               {{ !empty($evento['usdPrecioFijo']) ? 'checked' : '' }}>
+                        Precio USD fijo (sin tipo de cambio)
+                        <span class="font-normal text-slate-500">
+                            (usa el "Precio USD" cargado en cada categoría en vez de convertir el
+                            precio en Bs con la tasa del día — requiere "Acepta pago en USD" arriba)
+                        </span>
+                    </label>
+                </div>
+
                 {{-- Congresos con talleres (19/08/2026) — sin esto, el flag solo se
                      podía prender escribiendo directo en la BD; sin él, cualquier
                      taller con precio cargado se cobra $0 igual
@@ -321,7 +342,7 @@
     <div id="panel-categorias" role="tabpanel" aria-labelledby="tab-categorias" tabindex="0" class="p-6" hidden>
         @foreach ($evento['categories'] as $categoria)
             <div class="border border-slate-200 rounded-md p-3 mb-2">
-                <form method="POST" action="{{ route('categorias.update', $categoria['id']) }}" class="grid grid-cols-5 gap-2 items-end">
+                <form method="POST" action="{{ route('categorias.update', $categoria['id']) }}" class="grid grid-cols-6 gap-2 items-end">
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
@@ -332,6 +353,15 @@
                     <div>
                         <label class="block text-xs font-semibold mb-1">Precio</label>
                         <input type="number" step="0.01" min="0" name="price" value="{{ $categoria['price'] }}" required class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                    </div>
+                    {{-- Precio USD fijo (19/08/2026) — ver brain/PLAN-PRECIO-USD-FIJO-19082026.md.
+                         Vacío = esta categoría no se puede vender en USD fijo, aunque el
+                         evento tenga el modo prendido (ver checkbox en la pestaña Datos). --}}
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">
+                            Precio USD <span class="font-normal text-slate-500">(opc.)</span>
+                        </label>
+                        <input type="number" step="0.01" min="0" name="price_usd" value="{{ $categoria['priceUsd'] }}" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                     </div>
                     <div class="col-span-2">
                         <label class="block text-xs font-semibold mb-1">Descripción</label>
@@ -367,13 +397,16 @@
 
         <div class="border border-dashed border-slate-300 rounded-md p-3 mt-3">
             <p class="text-xs font-semibold text-slate-500 mb-2">+ Agregar categoría</p>
-            <form method="POST" action="{{ route('categorias.store', $evento['id']) }}" class="grid grid-cols-5 gap-2 items-end">
+            <form method="POST" action="{{ route('categorias.store', $evento['id']) }}" class="grid grid-cols-6 gap-2 items-end">
                 @csrf
                 <div>
                     <input type="text" name="name" placeholder="Nombre" required class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                 </div>
                 <div>
                     <input type="number" step="0.01" min="0" name="price" placeholder="Precio" required class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                </div>
+                <div>
+                    <input type="number" step="0.01" min="0" name="price_usd" placeholder="Precio USD (opc.)" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                 </div>
                 <div class="col-span-2">
                     <input type="text" name="description" placeholder="Descripción" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">

@@ -222,5 +222,56 @@
         </tbody>
     </table>
 </div>
+
+{{-- Reporte de talleres (19/08/2026) — pedido del usuario: "no tenemos
+     reporte de talleres". Condicional a propósito: la mayoría de los
+     eventos (carreras) no tienen talleres, mostrar una tabla siempre
+     vacía en el dashboard de todos sería ruido. Se agrupa por sesión
+     (no solo por taller) porque el cupo/horario son por sesión — ver
+     ReporteInscritosData::agruparPorTaller(). --}}
+@if (!empty($reporteInscritos['porTaller']['filas']))
+<h2 class="font-bold text-sm text-brand-600 mb-2 mt-6">Reporte de talleres</h2>
+<div class="overflow-x-auto">
+    <table class="w-full bg-white rounded-lg shadow text-sm">
+        <thead>
+            <tr class="bg-brand-600 text-white text-left">
+                <th class="px-3 py-2 font-semibold">Taller</th>
+                <th class="px-3 py-2 font-semibold">Sesión</th>
+                <th class="px-3 py-2 font-semibold">Fecha / horario</th>
+                <th class="px-3 py-2 font-semibold text-right">Inscritos</th>
+                <th class="px-3 py-2 font-semibold text-right">Cupo</th>
+                <th class="px-3 py-2 font-semibold text-right">Disponible</th>
+                <th class="px-3 py-2 font-semibold text-right">Recaudación</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($reporteInscritos['porTaller']['filas'] as $fila)
+                <tr class="border-t border-slate-100">
+                    <td class="px-3 py-2">{{ $fila['tallerNombre'] }}</td>
+                    <td class="px-3 py-2">{{ $fila['sesionTitulo'] }}</td>
+                    <td class="px-3 py-2">
+                        {{ $fila['fecha'] }}
+                        @if ($fila['horaInicio'])
+                            · {{ $fila['horaInicio'] }}–{{ $fila['horaFin'] }}
+                        @endif
+                    </td>
+                    <td class="px-3 py-2 text-right">{{ $fila['cantidad'] }}</td>
+                    <td class="px-3 py-2 text-right">{{ $fila['cupo'] ?? '—' }}</td>
+                    <td class="px-3 py-2 text-right {{ $fila['disponible'] === 0 ? 'text-red-600 font-semibold' : '' }}">
+                        {{ $fila['disponible'] ?? '—' }}
+                    </td>
+                    <td class="px-3 py-2 text-right">${{ number_format($fila['recaudacion'], 2) }}</td>
+                </tr>
+            @endforeach
+            <tr class="border-t border-slate-200 font-semibold bg-slate-50">
+                <td class="px-3 py-2" colspan="3">Total</td>
+                <td class="px-3 py-2 text-right">{{ $reporteInscritos['porTaller']['totalCantidad'] }}</td>
+                <td class="px-3 py-2" colspan="2"></td>
+                <td class="px-3 py-2 text-right">${{ number_format($reporteInscritos['porTaller']['totalRecaudacion'], 2) }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+@endif
 @endif
 @endsection

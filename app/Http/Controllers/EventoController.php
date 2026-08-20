@@ -146,6 +146,12 @@ class EventoController extends Controller
         // la pestaña "Talleres"); default false, igual que aceptaUsd.
         $payload['talleresConCosto'] = $request->boolean('talleresConCosto');
 
+        // Precio USD fijo (19/08/2026) — sin checkbox en create.blade.php a
+        // propósito, mismo motivo que talleresConCosto (el precio USD por
+        // categoría se carga después, en la pestaña Categorías del evento
+        // ya creado). Default false.
+        $payload['usdPrecioFijo'] = $request->boolean('usdPrecioFijo');
+
         $response = $client->forward('POST', '/event', body: $payload);
 
         if (!$response || !$response->json('success')) {
@@ -324,6 +330,10 @@ class EventoController extends Controller
         // tipos de admin pueden mandarlo (a diferencia de feePct, que es
         // super_admin-only).
         $payload['aceptaUsd'] = $request->boolean('aceptaUsd');
+
+        // Precio USD fijo (19/08/2026) — ver brain/PLAN-PRECIO-USD-FIJO-19082026.md.
+        // Mismo motivo que aceptaUsd/talleresConCosto (destildear también persiste).
+        $payload['usdPrecioFijo'] = $request->boolean('usdPrecioFijo');
 
         // Congresos con talleres (19/08/2026) — mismo motivo que aceptaUsd:
         // sin el checkbox marcado no se distingue "no vino el campo" de "lo
