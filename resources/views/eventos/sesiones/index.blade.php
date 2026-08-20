@@ -35,6 +35,7 @@
                 <th class="px-4 py-2">Horario</th>
                 <th class="px-4 py-2">Cupo</th>
                 <th class="px-4 py-2">Precio</th>
+                <th class="px-4 py-2">Precio USD</th>
                 <th class="px-4 py-2">Staff asignado</th>
                 <th class="px-4 py-2">Ponentes vinculados</th>
                 <th class="px-4 py-2"></th>
@@ -70,6 +71,16 @@
                     <td class="px-4 py-2">
                         @if ($sesion['precio'] !== null)
                             Bs. {{ number_format((float) $sesion['precio'], 2) }}
+                        @elseif (!empty($sesion['taller_id']))
+                            <span class="text-xs text-slate-500">del taller</span>
+                        @else
+                            <span class="text-xs text-slate-400">—</span>
+                        @endif
+                    </td>
+                    {{-- Override de precio USD por sesión (19/08/2026) — mismo criterio que Precio. --}}
+                    <td class="px-4 py-2">
+                        @if (($sesion['price_usd'] ?? null) !== null)
+                            US$ {{ number_format((float) $sesion['price_usd'], 2) }}
                         @elseif (!empty($sesion['taller_id']))
                             <span class="text-xs text-slate-500">del taller</span>
                         @else
@@ -161,7 +172,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="9" class="px-4 py-6 text-center text-slate-400">No hay sesiones registradas todavía.</td></tr>
+                <tr><td colspan="10" class="px-4 py-6 text-center text-slate-400">No hay sesiones registradas todavía.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -213,10 +224,18 @@
             </div>
         </div>
         {{-- Override de precio por sesión (si se deja vacío, hereda del taller). --}}
-        <div>
-            <label class="block text-sm font-medium mb-1">Precio <span class="text-slate-400">(opcional; hereda del taller)</span></label>
-            <input type="number" step="0.01" min="0" name="precio" value="{{ old('precio') }}"
-                   class="border border-slate-300 rounded px-2 py-1.5 w-full">
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm font-medium mb-1">Precio <span class="text-slate-400">(opcional; hereda del taller)</span></label>
+                <input type="number" step="0.01" min="0" name="precio" value="{{ old('precio') }}"
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Precio USD <span class="text-slate-400">(opcional; hereda del taller)</span></label>
+                <input type="number" step="0.01" min="0" name="price_usd" value="{{ old('price_usd') }}"
+                       placeholder="Solo modo Precio USD fijo"
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
         </div>
         <div class="grid grid-cols-3 gap-3">
             <div>

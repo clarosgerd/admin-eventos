@@ -26,6 +26,7 @@
                 <th class="px-4 py-2">Nombre</th>
                 <th class="px-4 py-2">Modalidad</th>
                 <th class="px-4 py-2">Precio</th>
+                <th class="px-4 py-2">Precio USD</th>
                 <th class="px-4 py-2">Sesiones</th>
                 <th class="px-4 py-2">Activo</th>
                 <th class="px-4 py-2"></th>
@@ -49,6 +50,12 @@
                         {{ $taller['precio'] !== null ? 'Bs. '.number_format((float) $taller['precio'], 2) : '—' }}
                     </td>
                     <td class="px-4 py-2">
+                        {{-- Este endpoint (index) devuelve el modelo Eloquent crudo,
+                             no TallerResource — por eso acá es snake_case (price_usd),
+                             a diferencia de lo que ve el frontend público. --}}
+                        {{ ($taller['price_usd'] ?? null) !== null ? 'US$ '.number_format((float) $taller['price_usd'], 2) : '—' }}
+                    </td>
+                    <td class="px-4 py-2">
                         <span class="text-xs text-slate-600">
                             {{ count($taller['sesiones'] ?? []) }} sesión(es)
                         </span>
@@ -67,7 +74,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">No hay talleres registrados todavía.</td></tr>
+                <tr><td colspan="7" class="px-4 py-6 text-center text-slate-400">No hay talleres registrados todavía.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -89,7 +96,7 @@
             <label class="block text-sm font-medium mb-1">Descripción</label>
             <textarea name="descripcion" rows="2" class="border border-slate-300 rounded px-2 py-1.5 w-full">{{ old('descripcion', $taller['descripcion']) }}</textarea>
         </div>
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-4 gap-3">
             <div>
                 <label class="block text-sm font-medium mb-1">Modalidad</label>
                 <select name="modalidad" required class="border border-slate-300 rounded px-2 py-1.5 w-full">
@@ -100,6 +107,12 @@
             <div>
                 <label class="block text-sm font-medium mb-1">Precio</label>
                 <input type="number" step="0.01" min="0" name="precio" value="{{ old('precio', $taller['precio']) }}"
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Precio USD</label>
+                <input type="number" step="0.01" min="0" name="price_usd" value="{{ old('price_usd', $taller['price_usd'] ?? '') }}"
+                       placeholder="Solo modo Precio USD fijo"
                        class="border border-slate-300 rounded px-2 py-1.5 w-full">
             </div>
             <div>
@@ -132,7 +145,7 @@
             <label class="block text-sm font-medium mb-1">Descripción</label>
             <textarea name="descripcion" rows="2" class="border border-slate-300 rounded px-2 py-1.5 w-full">{{ old('descripcion') }}</textarea>
         </div>
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-4 gap-3">
             <div>
                 <label class="block text-sm font-medium mb-1">Modalidad</label>
                 <select name="modalidad" required class="border border-slate-300 rounded px-2 py-1.5 w-full">
@@ -143,6 +156,12 @@
             <div>
                 <label class="block text-sm font-medium mb-1">Precio</label>
                 <input type="number" step="0.01" min="0" name="precio" value="{{ old('precio') }}"
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Precio USD</label>
+                <input type="number" step="0.01" min="0" name="price_usd" value="{{ old('price_usd') }}"
+                       placeholder="Solo modo Precio USD fijo"
                        class="border border-slate-300 rounded px-2 py-1.5 w-full">
             </div>
             <div>

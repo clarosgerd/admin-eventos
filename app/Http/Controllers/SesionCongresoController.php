@@ -69,6 +69,8 @@ class SesionCongresoController extends Controller
         );
         $body['taller_id'] = $request->input('taller_id') ?: null;
         $body['precio']    = $request->input('precio');
+        // price_usd (19/08/2026) — override de sesión, ver Store.
+        $body['price_usd'] = $request->input('price_usd');
 
         $response = $client->forward('POST', "/event/{$evento}/sesiones", body: $body);
 
@@ -89,6 +91,8 @@ class SesionCongresoController extends Controller
         );
         $body['taller_id'] = $request->input('taller_id') ?: null;
         $body['precio']    = $request->input('precio');
+        // price_usd (19/08/2026) — override de sesión, ver Store.
+        $body['price_usd'] = $request->input('price_usd');
 
         $response = $client->forward('PUT', "/event/{$evento}/sesiones/{$sesion}", body: $body);
 
