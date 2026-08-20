@@ -582,6 +582,96 @@
                         <button type="submit" class="text-xs text-brand-600 hover:underline">+ Agregar ítem</button>
                     </form>
                 </div>
+
+                {{-- Preguntas adicionales del formulario de inscripción
+                     (20/08/2026) — ya se renderizan y se guardan en
+                     elascenso/event desde antes; esto es lo que faltaba,
+                     crear/editarlas. 'Archivo' no está en el selector de
+                     tipo porque el formulario público lo omite en
+                     silencio (no hay endpoint de subida todavía). --}}
+                @php($tiposInput = ['text' => 'Texto corto', 'textarea' => 'Texto largo', 'email' => 'Email', 'tel' => 'Teléfono', 'date' => 'Fecha', 'number' => 'Número', 'select' => 'Lista desplegable', 'radio' => 'Opción única', 'checkbox' => 'Casillas'])
+                @php($secciones = ['personal' => 'Datos personales', 'kit' => 'Kit', 'encuesta' => 'Encuesta', 'legal' => 'Legal', 'otro' => 'Otro'])
+                <div class="border-t border-slate-100 mt-3 pt-2">
+                    <span class="text-xs font-semibold text-slate-500">Preguntas adicionales</span>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Se muestran agrupadas por sección, en el orden cargado, en el
+                        formulario de inscripción. "Lista desplegable"/"Opción única"/
+                        "Casillas" necesitan opciones (una por línea). Eliminar una
+                        pregunta borra también las respuestas ya guardadas de quienes
+                        ya la contestaron — no se puede deshacer.
+                    </p>
+                    @foreach ($formType['preguntas'] ?? [] as $pregunta)
+                        <div class="border border-slate-200 rounded p-2 mt-1">
+                            <form method="POST" action="{{ route('preguntas.update', $pregunta['id']) }}" class="space-y-2" id="pregunta-form-{{ $pregunta['id'] }}">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
+                                <div class="grid grid-cols-4 gap-2">
+                                    <select name="seccion" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                                        @foreach ($secciones as $val => $label)
+                                            <option value="{{ $val }}" @selected($pregunta['seccion'] === $val)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    <input type="text" name="nombre_campo" value="{{ $pregunta['nombre_campo'] }}" placeholder="Nombre interno (ej. alergias)" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                                    <input type="text" name="etiqueta" value="{{ $pregunta['etiqueta'] }}" placeholder="Pregunta que ve el participante" class="col-span-2 w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                                </div>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <select name="tipo_input" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                                        @foreach ($tiposInput as $val => $label)
+                                            <option value="{{ $val }}" @selected($pregunta['tipo_input'] === $val)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    <input type="text" name="placeholder" value="{{ $pregunta['placeholder'] }}" placeholder="Texto de ayuda (opcional)" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                                    <input type="number" min="0" name="orden" value="{{ $pregunta['orden'] }}" placeholder="Orden" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                                    <div class="flex items-center gap-3 text-xs">
+                                        <label class="flex items-center gap-1"><input type="checkbox" name="obligatorio" value="1" @checked($pregunta['obligatorio'])> Obligatoria</label>
+                                        <label class="flex items-center gap-1"><input type="checkbox" name="visible_en_reporte" value="1" @checked($pregunta['visible_en_reporte'])> En reporte</label>
+                                    </div>
+                                </div>
+                                <textarea name="opciones_texto" rows="2" placeholder="Una opción por línea (solo si el tipo es Lista/Opción única/Casillas)" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">{{ collect($pregunta['options'] ?? [])->sortBy('order')->pluck('option_text')->implode("\n") }}</textarea>
+                                <div class="flex items-center gap-3">
+                                    <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-2 py-1 rounded">Guardar</button>
+                                </div>
+                            </form>
+                            <form method="POST" action="{{ route('preguntas.destroy', $pregunta['id']) }}" class="mt-1"
+                                  onsubmit="return confirm('¿Eliminar esta pregunta? Si ya hay participantes inscritos que la contestaron, sus respuestas se borran también y no se pueden recuperar.')">
+                                @csrf
+                                @method('DELETE')
+                                <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
+                                <button type="submit" class="text-xs text-red-600 hover:underline">Eliminar</button>
+                            </form>
+                        </div>
+                    @endforeach
+
+                    <form method="POST" action="{{ route('preguntas.store', $formType['id']) }}" class="border border-dashed border-slate-300 rounded p-2 mt-2 space-y-2">
+                        @csrf
+                        <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
+                        <div class="grid grid-cols-4 gap-2">
+                            <select name="seccion" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                                @foreach ($secciones as $val => $label)
+                                    <option value="{{ $val }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <input type="text" name="nombre_campo" placeholder="Nombre interno (ej. alergias)" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                            <input type="text" name="etiqueta" placeholder="Pregunta que ve el participante" class="col-span-2 w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                        </div>
+                        <div class="grid grid-cols-4 gap-2">
+                            <select name="tipo_input" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                                @foreach ($tiposInput as $val => $label)
+                                    <option value="{{ $val }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <input type="text" name="placeholder" placeholder="Texto de ayuda (opcional)" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                            <input type="number" min="0" name="orden" placeholder="Orden" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                            <div class="flex items-center gap-3 text-xs">
+                                <label class="flex items-center gap-1"><input type="checkbox" name="obligatorio" value="1" checked> Obligatoria</label>
+                                <label class="flex items-center gap-1"><input type="checkbox" name="visible_en_reporte" value="1" checked> En reporte</label>
+                            </div>
+                        </div>
+                        <textarea name="opciones_texto" rows="2" placeholder="Una opción por línea (solo si el tipo es Lista/Opción única/Casillas)" class="w-full border border-slate-300 rounded px-2 py-1 text-sm"></textarea>
+                        <button type="submit" class="text-xs text-brand-600 hover:underline">+ Agregar pregunta</button>
+                    </form>
+                </div>
             </div>
         @endforeach
 

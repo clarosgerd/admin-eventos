@@ -37,6 +37,7 @@ use App\Http\Controllers\PromoCodeController;
 use App\Http\Controllers\AsistenciaSesionController;
 use App\Http\Controllers\SesionCongresoController;
 use App\Http\Controllers\TallerCongresoController;
+use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RegistroManualController;
 use App\Http\Controllers\RouteController as PanelRouteController;
 use App\Http\Controllers\SocioController;
@@ -101,6 +102,12 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::post('/formtypes/{form_type}/souvenirs', [SouvenirController::class, 'store'])->name('souvenirs.store');
     Route::put('/souvenirs/{souvenir}', [SouvenirController::class, 'update'])->name('souvenirs.update');
     Route::delete('/souvenirs/{souvenir}', [SouvenirController::class, 'destroy'])->name('souvenirs.destroy');
+
+    // Preguntas adicionales del formulario de inscripción (20/08/2026) —
+    // ver PreguntaController y ApiRestEvent/FormularioCamposController.
+    Route::post('/formtypes/{form_type}/preguntas', [PreguntaController::class, 'store'])->name('preguntas.store');
+    Route::put('/preguntas/{pregunta}', [PreguntaController::class, 'update'])->name('preguntas.update');
+    Route::delete('/preguntas/{pregunta}', [PreguntaController::class, 'destroy'])->name('preguntas.destroy');
 
     // Kit/tallas/stock (11/08/2026) — stock por talla/sexo de un ítem del
     // kit, y lista de espera del evento. Mismo criterio de permisos que
