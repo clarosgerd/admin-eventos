@@ -51,6 +51,9 @@
                 <th class="px-3 py-2 font-semibold">Número</th>
                 <th class="px-3 py-2 font-semibold">Estado</th>
                 <th class="px-3 py-2 font-semibold text-right">Importe</th>
+                {{-- importeTaller/importeTotal (19/08/2026) — para conciliar contra el banco, ver ApiRestEvent. --}}
+                <th class="px-3 py-2 font-semibold text-right">Taller</th>
+                <th class="px-3 py-2 font-semibold text-right">Total</th>
                 <th class="px-3 py-2 font-semibold">CI</th>
                 <th class="px-3 py-2 font-semibold">Nombre</th>
                 <th class="px-3 py-2 font-semibold">Apellido</th>
@@ -68,6 +71,8 @@
                     <td class="px-3 py-2 font-mono">{{ $p['numeroCorredor'] }}</td>
                     <td class="px-3 py-2">{{ $estadoLabels[$p['pagoStatus']] ?? $p['pagoStatus'] }}</td>
                     <td class="px-3 py-2 text-right">${{ number_format($p['importe'], 2) }}</td>
+                    <td class="px-3 py-2 text-right">${{ number_format($p['importeTaller'] ?? 0, 2) }}</td>
+                    <td class="px-3 py-2 text-right font-semibold">${{ number_format($p['importeTotal'] ?? $p['importe'], 2) }}</td>
                     <td class="px-3 py-2">{{ $p['numeroDocumento'] }}</td>
                     <td class="px-3 py-2">{{ $p['nombre'] }}</td>
                     <td class="px-3 py-2">{{ $p['apellido'] }}</td>
@@ -79,7 +84,7 @@
                     <td class="px-3 py-2">{{ $categoriasPorId[$p['categoria']]['name'] ?? $p['categoria'] }}</td>
                 </tr>
             @empty
-                <tr><td class="px-3 py-2 text-slate-500" colspan="12">No hay inscritos con estos filtros.</td></tr>
+                <tr><td class="px-3 py-2 text-slate-500" colspan="14">No hay inscritos con estos filtros.</td></tr>
             @endforelse
         </tbody>
     </table>

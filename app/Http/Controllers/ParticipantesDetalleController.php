@@ -82,13 +82,20 @@ class ParticipantesDetalleController extends Controller
 
         $handle = fopen('php://temp', 'w+');
         fwrite($handle, "\xEF\xBB\xBF");
+        // importe_taller / importe_total (19/08/2026) — `importe` (subtotal)
+        // nunca incluyó el importe de talleres, así que no servía para
+        // conciliar contra el depósito real del banco. `importe_total` sí
+        // es lo comparable (importe + importe_taller); no incluye el cargo
+        // de servicio, que se cobra por registro completo, no por
+        // participante — ver ApiRestEvent ParticipanteController::porEvento.
         fputcsv($handle, [
-            'numero_corredor', 'estado', 'importe', 'numero_documento', 'nombre', 'apellido',
+            'numero_corredor', 'estado', 'importe', 'importe_taller', 'importe_total', 'numero_documento', 'nombre', 'apellido',
             'sexo', 'celular', 'fecha_inscripcion', 'referencia', 'nacimiento', 'distancia',
         ]);
         foreach ($participantes as $p) {
             fputcsv($handle, [
                 $p['numeroCorredor'], $this->estadoLabel($p['pagoStatus']), $p['importe'],
+                $p['importeTaller'] ?? 0, $p['importeTotal'] ?? $p['importe'],
                 $p['numeroDocumento'], $p['nombre'], $p['apellido'], $p['genero'], $p['telefono'],
                 $p['fechaInscripcion'], $p['referencia'], $p['fechaNacimiento'],
                 $categoriasPorId[$p['categoria']]['name'] ?? $p['categoria'],
