@@ -160,6 +160,7 @@
                         @endif
                     </td>
                     <td class="px-4 py-2 text-right space-x-2 whitespace-nowrap">
+                        <a href="#edit-sesion-{{ $sesion['id'] }}" class="text-brand-600 hover:underline">Editar</a>
                         <a href="{{ route('sesiones.acreditacion.index', [$evento['id'], $sesion['id']]) }}" class="text-brand-600 hover:underline">
                             Acreditar
                         </a>
@@ -177,6 +178,104 @@
         </tbody>
     </table>
 </div>
+
+{{-- Formularios de edición inline (20/08/2026) — antes solo se podía
+     crear/eliminar una sesión; para cambiar cualquier campo (por ejemplo
+     el "Precio USD" nuevo) había que borrarla y recrearla, lo que además
+     borra en cascada su asistencia y desvincula las inscripciones de
+     taller ya hechas (`participante_taller_sesion` tiene FK con
+     `cascadeOnDelete` a `sesiones_congreso`). Mismo patrón que
+     talleres/index.blade.php. --}}
+@foreach ($sesiones as $sesion)
+<div id="edit-sesion-{{ $sesion['id'] }}" class="bg-white rounded-lg shadow p-4 mb-4 max-w-lg">
+    <h2 class="font-semibold mb-3">Editar: {{ $sesion['titulo'] }}</h2>
+    <form method="POST" action="{{ route('sesiones.update', [$evento['id'], $sesion['id']]) }}" class="space-y-3">
+        @csrf
+        @method('PUT')
+        <div>
+            <label class="block text-sm font-medium mb-1">Título</label>
+            <input type="text" name="titulo" value="{{ old('titulo', $sesion['titulo']) }}" required
+                   class="border border-slate-300 rounded px-2 py-1.5 w-full">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm font-medium mb-1">Ponente</label>
+                <input type="text" name="ponente" value="{{ old('ponente', $sesion['ponente']) }}"
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Cargo del ponente</label>
+                <input type="text" name="ponente_cargo" value="{{ old('ponente_cargo', $sesion['ponente_cargo']) }}"
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">Taller <span class="text-slate-400">(opcional; dejar vacío = ponencia suelta)</span></label>
+            <select name="taller_id" class="border border-slate-300 rounded px-2 py-1.5 w-full">
+                <option value="">— Sin taller —</option>
+                @foreach (($talleres ?? []) as $taller)
+                    <option value="{{ $taller['id'] }}" @selected(old('taller_id', $sesion['taller_id']) == $taller['id'])>
+                        {{ $taller['nombre'] }} ({{ $taller['modalidad'] === 'REQUIRED' ? 'Obligatorio' : 'Opcional' }})
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm font-medium mb-1">Sala / track</label>
+                <input type="text" name="sala" value="{{ old('sala', $sesion['sala']) }}"
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Cupo (vacío = sin límite)</label>
+                <input type="number" name="cupo" min="1" value="{{ old('cupo', $sesion['cupo']) }}"
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm font-medium mb-1">Precio <span class="text-slate-400">(opcional; hereda del taller)</span></label>
+                <input type="number" step="0.01" min="0" name="precio" value="{{ old('precio', $sesion['precio']) }}"
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Precio USD <span class="text-slate-400">(opcional; hereda del taller)</span></label>
+                <input type="number" step="0.01" min="0" name="price_usd" value="{{ old('price_usd', $sesion['price_usd'] ?? '') }}"
+                       placeholder="Solo modo Precio USD fijo"
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+            <div>
+                <label class="block text-sm font-medium mb-1">Fecha</label>
+                <input type="date" name="fecha" value="{{ old('fecha', \Carbon\Carbon::parse($sesion['fecha'])->format('Y-m-d')) }}" required
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Hora inicio</label>
+                <input type="time" name="hora_inicio" value="{{ old('hora_inicio', substr($sesion['hora_inicio'], 0, 5)) }}" required
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Hora fin</label>
+                <input type="time" name="hora_fin" value="{{ old('hora_fin', substr($sesion['hora_fin'], 0, 5)) }}" required
+                       class="border border-slate-300 rounded px-2 py-1.5 w-full">
+            </div>
+        </div>
+        <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="requiere_inscripcion" value="1" @checked(old('requiere_inscripcion', $sesion['requiere_inscripcion']))>
+            Requiere inscripción separada <span class="text-slate-400">(config para una fase futura, todavía sin efecto)</span>
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="activa" value="1" @checked(old('activa', $sesion['activa']))>
+            Activa <span class="text-slate-400">(si se destilda, deja de ser seleccionable en la inscripción)</span>
+        </label>
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-md">
+            Guardar cambios
+        </button>
+    </form>
+</div>
+@endforeach
 
 <div class="bg-white rounded-lg shadow p-4 max-w-lg">
     <h2 class="font-semibold mb-3">+ Nueva sesión</h2>

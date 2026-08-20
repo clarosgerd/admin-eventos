@@ -99,6 +99,13 @@ class TallerCongresoController extends Controller
             return array_map(fn ($messages) => is_array($messages) ? implode(' ', $messages) : $messages, $errors);
         }
 
-        return ['general' => $response->json('error') ?? 'Ocurrió un error.'];
+        // 'message' (20/08/2026) — antes solo miraba 'error' (la clave que
+        // usan las respuestas de ESTE panel), pero una excepción no
+        // controlada en ApiRestEvent (p.ej. una columna faltante en BD)
+        // responde con 'message' (formato default de Laravel), nunca
+        // 'error' — quedaba en el genérico "Ocurrió un error" sin ningún
+        // detalle. Mismo fallback que ya usan la mayoría de los otros
+        // controllers del panel.
+        return ['general' => $response->json('error') ?? $response->json('message') ?? 'Ocurrió un error.'];
     }
 }

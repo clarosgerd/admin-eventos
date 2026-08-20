@@ -172,6 +172,9 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     // participante — mismo criterio de permisos que el resto del bloque:
     // super_admin o el admin scoped a su propio evento.
     Route::get('/eventos/{evento}/dashboard', [DashboardInscripcionesController::class, 'show'])->name('eventos.dashboard');
+    // CSV del Reporte de talleres (20/08/2026) — sin agrupar, ordenado por
+    // fecha, ver DashboardInscripcionesController::csvTalleres().
+    Route::get('/eventos/{evento}/dashboard/talleres/csv', [DashboardInscripcionesController::class, 'csvTalleres'])->name('eventos.dashboard.talleres.csv');
     Route::get('/eventos/{evento}/participantes', [ParticipantesController::class, 'index'])->name('participantes.index');
     Route::patch('/eventos/{evento}/participantes/{participante}', [ParticipantesController::class, 'update'])->name('participantes.update');
     // Reporte detallado de inscritos (15/08/2026) — drill-down desde las

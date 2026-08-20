@@ -182,10 +182,26 @@ class SesionCongresoController extends Controller
         }
 
         $errors = $response->json('errors');
-        if (is_array($errors)) {
+        if (is_array($errors) && $errors !== []) {
             return array_map(fn ($messages) => is_array($messages) ? implode(' ', $messages) : $messages, $errors);
         }
 
-        return ['general' => $response->json('error') ?? 'Ocurrió un error.'];
+        // 'message' (20/08/2026) — mismo fix que TallerCongresoController,
+        // ver el comentario ahí. Cambiado de ?? a ?: (20/08/2026, mismo día):
+        // ApiRestEvent puede responder con 'error'/'message' como string
+        // vacío "" (no null) — ?? no cae al siguiente valor ante "", ?: sí.
+        // Si las tres vienen vacías, se arma el mensaje con status+body
+        // crudo en vez del genérico, para diagnosticar sin acceso a logs
+        // del servidor (UAT es cPanel sin SSH).
+        $detalle = $response->json('error') ?: $response->json('message');
+        if ($detalle) {
+            return ['general' => $detalle];
+        }
+
+        return ['general' => sprintf(
+            'Ocurrió un error. HTTP %d: %s',
+            $response->status(),
+            substr($response->body(), 0, 500) ?: '(respuesta vacía)'
+        )];
     }
 }

@@ -230,7 +230,16 @@
      (no solo por taller) porque el cupo/horario son por sesión — ver
      ReporteInscritosData::agruparPorTaller(). --}}
 @if (!empty($reporteInscritos['porTaller']['filas']))
-<h2 class="font-bold text-sm text-brand-600 mb-2 mt-6">Reporte de talleres</h2>
+<div class="flex items-center justify-between mt-6 mb-2">
+    <h2 class="font-bold text-sm text-brand-600">Reporte de talleres</h2>
+    {{-- CSV sin agrupar (20/08/2026) — una fila por selección de taller,
+         ordenado por fecha, para que el organizador pueda bajarlo y
+         trabajarlo aparte (no es la misma tabla agrupada de abajo). --}}
+    <a href="{{ route('eventos.dashboard.talleres.csv', $evento['id']) }}"
+       class="inline-block bg-white border border-slate-300 hover:bg-slate-50 text-xs font-semibold px-3 py-1.5 rounded-md">
+        Descargar CSV (detalle sin agrupar)
+    </a>
+</div>
 <div class="overflow-x-auto">
     <table class="w-full bg-white rounded-lg shadow text-sm">
         <thead>
