@@ -62,10 +62,38 @@
             <input type="file" name="csv" accept=".csv,text/csv" required
                    class="w-full text-sm border border-slate-300 rounded-md px-3 py-2">
             <p class="text-xs text-slate-500 mt-1">
-                Columnas requeridas: <code class="bg-slate-100 px-1 rounded">numero_documento, tipo_documento, nombre, apellido, alias, genero, fecha_nacimiento (AAAA-MM-DD), email, direccion, ciudad, telefono, contacto_emergencia_nombre, contacto_emergencia_telefono, contacto_emergencia_relacion</code>.
+                Columnas requeridas: <code class="bg-slate-100 px-1 rounded">numero_documento, tipo_documento, nombre, apellido, alias, genero, fecha_nacimiento (AAAA-MM-DD), email, direccion, ciudad, telefono, contacto_emergencia_nombre, contacto_emergencia_telefono, contacto_emergencia_relacion, talleres</code>.
                 <a href="{{ route('registro-manual.plantilla', $evento['id']) }}" class="text-brand-600 hover:underline">Descargar plantilla</a>.
             </p>
         </div>
+
+        @if (!empty($evento['talleres']))
+            {{-- Talleres (21/08/2026) — la columna "talleres" del CSV se
+                 completa con el NOMBRE del taller (no un ID), uno o más
+                 separados por ';'. Solo se pueden identificar sin
+                 ambigüedad desde el CSV los que tienen exactamente una
+                 sesión activa — un taller con 0 o 2+ horarios no se puede
+                 seleccionar por nombre solo, hay que cargar esa fila desde
+                 el formulario público o el panel en su lugar. --}}
+            <div class="bg-slate-50 border border-slate-200 rounded-md p-3 text-xs text-slate-600">
+                <p class="font-semibold mb-1">Columna "talleres" — nombres válidos para este evento:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    @foreach ($evento['talleres'] as $taller)
+                        @php($sesionesActivas = collect($taller['sesiones'] ?? [])->where('activa', true))
+                        <li>
+                            <code class="bg-white px-1 rounded border border-slate-200">{{ $taller['nombre'] }}</code>
+                            {{ ($taller['modalidad'] ?? null) === 'REQUIRED' ? '— obligatorio' : '' }}
+                            @if ($sesionesActivas->count() !== 1)
+                                <span class="text-amber-600">
+                                    ({{ $sesionesActivas->count() }} horarios activos — no seleccionable por CSV, usar el formulario público o el panel)
+                                </span>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+                <p class="mt-2">Para más de uno en la misma fila: <code class="bg-white px-1 rounded border border-slate-200">Taller A;Taller B</code>. Dejar vacío si no aplica.</p>
+            </div>
+        @endif
 
         <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-md">
             Subir y crear inscripciones

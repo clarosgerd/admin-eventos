@@ -23,6 +23,11 @@ class RegistroManualController extends Controller
         'numero_documento', 'tipo_documento', 'nombre', 'apellido', 'alias', 'genero',
         'fecha_nacimiento', 'email', 'direccion', 'ciudad', 'telefono',
         'contacto_emergencia_nombre', 'contacto_emergencia_telefono', 'contacto_emergencia_relacion',
+        // Talleres (21/08/2026) — opcional, uno o más nombres de taller
+        // separados por ';' (ver RegistrationController::importarBulk()
+        // en ApiRestEvent, resolverTalleresFila()). Vacío = sin talleres,
+        // válido siempre que el evento no tenga ninguno obligatorio.
+        'talleres',
     ];
 
     public function index(int $evento, ApiRestEventClient $client): View
@@ -34,15 +39,25 @@ class RegistroManualController extends Controller
         return view('eventos.registro-manual', ['evento' => $eventoData]);
     }
 
-    public function plantilla(): Response
+    /**
+     * La plantilla incluye un ejemplo con un taller real del evento (si
+     * tiene alguno cargado) para que el nombre a escribir en el CSV quede
+     * claro de una — mismo criterio que el <select> de categoría en la
+     * pantalla, que ya usa nombres reales.
+     */
+    public function plantilla(int $evento, ApiRestEventClient $client): Response
     {
+        $response = $client->forward('GET', "/event/{$evento}");
+        $talleres = $response?->json('eventos.talleres') ?? [];
+        $ejemploTaller = $talleres[0]['nombre'] ?? '';
+
         $handle = fopen('php://temp', 'w+');
         fwrite($handle, "\xEF\xBB\xBF");
         fputcsv($handle, self::COLUMNAS);
         fputcsv($handle, [
             '1234567', 'DNI', 'Ana', 'Prueba', 'AnaP', 'Femenino',
             '1995-06-15', 'ana@example.com', 'Av. Siempre Viva 123', 'La Paz', '77712345',
-            'Juan Prueba', '77798765', 'Padre',
+            'Juan Prueba', '77798765', 'Padre', $ejemploTaller,
         ]);
         rewind($handle);
         $csv = stream_get_contents($handle);
