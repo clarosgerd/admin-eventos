@@ -38,6 +38,13 @@ class FormTypeController extends Controller
                 'es_staff'           => $request->boolean('es_staff'),
                 // Ver brain/PLAN-VINCULACION-PONENTES-SESIONES-CONGRESO-13082026.md
                 'es_ponente'         => $request->boolean('es_ponente'),
+                // Caja para eventos tipo congreso (20/08/2026) — checkbox
+                // "checked" por default en el <form> de alta (mismo
+                // criterio que requiere_categoria), así que a diferencia
+                // de los demás booleans de este payload SÍ importa que el
+                // request->boolean() lea el checkbox real, no un default
+                // fijo acá.
+                'requiere_contacto_emergencia' => $request->boolean('requiere_contacto_emergencia'),
             ]
         );
 
@@ -67,6 +74,8 @@ class FormTypeController extends Controller
                 'es_staff'           => $request->boolean('es_staff'),
                 // Ver brain/PLAN-VINCULACION-PONENTES-SESIONES-CONGRESO-13082026.md
                 'es_ponente'         => $request->boolean('es_ponente'),
+                // Caja para eventos tipo congreso (20/08/2026).
+                'requiere_contacto_emergencia' => $request->boolean('requiere_contacto_emergencia'),
             ]
         );
 

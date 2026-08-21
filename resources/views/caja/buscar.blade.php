@@ -23,6 +23,7 @@
     const buscarUrl = @json(route('caja.buscar.resultados', $evento['id']));
     const cobrarUrlBase = @json(route('caja.cobrar-pendiente', [$evento['id'], '__REF__']));
     const editarUrlBase = @json(route('caja.editar', [$evento['id'], '__REF__']));
+    const eticketUrlBase = @json(route('caja.eticket', [$evento['id'], '__REF__']));
     const input = document.getElementById('q');
     const cont = document.getElementById('resultados');
     const msg = document.getElementById('msg');
@@ -40,6 +41,7 @@
             const total = r.totales && r.totales.grand_total !== undefined ? Number(r.totales.grand_total).toFixed(2) : '—';
             const estado = r.pago_status === 'paid' ? 'Pagada' : (r.pago_status === 'pending' ? 'Pendiente' : r.pago_status);
             const editarUrl = editarUrlBase.replace('__REF__', r.referencia);
+            const eticketUrl = eticketUrlBase.replace('__REF__', r.referencia);
             const cobrarBtn = r.pago_status === 'pending'
                 ? `<button type="button" class="btn-cobrar bg-brand-600 hover:bg-brand-700 text-white rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}">Cobrar</button>`
                 : '';
@@ -50,6 +52,7 @@
                 </div>
                 <div class="flex gap-2">
                     ${cobrarBtn}
+                    <a href="${eticketUrl}" target="_blank" class="bg-white border border-slate-300 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold">Comprobante</a>
                     <a href="${editarUrl}" class="bg-white border border-slate-300 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold">Editar</a>
                 </div>
             </div>`;
@@ -70,7 +73,7 @@
                     });
                     const data = await resp.json();
                     if (data.success) {
-                        alert('Cobro registrado correctamente.');
+                        window.open(eticketUrlBase.replace('__REF__', btn.dataset.ref), '_blank');
                         buscar();
                     } else {
                         alert(data.error || 'No se pudo cobrar.');

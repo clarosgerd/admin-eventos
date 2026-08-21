@@ -82,7 +82,10 @@ class CajaController extends Controller
 
         $referencia = $response->json('data.referencia');
 
-        return redirect()->route('caja.index', $evento)
+        // Comprobante imprimible (20/08/2026) — el cajero necesita algo
+        // físico para entregar; lo mandamos directo al comprobante en vez
+        // de a Caja > índice, que era un punto muerto sin acción posible.
+        return redirect()->route('caja.eticket', [$evento, $referencia])
             ->with('status', "Inscripción {$referencia} registrada y cobrada correctamente.");
     }
 
@@ -105,6 +108,20 @@ class CajaController extends Controller
         return response()->json($response?->json() ?? ['success' => false, 'error' => 'No se pudo conectar con el servidor.']);
     }
 
+    /**
+     * Prellenado desde `personas` (20/08/2026) — búsqueda en vivo llamada
+     * desde caja/_formulario.blade.php al tipear el N° documento en alta
+     * nueva. Proxy puro, mismo patrón que buscar().
+     */
+    public function buscarPersona(Request $request, int $evento, ApiRestEventClient $client): JsonResponse
+    {
+        $response = $client->forward('GET', "/event/{$evento}/caja/persona", query: [
+            'numero_documento' => $request->input('numero_documento', ''),
+        ]);
+
+        return response()->json($response?->json() ?? ['success' => false, 'error' => 'No se pudo conectar con el servidor.']);
+    }
+
     public function cobrarPendiente(int $evento, string $referencia, ApiRestEventClient $client): JsonResponse
     {
         $response = $client->forward('POST', "/registrations/{$referencia}/caja/cobrar-pendiente");
@@ -118,6 +135,22 @@ class CajaController extends Controller
         $registro = $client->forward('GET', "/registrations/{$referencia}")?->json('data');
 
         return view('caja.editar', ['evento' => $eventoData, 'registro' => $registro, 'referencia' => $referencia]);
+    }
+
+    /**
+     * Comprobante imprimible (20/08/2026) — el cajero lo necesita en mano
+     * después de cobrar (o para reimprimir uno viejo desde "Buscar").
+     * Mismo detalle que editar() (GET /registrations/{reference}), acá
+     * solo se muestra, no se edita nada.
+     */
+    public function eticket(int $evento, string $referencia, ApiRestEventClient $client): View
+    {
+        $eventoData = $this->fetchEvento($evento, $client);
+        $registro = $client->forward('GET', "/registrations/{$referencia}")?->json('data');
+
+        abort_if(!$registro, 404, 'Inscripción no encontrada.');
+
+        return view('caja.eticket', ['evento' => $eventoData, 'registro' => $registro, 'referencia' => $referencia]);
     }
 
     public function storeEditar(Request $request, int $evento, string $referencia, ApiRestEventClient $client): RedirectResponse

@@ -32,7 +32,10 @@ class CategoryPricePeriodController extends Controller
 
     public function store(Request $request, int $category, ApiRestEventClient $client): RedirectResponse
     {
-        $response = $client->forward('POST', "/category/{$category}/periodos", body: $request->only('nombre', 'price', 'fecha_desde', 'fecha_hasta'));
+        // price_usd (20/08/2026) — opcional, ver PrecioVigenteData en
+        // ApiRestEvent. Sin esto, el precio USD fijo de un evento con
+        // usd_precio_fijo=true ignoraba los períodos por completo.
+        $response = $client->forward('POST', "/category/{$category}/periodos", body: $request->only('nombre', 'price', 'price_usd', 'fecha_desde', 'fecha_hasta'));
 
         if (!$response || !$response->json('success')) {
             return back()->withErrors($this->extractErrors($response));
@@ -43,7 +46,7 @@ class CategoryPricePeriodController extends Controller
 
     public function update(Request $request, int $categoryPricePeriod, ApiRestEventClient $client): RedirectResponse
     {
-        $response = $client->forward('PUT', "/category-price-period/{$categoryPricePeriod}", body: $request->only('nombre', 'price', 'fecha_desde', 'fecha_hasta'));
+        $response = $client->forward('PUT', "/category-price-period/{$categoryPricePeriod}", body: $request->only('nombre', 'price', 'price_usd', 'fecha_desde', 'fecha_hasta'));
 
         if (!$response || !$response->json('success')) {
             return back()->withErrors($this->extractErrors($response));

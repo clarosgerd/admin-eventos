@@ -504,6 +504,10 @@
                             <input type="checkbox" name="es_ponente" value="1" {{ ($formType['esPonente'] ?? false) ? 'checked' : '' }}>
                             Es Ponente/Expositor <span class="text-slate-400">(vinculable a sesiones de congreso)</span>
                         </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="requiere_contacto_emergencia" value="1" {{ ($formType['requiereContactoEmergencia'] ?? true) ? 'checked' : '' }}>
+                            Pide contacto de emergencia <span class="text-slate-400">(desmarcar en congresos/talleres donde no aplica — oculta esos 3 campos en el formulario público y en Caja)</span>
+                        </label>
                     </div>
                     <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded">Guardar</button>
                 </form>
@@ -722,6 +726,10 @@
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="es_ponente" value="1">
                         Es Ponente/Expositor <span class="text-slate-400">(vinculable a sesiones de congreso)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="requiere_contacto_emergencia" value="1" checked>
+                        Pide contacto de emergencia <span class="text-slate-400">(desmarcar en congresos/talleres donde no aplica)</span>
                     </label>
                 </div>
                 <button type="submit" class="text-sm bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-md">Agregar tipo de formulario</button>

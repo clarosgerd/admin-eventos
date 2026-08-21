@@ -53,6 +53,8 @@
         'donacion' => $p['donacion'] ?? 0,
         'promoCodigo' => $p['promoCodigo'] ?? '',
         'souvenirs' => [],
+        // Congresos con talleres desde Caja (20/08/2026).
+        'talleres' => $p['talleres'] ?? [],
     ],
     'costoEdicion' => $costoEdicion,
     'actionUrl' => route('caja.editar.store', [$evento['id'], $referencia]),

@@ -62,9 +62,16 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::post('/eventos/{evento}/caja/nueva', [CajaController::class, 'storeNueva'])->name('caja.nueva.store');
     Route::get('/eventos/{evento}/caja/buscar', [CajaController::class, 'buscarPage'])->name('caja.buscar');
     Route::get('/eventos/{evento}/caja/buscar/resultados', [CajaController::class, 'buscar'])->name('caja.buscar.resultados');
+    // Prellenado desde `personas` (20/08/2026).
+    Route::get('/eventos/{evento}/caja/persona', [CajaController::class, 'buscarPersona'])->name('caja.persona');
     Route::post('/eventos/{evento}/caja/registrations/{referencia}/cobrar-pendiente', [CajaController::class, 'cobrarPendiente'])->name('caja.cobrar-pendiente');
     Route::get('/eventos/{evento}/caja/registrations/{referencia}/editar', [CajaController::class, 'editar'])->name('caja.editar');
     Route::post('/eventos/{evento}/caja/registrations/{referencia}/editar', [CajaController::class, 'storeEditar'])->name('caja.editar.store');
+    // Comprobante imprimible (20/08/2026) — el cajero necesita algo físico
+    // para entregar; reusa el mismo detalle que /registrations/{reference}
+    // (ya se pide en editar()), no hace falta un endpoint nuevo en
+    // ApiRestEvent.
+    Route::get('/eventos/{evento}/caja/registrations/{referencia}/comprobante', [CajaController::class, 'eticket'])->name('caja.eticket');
     // Cierres de caja — el control pedido por el stakeholder; solo
     // admin/super_admin en la práctica (ApiRestEvent rechaza a un cajero
     // con 403, ver assertCanWriteEvento()).

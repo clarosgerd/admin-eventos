@@ -21,11 +21,20 @@
                 🔥 {{ $categoria['periodo_vigente_nombre'] }}
             </span>
         @endif
+        @if (!is_null($categoria['precio_usd_vigente'] ?? null))
+            <span class="text-slate-400">·</span>
+            US$ {{ number_format($categoria['precio_usd_vigente'], 2) }}
+        @endif
     </p>
     <p class="text-xs text-slate-400 mt-1">
         Una categoría sin ningún período acá cobra su precio base ({{ 'Bs ' . number_format($categoria['price'] ?? 0, 2) }})
         tal cual, sin cambios. Fuera de período (huecos entre fechas, o después del último) se cae al precio del
         período vencido más reciente — nunca se bloquea una venta por un hueco de configuración.
+    </p>
+    <p class="text-xs text-slate-400 mt-1">
+        "Precio USD" es opcional por período — solo importa si el evento cobra en USD sin tipo de cambio
+        (Configuración → Precio USD fijo). Un período sin USD cargado cae al precio USD base de la categoría
+        ({{ !is_null($categoria['priceUsd'] ?? null) ? 'US$ '.number_format($categoria['priceUsd'], 2) : 'sin cargar' }}).
     </p>
 </div>
 
@@ -35,6 +44,7 @@
             <tr>
                 <th class="px-4 py-2">Nombre</th>
                 <th class="px-4 py-2">Precio</th>
+                <th class="px-4 py-2">Precio USD <span class="font-normal text-slate-400">(opc.)</span></th>
                 <th class="px-4 py-2">Desde</th>
                 <th class="px-4 py-2">Hasta</th>
                 <th class="px-4 py-2"></th>
@@ -49,6 +59,10 @@
                     </td>
                     <td class="px-4 py-2">
                         <input type="number" step="0.01" min="0" name="price" value="{{ $periodo['price'] }}" required
+                               form="periodo-form-{{ $periodo['id'] }}" class="border border-slate-300 rounded px-2 py-1 w-24">
+                    </td>
+                    <td class="px-4 py-2">
+                        <input type="number" step="0.01" min="0" name="price_usd" value="{{ $periodo['price_usd'] }}" placeholder="opc."
                                form="periodo-form-{{ $periodo['id'] }}" class="border border-slate-300 rounded px-2 py-1 w-24">
                     </td>
                     <td class="px-4 py-2">
@@ -78,7 +92,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Sin períodos cargados — se cobra el precio base tal cual.</td></tr>
+                <tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Sin períodos cargados — se cobra el precio base tal cual.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -96,6 +110,10 @@
         <div>
             <label class="block text-sm font-medium mb-1">Precio</label>
             <input type="number" name="price" step="0.01" min="0" required class="border border-slate-300 rounded px-2 py-1.5 w-full">
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">Precio USD <span class="font-normal text-slate-400">(opcional)</span></label>
+            <input type="number" name="price_usd" step="0.01" min="0" placeholder="Solo si el evento cobra en USD fijo" class="border border-slate-300 rounded px-2 py-1.5 w-full">
         </div>
         <div class="grid grid-cols-2 gap-2">
             <div>
