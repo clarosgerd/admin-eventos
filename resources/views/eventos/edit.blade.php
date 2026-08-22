@@ -567,6 +567,24 @@
                                     Sexo
                                 </label>
                             </div>
+                            {{-- Souvenirs invisibles para el participante (22/08/2026) —
+                                 checked por defecto (opt-out, no opt-in): un ítem nace
+                                 visible, el organizador lo destilda si quiere que se
+                                 asigne solo al inscribirse, sin pasar por el formulario
+                                 (pensado para el retiro en sitio en elascenso/delivery). No
+                                 se puede combinar con Talla/Sexo tildados — nadie lo va a
+                                 elegir, ApiRestEvent rechaza esa combinación. --}}
+                            <div class="mt-2">
+                                <label class="text-xs flex items-center gap-1">
+                                    <input type="checkbox" name="visible_participante" form="souvenir-form-{{ $souvenir['id'] }}" value="1" @checked($souvenir['visible_participante'] ?? true)>
+                                    Visible para el participante
+                                </label>
+                                <p class="text-xs text-slate-400 mt-0.5">
+                                    Destildado: se asigna solo a cada participante al
+                                    inscribirse, sin costo aparte y sin que lo elija — nunca
+                                    aparece en el formulario de inscripción.
+                                </p>
+                            </div>
                             {{-- Gestionar stock aplica a CUALQUIER ítem, tenga o no talla/sexo
                                  (ej. una medalla): sin filas ahí, el ítem queda con
                                  "disponibilidad no controlada" — ver stock.blade.php. Antes este

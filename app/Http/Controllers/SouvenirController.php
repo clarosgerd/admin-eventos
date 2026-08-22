@@ -51,6 +51,11 @@ class SouvenirController extends Controller
                 'incluido'       => $request->boolean('incluido'),
                 'requiere_talla' => $request->boolean('requiere_talla'),
                 'requiere_sexo'  => $request->boolean('requiere_sexo'),
+                // Souvenirs invisibles para el participante (22/08/2026) —
+                // checkbox opt-out (checked por defecto en la vista): igual
+                // que los de arriba, si está destildado no manda nada, por
+                // eso el default explícito acá.
+                'visible_participante' => $request->boolean('visible_participante'),
             ]
         );
 
