@@ -85,6 +85,10 @@ class OrganizadorController extends Controller
     {
         $response = $client->forward('PUT', "/organizadores/{$organizador}/formas-pago", body: [
             'forma_pago_ids' => $request->input('forma_pago_ids', []),
+            // Pago pendiente USD (24/08/2026) — link que ApiRestEvent guarda en
+            // el pivote solo para la fila "pendiente_usd" (ver
+            // OrganizadorController::updateFormasPago() del lado de la API).
+            'link_pago_pendiente_usd' => $request->input('link_pago_pendiente_usd'),
         ]);
 
         if (!$response || !$response->json('success')) {

@@ -57,6 +57,27 @@ class ParticipantesDetalleController extends Controller
         ]);
     }
 
+    /**
+     * Conciliación manual de "Pago pendiente (USD)" (24/08/2026) — el admin
+     * confirma desde esta misma pantalla que el participante pagó por el
+     * link enviado por correo. Reenvía a
+     * RegistrationController::confirmarPagoManual() en ApiRestEvent, que
+     * revalida tipo_pago/pago_status server-side (no confía en que el botón
+     * solo se muestre para las filas correctas).
+     */
+    public function confirmarPagoManual(Request $request, int $evento, string $referencia, ApiRestEventClient $client): \Illuminate\Http\RedirectResponse
+    {
+        $this->assertCanViewEvento($evento);
+
+        $response = $client->forward('PATCH', "/registrations/{$referencia}/confirmar-pago-manual");
+
+        if (!$response || !$response->json('success')) {
+            return back()->withErrors($this->extractErrors($response));
+        }
+
+        return back()->with('status', "Pago confirmado — referencia {$referencia}.");
+    }
+
     public function csvDownload(Request $request, int $evento, ApiRestEventClient $client): Response
     {
         $this->assertCanViewEvento($evento);

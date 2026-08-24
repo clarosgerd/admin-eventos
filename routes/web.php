@@ -197,6 +197,7 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     // de edición de contacto, otra UX/contrato).
     Route::get('/eventos/{evento}/participantes/detalle', [ParticipantesDetalleController::class, 'index'])->name('participantes.detalle');
     Route::get('/eventos/{evento}/participantes/detalle/csv', [ParticipantesDetalleController::class, 'csvDownload'])->name('participantes.detalle.csv');
+    Route::post('/eventos/{evento}/participantes/detalle/{referencia}/confirmar-pago-manual', [ParticipantesDetalleController::class, 'confirmarPagoManual'])->name('participantes.detalle.confirmar-pago-manual');
 
     // Presupuesto de un evento (control financiero del organizador) —
     // mismo criterio de permisos que Numeración/Participantes: super_admin
