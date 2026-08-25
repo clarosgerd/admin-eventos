@@ -41,4 +41,11 @@ return [
         'retry_delay' => env('EXTERNAL_API_RETRY_DELAY_MS', 400),
     ],
 
+    // Frontend público (elascenso/event) — usado solo para armar el link
+    // "Ver como participante" / "Vista previa (borrador)" en la edición de
+    // evento (ver eventos/edit.blade.php). No es la API, es el sitio SPA.
+    'event_frontend' => [
+        'base_url' => env('EVENT_FRONTEND_URL', 'http://localhost/elascenso/event/'),
+    ],
+
 ];

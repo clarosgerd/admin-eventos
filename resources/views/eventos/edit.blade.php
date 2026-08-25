@@ -28,6 +28,17 @@
            class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold">
             Participantes
         </a>
+        {{-- "Ver como participante" (25/08/2026) — abre el frontend público con el
+             deep-link ?evento=<id> que ya existe (elascenso/event/index.php). Ese
+             endpoint hoy no filtra por `publicado` (gap conocido, aceptado por ahora),
+             así que sirve igual para previsualizar un borrador; el frontend entra en
+             modo lectura forzado (sin permitir confirmar inscripción) cuando
+             `publicado` es false — ver elascenso/event/index.php renderPreviewBanner(). --}}
+        <a href="{{ rtrim(config('services.event_frontend.base_url'), '/') }}/?evento={{ $evento['id'] }}"
+           target="_blank" rel="noopener"
+           class="text-sm px-3 py-1.5 rounded-md font-semibold border {{ $evento['publicado'] ? 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700' : 'bg-amber-50 border-amber-300 hover:bg-amber-100 text-amber-800' }}">
+            {{ $evento['publicado'] ? 'Ver evento público' : 'Vista previa (borrador)' }}
+        </a>
 
         <details class="relative group">
             <summary class="text-sm bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md font-semibold cursor-pointer select-none list-none flex items-center gap-1.5 [&::-webkit-details-marker]:hidden">
