@@ -342,6 +342,55 @@
                     <input type="text" name="deslinde_pdf_url" value="{{ old('deslinde_pdf_url', $evento['deslinde_pdf_url']) }}"
                            class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
                 </div>
+
+                {{-- Orden de secciones en la página del evento (25/08/2026) — controla en qué
+                     orden se muestran estos bloques en elascenso/event (#screen-form-types),
+                     debajo de la cabecera fija con nombre/fecha/ubicación. Cada bloque se sigue
+                     ocultando solo si el evento no tiene datos para él (sin auspiciadores → no
+                     se muestra, etc.) — esto solo decide el orden relativo entre los que sí
+                     tienen datos. Sin configurar (todos los eventos existentes hoy), el
+                     frontend usa este mismo orden por defecto, cero cambio visual. --}}
+                @php
+                    $seccionOrdenLabels = [
+                        'description' => 'Descripción del evento',
+                        'calendar'    => 'Agregar al calendario',
+                        'countdown'   => 'Cuenta regresiva',
+                        'media'       => 'Video o imagen',
+                        'sponsors'    => 'Auspiciadores',
+                        'kitGallery'  => 'Galería del kit',
+                        'routeMap'    => 'Mapa de ruta',
+                        'agenda'      => 'Agenda',
+                        'formTypes'   => 'Tarjetas de tipo de formulario',
+                    ];
+                    $seccionOrdenDefault = array_keys($seccionOrdenLabels);
+                    $seccionOrdenActual = is_array($evento['seccionesOrden'] ?? null) && count($evento['seccionesOrden'])
+                        ? array_values($evento['seccionesOrden'])
+                        : $seccionOrdenDefault;
+                    foreach ($seccionOrdenDefault as $clave) {
+                        if (!in_array($clave, $seccionOrdenActual, true)) {
+                            $seccionOrdenActual[] = $clave;
+                        }
+                    }
+                    $seccionOrdenPosiciones = array_flip($seccionOrdenActual);
+                @endphp
+                <div class="col-span-2 border border-slate-200 rounded-md p-3">
+                    <p class="text-sm font-semibold mb-1">Orden de secciones en la página del evento</p>
+                    <p class="text-xs text-slate-500 mb-3">
+                        Define en qué orden aparecen estos bloques para el participante (1 = primero).
+                        Un bloque sin datos cargados (ej. sin auspiciadores) no se muestra igual, tenga
+                        la posición que tenga.
+                    </p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        @foreach ($seccionOrdenLabels as $clave => $label)
+                            <label class="flex items-center gap-2 text-xs">
+                                <input type="number" name="orden[{{ $clave }}]" min="1" max="{{ count($seccionOrdenLabels) }}"
+                                       value="{{ old('orden.'.$clave, $seccionOrdenPosiciones[$clave] + 1) }}"
+                                       class="w-14 border border-slate-300 rounded-md px-2 py-1">
+                                {{ $label }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
             </div>
             <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white rounded-md px-4 py-2 text-sm font-semibold">
                 Guardar datos del evento

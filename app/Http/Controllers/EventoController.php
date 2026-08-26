@@ -341,6 +341,18 @@ class EventoController extends Controller
         // vino tildado) para que destildear también persista.
         $payload['talleresConCosto'] = $request->boolean('talleresConCosto');
 
+        // Orden de secciones en la página del evento (25/08/2026) — la
+        // vista manda 9 inputs numéricos, uno por bloque
+        // (orden[description], orden[calendar], ...); acá se ordenan por
+        // su valor y se convierte a la lista de claves ordenada que
+        // espera ApiRestEvent (EventoService::update() -> secciones_orden).
+        // El backend revalida que sean exactamente esas 9 claves.
+        $ordenSecciones = $request->input('orden', []);
+        if (is_array($ordenSecciones) && count($ordenSecciones)) {
+            asort($ordenSecciones);
+            $payload['seccionesOrden'] = array_keys($ordenSecciones);
+        }
+
         $response = $client->forward('PUT', "/event/{$evento}", body: $payload);
 
         // Mejora de visualización (12/08/2026) — '#datos' es la primera
