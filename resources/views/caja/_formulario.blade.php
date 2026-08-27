@@ -23,15 +23,26 @@
     <input type="hidden" name="totales_json" id="totales_json">
 
     @if ($modo === 'editar' && $pagoStatus === 'paid')
+        {{-- Agregar talleres / cambiar categoría en inscripción pagada
+             (25/08/2026) — el monto real ya no es siempre el fijo de acá
+             (ver ApiRestEvent ActualizarInscripcionPagadaAction): si se
+             agrega un taller o se cambia de categoría, se suma/resta la
+             diferencia real, que puede terminar en una DEVOLUCIÓN
+             (categoría más barata). El monto exacto (a cobrar o a
+             devolver) recién se conoce al guardar — este aviso ya no
+             promete un número fijo. --}}
         <div class="bg-amber-50 border border-amber-300 text-amber-900 rounded-md p-4 text-sm">
             <p class="font-semibold mb-1">Esta inscripción ya está pagada.</p>
             <p>
-                Guardar los cambios cobra un adicional configurado de
-                <strong>{{ number_format($costoEdicion ?? 0, 2) }}</strong>.
+                Guardar los cambios cobra un cargo base de edición de
+                <strong>{{ number_format($costoEdicion ?? 0, 2) }}</strong>, más la diferencia real de
+                cualquier taller agregado o cambio de categoría — esto último puede ser una
+                <strong>devolución</strong> al participante si la categoría nueva es más barata. El
+                monto final se confirma al guardar.
             </p>
             <label class="inline-flex items-center gap-2 mt-2">
                 <input type="checkbox" id="confirmarAdicional">
-                Confirmo que voy a cobrar ese adicional
+                Entiendo y confirmo el cobro o devolución que corresponda
             </label>
         </div>
     @endif
@@ -95,8 +106,16 @@
                 </select>
                 <input type="text" id="f_aliasTituloOtro" placeholder="Especificar título" style="display:none" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm mt-1">
             </div>
-            <div><label class="block text-xs font-semibold mb-1">Género</label>
-                <select id="f_genero" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+            <div><label class="block text-xs font-semibold mb-1">Género *</label>
+                {{-- Bug real 25/08/2026 (reportado por el usuario: "muchas
+                     personas de sexo femenino registraron masculino") — este
+                     select no tenía opción vacía ni `required`, y "Masculino"
+                     era la primera opción: si el cajero no lo tocaba, quedaba
+                     Masculino por defecto del navegador aunque la persona
+                     fuera mujer. Ahora exige elección explícita, igual que
+                     el resto de los campos obligatorios de este formulario. --}}
+                <select id="f_genero" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                    <option value="" @selected(empty($prefill['genero']))>Seleccionar…</option>
                     <option value="Masculino" @selected(($prefill['genero'] ?? '') === 'Masculino')>Masculino</option>
                     <option value="Femenino" @selected(($prefill['genero'] ?? '') === 'Femenino')>Femenino</option>
                 </select></div>
@@ -266,7 +285,18 @@
         select.innerHTML = '<option value="">— seleccionar —</option>' + (EVENTO.categories || []).map(c =>
             `<option value="${c.id}" data-precio="${c.precio_vigente}">${c.name} (${Number(c.precio_vigente).toFixed(2)})</option>`
         ).join('');
-        const pre = {{ json_encode($prefill['categoria'] ?? null) }};
+        // Bug real 27/08/2026 (reportado por el usuario: "no me muestra la
+        // opción de modificar/adición de talleres incluso cuando hago
+        // click en checkbox") — acá usaba la directiva Blade de echo
+        // ESCAPADO en vez de la de echo SIN escapar (mismo criterio que
+        // EVENTO/PREFILL_TALLERES más arriba). Cuando `categoria` es un
+        // string (el caso normal — categorias.id se expone como string),
+        // Blade convertía las comillas del JSON en la entidad HTML
+        // correspondiente, produciendo JS inválido que rompía el <script>
+        // ENTERO por error de sintaxis — nada de lo que viene después
+        // (talleres, souvenirs, equipo, alias de congreso, etc.) llegaba
+        // a ejecutarse nunca, no solo esta función.
+        const pre = @json($prefill['categoria'] ?? null);
         if (pre) select.value = String(pre);
     }
 

@@ -65,14 +65,25 @@ class DashboardInscripcionesController extends Controller
         fwrite($handle, "\xEF\xBB\xBF");
         fputcsv($handle, [
             'fecha', 'hora_inicio', 'hora_fin', 'sala', 'taller', 'sesion',
-            'nombre', 'apellido', 'numero_documento', 'correo', 'telefono', 'referencia', 'precio',
+            // Título académico (25/08/2026) — reusa participanteAlias, que
+            // en ApiRestEvent::ReporteInscritosData::detalleTalleres() ya
+            // viene con el mismo dato que el campo "Alias/Título" del
+            // formulario de inscripción (Dr./Lic./PhD./etc. para eventos de
+            // congreso, ver toggleAliasTituloMode() en elascenso/event).
+            'titulo', 'nombre', 'apellido', 'numero_documento', 'correo', 'telefono', 'referencia', 'precio',
+            // Estado de pago por fila (27/08/2026) — "Pagado" (inscripción
+            // original, Caja, o SIP confirmado) vs "Pendiente (efectivo en
+            // el evento)" (autoservicio, todavía sin cobrar). Ver
+            // ReporteInscritosData::detalleTalleres().
+            'estado_pago',
         ]);
         foreach ($filas as $fila) {
             fputcsv($handle, [
                 $fila['fecha'], $fila['horaInicio'], $fila['horaFin'], $fila['sala'],
                 $fila['tallerNombre'], $fila['sesionTitulo'],
-                $fila['participanteNombre'], $fila['participanteApellido'], $fila['numeroDocumento'],
+                $fila['participanteAlias'] ?? null, $fila['participanteNombre'], $fila['participanteApellido'], $fila['numeroDocumento'],
                 $fila['correo'], $fila['telefono'], $fila['referencia'], $fila['precio'],
+                $fila['estadoPago'] ?? 'Pagado',
             ]);
         }
         rewind($handle);

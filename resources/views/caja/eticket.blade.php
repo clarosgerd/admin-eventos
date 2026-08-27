@@ -134,8 +134,18 @@
         @if (($totales['talleres'] ?? 0) > 0)
             <div class="eticket-row"><span class="eticket-label">Talleres</span><span class="eticket-value">{{ number_format($totales['talleres'], 2) }}</span></div>
         @endif
-        <div class="eticket-row"><span class="eticket-label">Souvenirs</span><span class="eticket-value">{{ number_format($totales['souvenirs'] ?? 0, 2) }}</span></div>
-        <div class="eticket-row"><span class="eticket-label">Donación</span><span class="eticket-value">{{ number_format($totales['donacion'] ?? 0, 2) }}</span></div>
+        {{-- Bug real 27/08/2026 (reportado por el usuario: "en caja me
+             sigue mostrando souvenir y donaciones") — Souvenirs/Donación
+             se mostraban siempre, incluso en 0, a diferencia de
+             Talleres/Descuento/Descuento grupal que ya se ocultaban.
+             Mismo criterio que ya se aplicó en el e-ticket público
+             (elascenso/event index.php::buildETicket(), 26/08). --}}
+        @if (($totales['souvenirs'] ?? 0) > 0)
+            <div class="eticket-row"><span class="eticket-label">Souvenirs</span><span class="eticket-value">{{ number_format($totales['souvenirs'], 2) }}</span></div>
+        @endif
+        @if (($totales['donacion'] ?? 0) > 0)
+            <div class="eticket-row"><span class="eticket-label">Donación</span><span class="eticket-value">{{ number_format($totales['donacion'], 2) }}</span></div>
+        @endif
         <div class="eticket-row"><span class="eticket-label">Cargo de servicio</span><span class="eticket-value">{{ number_format($totales['fee'] ?? 0, 2) }}</span></div>
         @if (($totales['descuento'] ?? 0) > 0)
             <div class="eticket-row"><span class="eticket-label">Descuento</span><span class="eticket-value" style="color:#258f36;">-{{ number_format($totales['descuento'], 2) }}</span></div>

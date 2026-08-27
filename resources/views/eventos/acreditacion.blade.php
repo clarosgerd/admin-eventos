@@ -61,6 +61,12 @@
     <h2 class="font-bold mb-1 text-sm">Resultado</h2>
     <p id="resultadoReferencia" class="text-xs text-slate-500 font-mono mb-3"></p>
     <p id="resultadoError" class="text-sm text-red-600" style="display:none;"></p>
+    {{-- Talleres y pagos en acreditación (26/08/2026) — el staff necesita
+         ver, en el momento de acreditar, qué pagó esta persona (inscripción
+         base + cualquier cobro adicional por SIP) para poder resolver ahí
+         mismo un pago 'pending'/'error' sin tocado, en vez de enterarse
+         después. --}}
+    <div id="resultadoPagos" class="mb-3"></div>
     <div id="resultadoParticipantes" class="space-y-2"></div>
 </section>
 
@@ -119,10 +125,42 @@ async function buscarReferencia(referencia) {
     renderParticipantes(data);
 }
 
+// Etiqueta + color por estado de un pago adicional — 'pending'/'error' se
+// destacan a propósito (es justo lo que el staff necesita ver para actuar),
+// 'paid' queda discreto (ya está resuelto), 'expired' informativo nomás.
+const PAGO_ADICIONAL_ESTADO = {
+    paid:    { label: 'Pagado',    cls: 'bg-green-50 text-green-700 border-green-200' },
+    pending: { label: 'Pendiente', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+    error:   { label: '⚠ Sin resolver', cls: 'bg-red-50 text-red-700 border-red-200' },
+    expired: { label: 'Vencido',   cls: 'bg-slate-100 text-slate-500 border-slate-200' },
+};
+
+function renderResumenPagos(data) {
+    const cont = document.getElementById('resultadoPagos');
+    cont.innerHTML = '';
+
+    const totalBase = document.createElement('p');
+    totalBase.className = 'text-xs text-slate-600 mb-1';
+    const moneda = data.monedaPago === 'USD' ? 'US$' : 'Bs';
+    const monto = data.monedaPago === 'USD' ? data.totalPagado : (data.totales ? data.totales.grand_total : null);
+    totalBase.innerHTML = `<strong>Inscripción:</strong> ${monto != null ? moneda + ' ' + Number(monto).toFixed(2) : '—'}`
+        + (data.tipoPago ? ` · ${escHtml(data.tipoPago)}` : '');
+    cont.appendChild(totalBase);
+
+    (data.pagosAdicionales || []).forEach(pago => {
+        const estado = PAGO_ADICIONAL_ESTADO[pago.pagoStatus] || { label: pago.pagoStatus, cls: 'bg-slate-100 text-slate-600 border-slate-200' };
+        const row = document.createElement('p');
+        row.className = `text-xs border rounded-md px-2 py-1 mt-1 inline-block mr-2 ${estado.cls}`;
+        row.innerHTML = `<strong>Adicional ${escHtml(pago.referencia)}:</strong> Bs ${Number(pago.monto).toFixed(2)} · ${estado.label}`;
+        cont.appendChild(row);
+    });
+}
+
 function renderParticipantes(data) {
     const listEl = document.getElementById('resultadoParticipantes');
     const pagado = data.pagoStatus === 'paid';
     listEl.innerHTML = '';
+    renderResumenPagos(data);
 
     if (!pagado) {
         const aviso = document.createElement('p');
@@ -136,9 +174,12 @@ function renderParticipantes(data) {
         card.className = 'border border-slate-200 rounded-md p-3 flex items-center justify-between gap-3 flex-wrap';
         card.id = 'participante-' + p.id;
 
+        const talleresTxt = (p.talleres || []).length
+            ? '<br><span class="text-xs text-slate-500">Talleres: ' + p.talleres.map(t => escHtml(t.tallerNombre || '')).join(', ') + '</span>'
+            : '';
         const info = document.createElement('div');
         info.innerHTML = `<span class="font-semibold text-sm">${escHtml(p.nombre)} ${escHtml(p.apellido)}</span>
-            <span class="text-xs text-slate-500"> · Categoría: ${escHtml(p.categoria)}</span>`;
+            <span class="text-xs text-slate-500"> · Categoría: ${escHtml(p.categoria)}</span>${talleresTxt}`;
         card.appendChild(info);
 
         const accion = document.createElement('div');

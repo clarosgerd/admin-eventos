@@ -175,8 +175,15 @@ class CajaController extends Controller
         }
 
         $status = 'Inscripción actualizada correctamente.';
-        if ($esPagada && $response->json('costo_adicion') > 0) {
-            $status .= ' Adicional cobrado: ' . number_format((float) $response->json('costo_adicion'), 2) . '.';
+        // != 0 en vez de > 0 (25/08/2026) — un cambio a categoría más
+        // barata da un costo_adicion negativo (devolución al participante,
+        // ver ApiRestEvent CajaController::editarPagada()), que antes no
+        // se reflejaba en este mensaje.
+        $costoAdicion = (float) $response->json('costo_adicion');
+        if ($esPagada && abs($costoAdicion) > 0.001) {
+            $status .= $costoAdicion > 0
+                ? ' Adicional cobrado: ' . number_format($costoAdicion, 2) . '.'
+                : ' Devolución al participante: ' . number_format(abs($costoAdicion), 2) . '.';
         }
 
         return redirect()->route('caja.index', $evento)->with('status', $status);
@@ -190,10 +197,45 @@ class CajaController extends Controller
             'hasta'         => $request->input('hasta'),
         ]));
 
+        // Detalle de cierre de caja (27/08/2026) — el filtro de cajero
+        // necesita la lista de cajeros que tuvieron turnos en este evento
+        // (no existe un endpoint de "admins del evento" reusable acá). Se
+        // deriva de una consulta SIN el filtro de cajero (respetando
+        // fecha, si hay), no de la lista ya filtrada — si no, elegir un
+        // cajero haría desaparecer del <select> a los demás.
+        $todosLosTurnos = $request->filled('cajero')
+            ? ($client->forward('GET', "/event/{$evento}/caja/turnos", query: array_filter([
+                'desde' => $request->input('desde'),
+                'hasta' => $request->input('hasta'),
+              ]))?->json('turnos') ?? [])
+            : ($response?->json('turnos') ?? []);
+        $cajeros = collect($todosLosTurnos)
+            ->unique('cajeroId')
+            ->map(fn ($t) => ['id' => $t['cajeroId'], 'nombre' => $t['cajeroNombre'] ?? ('#'.$t['cajeroId'])])
+            ->sortBy('nombre')
+            ->values();
+
         return view('caja.cierres', [
             'evento' => $this->fetchEvento($evento, $client),
             'turnos' => $response?->json('turnos') ?? [],
+            'cajeros' => $cajeros,
             'error'  => (!$response || !$response->json('success')) ? ($response?->json('error') ?? 'No se pudo conectar con el servidor.') : null,
+        ]);
+    }
+
+    /**
+     * Detalle de un turno (27/08/2026) — drill-down pedido por el usuario
+     * desde el reporte de cierres, mismo patrón que editar()/eticket().
+     */
+    public function cierreDetalle(int $evento, int $turno, ApiRestEventClient $client): View
+    {
+        $response = $client->forward('GET', "/event/{$evento}/caja/turnos/{$turno}");
+
+        abort_if(!$response || !$response->json('success'), $response?->status() ?? 502, $response?->json('error') ?? 'No se pudo cargar el detalle del turno.');
+
+        return view('caja.cierre-detalle', [
+            'evento' => $this->fetchEvento($evento, $client),
+            'turno'  => $response->json('turno'),
         ]);
     }
 

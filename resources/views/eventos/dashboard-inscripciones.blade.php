@@ -240,6 +240,15 @@
         Descargar CSV (detalle sin agrupar)
     </a>
 </div>
+{{-- Estado del pago por fila (27/08/2026) — "Cobrada" es lo ya cobrado
+     (inscripción original, Caja, o SIP confirmado); "Pendiente" es lo que
+     el participante eligió pagar en efectivo el día del evento y todavía
+     no se cobró — ver ReporteInscritosData::agruparPorTaller(). Se separan
+     para que "Recaudación" no dé una idea equivocada de cuánta plata
+     realmente entró ya. --}}
+<p class="text-xs text-slate-500 mb-2">
+    "Pendiente" = el participante eligió pagar en efectivo el día del evento y todavía no se cobró.
+</p>
 <div class="overflow-x-auto">
     <table class="w-full bg-white rounded-lg shadow text-sm">
         <thead>
@@ -250,7 +259,8 @@
                 <th class="px-3 py-2 font-semibold text-right">Inscritos</th>
                 <th class="px-3 py-2 font-semibold text-right">Cupo</th>
                 <th class="px-3 py-2 font-semibold text-right">Disponible</th>
-                <th class="px-3 py-2 font-semibold text-right">Recaudación</th>
+                <th class="px-3 py-2 font-semibold text-right">Recaudación cobrada</th>
+                <th class="px-3 py-2 font-semibold text-right">Pendiente</th>
             </tr>
         </thead>
         <tbody>
@@ -269,14 +279,28 @@
                     <td class="px-3 py-2 text-right {{ $fila['disponible'] === 0 ? 'text-red-600 font-semibold' : '' }}">
                         {{ $fila['disponible'] ?? '—' }}
                     </td>
-                    <td class="px-3 py-2 text-right">${{ number_format($fila['recaudacion'], 2) }}</td>
+                    <td class="px-3 py-2 text-right">${{ number_format($fila['recaudacionCobrada'], 2) }}</td>
+                    <td class="px-3 py-2 text-right {{ $fila['recaudacionPendiente'] > 0 ? 'text-amber-700 font-semibold' : 'text-slate-400' }}">
+                        @if ($fila['recaudacionPendiente'] > 0)
+                            ${{ number_format($fila['recaudacionPendiente'], 2) }} ({{ $fila['cantidadPendiente'] }})
+                        @else
+                            —
+                        @endif
+                    </td>
                 </tr>
             @endforeach
             <tr class="border-t border-slate-200 font-semibold bg-slate-50">
                 <td class="px-3 py-2" colspan="3">Total</td>
                 <td class="px-3 py-2 text-right">{{ $reporteInscritos['porTaller']['totalCantidad'] }}</td>
                 <td class="px-3 py-2" colspan="2"></td>
-                <td class="px-3 py-2 text-right">${{ number_format($reporteInscritos['porTaller']['totalRecaudacion'], 2) }}</td>
+                <td class="px-3 py-2 text-right">${{ number_format($reporteInscritos['porTaller']['totalRecaudacionCobrada'], 2) }}</td>
+                <td class="px-3 py-2 text-right {{ $reporteInscritos['porTaller']['totalRecaudacionPendiente'] > 0 ? 'text-amber-700' : 'text-slate-400' }}">
+                    @if ($reporteInscritos['porTaller']['totalRecaudacionPendiente'] > 0)
+                        ${{ number_format($reporteInscritos['porTaller']['totalRecaudacionPendiente'], 2) }} ({{ $reporteInscritos['porTaller']['totalCantidadPendiente'] }})
+                    @else
+                        —
+                    @endif
+                </td>
             </tr>
         </tbody>
     </table>

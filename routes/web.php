@@ -76,6 +76,8 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     // admin/super_admin en la práctica (ApiRestEvent rechaza a un cajero
     // con 403, ver assertCanWriteEvento()).
     Route::get('/eventos/{evento}/caja/cierres', [CajaController::class, 'cierres'])->name('caja.cierres');
+    // Detalle de un turno (27/08/2026) — drill-down de movimientos.
+    Route::get('/eventos/{evento}/caja/cierres/{turno}', [CajaController::class, 'cierreDetalle'])->name('caja.cierres.detalle');
 
     // Publicar: alcanzable por super_admin y por un admin scoped a su
     // propio evento — el scoping real lo valida ApiRestEvent
