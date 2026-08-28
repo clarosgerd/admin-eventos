@@ -431,6 +431,19 @@
                         <input type="color" name="color" value="{{ $categoria['color'] ?: '#022858' }}" class="flex-1 h-8 border border-slate-300 rounded">
                         <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-2 py-1 rounded">Guardar</button>
                     </div>
+                    {{-- Categorías por form_type (27/08/2026) — "General" (vacío) =
+                         categoría compartida por todos los form_types del evento
+                         (comportamiento previo, default). Mismo criterio ya usado en
+                         el selector de form_type de los ítems de agenda más abajo. --}}
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold mb-1">Tipo de formulario</label>
+                        <select name="formulario_id" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                            <option value="">General (todos los tipos de este evento)</option>
+                            @foreach ($evento['formTypes'] as $formType)
+                                <option value="{{ $formType['id'] }}" @selected(($categoria['formulario_id'] ?? null) == $formType['id'])>{{ $formType['name'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </form>
                 <form method="POST" action="{{ route('categorias.destroy', $categoria['id']) }}" class="mt-1 inline"
                       onsubmit="return confirm('¿Eliminar esta categoría?')">
@@ -474,6 +487,15 @@
                 <div class="flex items-end gap-2">
                     <input type="color" name="color" value="#022858" class="flex-1 h-8 border border-slate-300 rounded">
                     <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-2 py-1 rounded">Agregar</button>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs font-semibold mb-1">Tipo de formulario</label>
+                    <select name="formulario_id" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                        <option value="">General (todos los tipos de este evento)</option>
+                        @foreach ($evento['formTypes'] as $formType)
+                            <option value="{{ $formType['id'] }}">{{ $formType['name'] }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </form>
         </div>

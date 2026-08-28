@@ -16,10 +16,17 @@ class CategoriaController extends Controller
 {
     public function store(Request $request, int $evento, ApiRestEventClient $client): RedirectResponse
     {
+        // Categorías por form_type (27/08/2026) — formulario_id vacío ("")
+        // debe mandarse como ausente/null, no como string vacío, para que
+        // ApiRestEvent lo trate como "compartida por todos los form_types"
+        // en vez de rechazar la validación `nullable|integer`.
         $payload = array_merge(
-            $request->only('name', 'price', 'price_usd', 'description', 'color'),
+            $request->only('name', 'price', 'price_usd', 'description', 'color', 'formulario_id'),
             ['event_id' => $evento]
         );
+        if (($payload['formulario_id'] ?? '') === '') {
+            unset($payload['formulario_id']);
+        }
 
         $response = $client->forward('POST', '/category', body: $payload);
 
@@ -35,7 +42,17 @@ class CategoriaController extends Controller
 
     public function update(Request $request, int $categoria, ApiRestEventClient $client): RedirectResponse
     {
-        $response = $client->forward('PUT', "/category/{$categoria}", body: $request->only('name', 'price', 'price_usd', 'description', 'color'));
+        // Categorías por form_type (27/08/2026) — a diferencia de store(),
+        // acá SÍ se manda `formulario_id: null` explícito cuando llega
+        // vacío, para poder volver una categoría ya asignada a "compartida
+        // por todos los form_types" (UpdateCategoryRequest usa `sometimes`,
+        // así que omitir el campo entero dejaría el valor anterior intacto).
+        $payload = $request->only('name', 'price', 'price_usd', 'description', 'color', 'formulario_id');
+        if (($payload['formulario_id'] ?? '') === '') {
+            $payload['formulario_id'] = null;
+        }
+
+        $response = $client->forward('PUT', "/category/{$categoria}", body: $payload);
 
         $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {
