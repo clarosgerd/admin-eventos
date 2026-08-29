@@ -19,8 +19,15 @@ class CategoryPricePeriodController extends Controller
 {
     public function index(Request $request, int $category, ApiRestEventClient $client): View
     {
+        // Bug real (28/08/2026) — GET /category/{id} devuelve
+        // {'success', 'category' => {...}} (CategoryController::show(),
+        // ApiRestEvent), no los campos en la raíz. Acá se leía
+        // $response->json() completo, así que $categoria['periodos'] y
+        // $categoria['precio_vigente'] nunca existían — la pantalla
+        // mostraba "Sin períodos cargados" / "Bs 0.00" siempre, tuviera o
+        // no la categoría períodos reales cargados.
         $response = $client->forward('GET', "/category/{$category}");
-        $categoria = $response?->json() ?? [];
+        $categoria = $response?->json('category') ?? [];
 
         return view('categorias.periodos', [
             'categoryId' => $category,
