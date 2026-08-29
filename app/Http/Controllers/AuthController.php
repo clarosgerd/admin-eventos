@@ -29,6 +29,11 @@ class AuthController extends Controller
                 ->withErrors(['email' => $response?->json('error') ?? 'No se pudo conectar con el servidor.']);
         }
 
+        // Admin de evento asignado a varios eventos (28/08/2026) — ver
+        // ApiRestEvent/brain/api_rest_event/PLAN-ADMIN-MULTI-EVENTO-28082026.md.
+        // $data['admin'] ya trae 'eventoIds' (evento principal +
+        // adicionales) desde AdminAuthController::login(); se guarda tal
+        // cual, no hace falta desarmarlo acá.
         $data = $response->json('data');
         session([
             'admin_token' => $data['token'],

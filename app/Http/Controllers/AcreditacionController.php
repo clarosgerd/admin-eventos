@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesEventoScope;
 use App\Services\ApiRestEventClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,8 @@ use Illuminate\View\View;
  */
 class AcreditacionController extends Controller
 {
+    use AuthorizesEventoScope;
+
     public function index(Request $request, int $evento, ApiRestEventClient $client): View
     {
         $this->assertCanViewEvento($evento);
@@ -83,17 +86,4 @@ class AcreditacionController extends Controller
         return response()->json($response->json(), $response->status());
     }
 
-    /**
-     * Mismo criterio que NumeracionController::assertCanViewEvento — evita
-     * que un admin scoped navegue directo a la URL de otro evento, aunque
-     * la API ya lo rechazaría igual.
-     */
-    private function assertCanViewEvento(int $evento): void
-    {
-        $admin = session('admin_user');
-
-        if (($admin['rol'] ?? null) !== 'super_admin' && (int) ($admin['evento_id'] ?? 0) !== $evento) {
-            abort(403, 'No tiene acceso a este evento.');
-        }
-    }
 }

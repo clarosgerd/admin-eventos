@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesEventoScope;
 use App\Services\ApiRestEventClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,8 @@ use Illuminate\View\View;
  */
 class AsistenciaSesionController extends Controller
 {
+    use AuthorizesEventoScope;
+
     public function index(int $evento, int $sesion, ApiRestEventClient $client): View
     {
         $this->assertCanViewEvento($evento);
@@ -111,15 +114,4 @@ class AsistenciaSesionController extends Controller
         ]);
     }
 
-    /**
-     * Mismo criterio que ParticipantesController::assertCanViewEvento.
-     */
-    private function assertCanViewEvento(int $evento): void
-    {
-        $admin = session('admin_user');
-
-        if (($admin['rol'] ?? null) !== 'super_admin' && (int) ($admin['evento_id'] ?? 0) !== $evento) {
-            abort(403, 'No tiene acceso a este evento.');
-        }
-    }
 }

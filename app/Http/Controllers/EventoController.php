@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesEventoScope;
 use App\Services\ApiRestEventClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,8 @@ use Illuminate\View\View;
  */
 class EventoController extends Controller
 {
+    use AuthorizesEventoScope;
+
     public function create(ApiRestEventClient $client): View
     {
         return view('eventos.create', [
@@ -257,21 +260,6 @@ class EventoController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="certificados-evento-'.$evento.'.pdf"',
         ]);
-    }
-
-    /**
-     * Guarda de UX del panel — la API ya rechaza cualquier escritura fuera
-     * de scope, pero sin esto un admin scoped podría navegar directo a la
-     * URL de otro evento y ver sus datos (categorías, form_types) aunque
-     * no pueda guardarlos. Mismo criterio que EnsureSuperAdminSession.
-     */
-    private function assertCanViewEvento(int $evento): void
-    {
-        $admin = session('admin_user');
-
-        if ($admin['rol'] !== 'super_admin' && (int) $admin['evento_id'] !== $evento) {
-            abort(403, 'No tiene acceso a este evento.');
-        }
     }
 
     /**

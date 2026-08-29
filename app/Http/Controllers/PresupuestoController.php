@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesEventoScope;
 use App\Services\ApiRestEventClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,8 @@ use Illuminate\View\View;
  */
 class PresupuestoController extends Controller
 {
+    use AuthorizesEventoScope;
+
     public function index(int $evento, ApiRestEventClient $client): View
     {
         $this->assertCanViewEvento($evento);
@@ -87,19 +90,6 @@ class PresupuestoController extends Controller
         }
 
         return redirect()->route('presupuesto.index', $evento)->with('status', 'Movimiento eliminado correctamente.');
-    }
-
-    /**
-     * Mismo criterio que ParticipantesController::assertCanViewEvento /
-     * NumeracionController::assertCanViewEvento.
-     */
-    private function assertCanViewEvento(int $evento): void
-    {
-        $admin = session('admin_user');
-
-        if (($admin['rol'] ?? null) !== 'super_admin' && (int) ($admin['evento_id'] ?? 0) !== $evento) {
-            abort(403, 'No tiene acceso a este evento.');
-        }
     }
 
     private function extractErrors($response): array

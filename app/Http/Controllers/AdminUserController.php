@@ -37,7 +37,7 @@ class AdminUserController extends Controller
     public function store(Request $request, ApiRestEventClient $client): RedirectResponse
     {
         $response = $client->forward('POST', '/admin/users', body: $request->only(
-            'nombre', 'email', 'password', 'rol', 'evento_id', 'activo'
+            'nombre', 'email', 'password', 'rol', 'evento_id', 'evento_ids_adicionales', 'activo'
         ));
 
         if (!$response || !$response->json('success')) {
@@ -62,7 +62,16 @@ class AdminUserController extends Controller
 
     public function update(Request $request, ApiRestEventClient $client, int $user): RedirectResponse
     {
-        $data = $request->only('nombre', 'email', 'rol', 'evento_id', 'activo');
+        $data = $request->only('nombre', 'email', 'rol', 'evento_id', 'evento_ids_adicionales', 'activo');
+        // Admin de evento asignado a varios eventos (28/08/2026) — un
+        // <select multiple> vacío (nadie tildado) no manda la clave en el
+        // POST, y ApiRestEvent necesita distinguir "no la toques" de
+        // "vaciala" (ver AdminUserController::update() del lado de la
+        // API). Se manda explícita como array vacío cuando el rol es
+        // admin, para que "deseleccionar todo" también funcione.
+        if (($data['rol'] ?? null) === 'admin' && !array_key_exists('evento_ids_adicionales', $data)) {
+            $data['evento_ids_adicionales'] = [];
+        }
         if ($request->filled('password')) {
             $data['password'] = $request->input('password');
         }
@@ -88,16 +97,34 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Lista de eventos para poblar el select de evento_id — reusa el
-     * mismo endpoint que el dashboard, sin selector de evento propio para
-     * no duplicar lógica de paginación (alcanza con la primera página
-     * para este selector, ver Fase 2 si hace falta buscar más adelante).
+     * Lista de eventos para poblar el select de evento_id (principal) y
+     * el multi-select de evento_ids_adicionales — reusa el mismo endpoint
+     * que el dashboard.
+     *
+     * Bug real (28/08/2026, reportado por el usuario: "solo le muestra 48
+     * registros de eventos") — `GET /event` tiene un tope DURO server-side
+     * de 48 por página (`EventoController::index()`,
+     * `min(48, $perPage)` — deliberado, para que el frontend público nunca
+     * pida el catálogo completo de una), así que pedir `per_page` más alto
+     * no alcanzaba: con más de 48 eventos cargados, este selector
+     * simplemente no dejaba elegir los que quedaban afuera de la primera
+     * página. Se recorre acá toda la paginación (respetando el tope de 48
+     * por página) hasta juntar el catálogo completo — no toca el tope del
+     * lado de la API, que sigue protegiendo al consumidor público.
      */
     private function listaEventos(ApiRestEventClient $client): array
     {
-        $response = $client->forward('GET', '/event', query: ['per_page' => 48]);
+        $eventos = [];
+        $page = 1;
 
-        return $response?->json('eventos') ?? [];
+        do {
+            $response = $client->forward('GET', '/event', query: ['per_page' => 48, 'page' => $page]);
+            $eventos = array_merge($eventos, $response?->json('eventos') ?? []);
+            $lastPage = $response?->json('pagination.last_page') ?? $page;
+            $page++;
+        } while ($page <= $lastPage);
+
+        return $eventos;
     }
 
     private function extractErrors($response): array

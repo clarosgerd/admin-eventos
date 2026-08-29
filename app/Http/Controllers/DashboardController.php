@@ -23,9 +23,20 @@ class DashboardController extends Controller
             $eventos = $response?->json('eventos') ?? [];
             $pagination = $response?->json('pagination');
         } else {
-            $response = $client->forward('GET', '/event/'.$admin['evento_id']);
-            $evento = $response?->json('eventos');
-            $eventos = $evento ? [$evento] : [];
+            // Admin de evento asignado a varios eventos (28/08/2026) — ver
+            // ApiRestEvent/brain/api_rest_event/PLAN-ADMIN-MULTI-EVENTO-28082026.md.
+            // 'eventoIds' es evento principal + adicionales, deduplicado
+            // (ver AdminUser::eventoIds() del lado de ApiRestEvent); un
+            // admin sin eventos adicionales sigue viendo exactamente su
+            // único evento, como antes.
+            $eventos = [];
+            foreach ($admin['eventoIds'] ?? [] as $eventoId) {
+                $response = $client->forward('GET', '/event/'.$eventoId);
+                $evento = $response?->json('eventos');
+                if ($evento) {
+                    $eventos[] = $evento;
+                }
+            }
             $pagination = null;
         }
 

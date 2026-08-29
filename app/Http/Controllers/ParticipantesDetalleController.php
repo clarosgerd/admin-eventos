@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesEventoScope;
 use App\Services\ApiRestEventClient;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 /**
@@ -25,6 +27,8 @@ use Illuminate\View\View;
  */
 class ParticipantesDetalleController extends Controller
 {
+    use AuthorizesEventoScope;
+
     private const PER_PAGE_DEFAULT = 50;
 
     private const PER_PAGE_MAX = 200;
@@ -89,6 +93,17 @@ class ParticipantesDetalleController extends Controller
         // CSV sea legible.
         $eventoResponse = $client->forward('GET', "/event/{$evento}");
         $categoriasPorId = collect($eventoResponse?->json('eventos.categories') ?? [])->keyBy(fn ($c) => (string) $c['id']);
+        // 3 edades para recategorización + carga a ChronoTrack (28/08/2026)
+        // — pedido del usuario. ChronoTrack y las federaciones deportivas
+        // categorizan por edad de 3 formas distintas, todas legítimas según
+        // el evento: a la fecha del evento, a fin de año (la más usada para
+        // "edad que cumple en el año"), y la edad actual/de hoy. En vez de
+        // construir el selector `calculo_edad_id` (columna que existe en
+        // `categories` desde julio pero nunca se implementó — decisión
+        // explícita del usuario de no hacerlo ahora), se calculan las 3 acá
+        // mismo para que el staff decida a mano cuál aplica.
+        $fechaEvento = $eventoResponse?->json('eventos.date');
+        $finDeAnioEvento = $fechaEvento ? Carbon::parse($fechaEvento)->endOfYear() : null;
 
         // Sin `per_page` a propósito: la descarga CSV es una acción
         // explícita del usuario, no la carga de pantalla por defecto —
@@ -112,14 +127,18 @@ class ParticipantesDetalleController extends Controller
         fputcsv($handle, [
             'numero_corredor', 'estado', 'importe', 'importe_taller', 'importe_total', 'numero_documento', 'nombre', 'apellido',
             'sexo', 'celular', 'fecha_inscripcion', 'referencia', 'nacimiento', 'distancia',
+            'edad_fecha_evento', 'edad_fin_de_anio', 'edad_hoy',
         ]);
         foreach ($participantes as $p) {
+            [$edadEvento, $edadFinDeAnio, $edadHoy] = $this->edades($p['fechaNacimiento'] ?? null, $fechaEvento, $finDeAnioEvento);
+
             fputcsv($handle, [
                 $p['numeroCorredor'], $this->estadoLabel($p['pagoStatus']), $p['importe'],
                 $p['importeTaller'] ?? 0, $p['importeTotal'] ?? $p['importe'],
                 $p['numeroDocumento'], $p['nombre'], $p['apellido'], $p['genero'], $p['telefono'],
                 $p['fechaInscripcion'], $p['referencia'], $p['fechaNacimiento'],
                 $categoriasPorId[$p['categoria']]['name'] ?? $p['categoria'],
+                $edadEvento, $edadFinDeAnio, $edadHoy,
             ]);
         }
         rewind($handle);
@@ -156,15 +175,28 @@ class ParticipantesDetalleController extends Controller
     }
 
     /**
-     * Mismo criterio que EventoController::assertCanViewEvento /
-     * NumeracionController::assertCanViewEvento.
+     * Las 3 edades del reporte (28/08/2026) — ver comentario en
+     * csvDownload(). Devuelve '' cuando falta el dato de origen (fecha de
+     * nacimiento ausente, o evento sin fecha cargada) en vez de un 0
+     * engañoso — mejor una celda vacía en el CSV que una edad falsa.
+     *
+     * @return array{0: int|string, 1: int|string, 2: int|string}
      */
-    private function assertCanViewEvento(int $evento): void
+    private function edades(?string $fechaNacimiento, ?string $fechaEvento, ?Carbon $finDeAnioEvento): array
     {
-        $admin = session('admin_user');
-
-        if (($admin['rol'] ?? null) !== 'super_admin' && (int) ($admin['evento_id'] ?? 0) !== $evento) {
-            abort(403, 'No tiene acceso a este evento.');
+        if (!$fechaNacimiento) {
+            return ['', '', ''];
         }
+
+        $nacimiento = Carbon::parse($fechaNacimiento);
+
+        // (int), no el float que devuelve diffInYears() en Carbon 3.x por
+        // default (ej. 53.69 en vez de 53) — trunca hacia el año cumplido,
+        // que es lo que significa "edad" acá.
+        $edadEvento = $fechaEvento ? (int) $nacimiento->diffInYears(Carbon::parse($fechaEvento)) : '';
+        $edadFinDeAnio = $finDeAnioEvento ? (int) $nacimiento->diffInYears($finDeAnioEvento) : '';
+        $edadHoy = (int) $nacimiento->diffInYears(Carbon::today());
+
+        return [$edadEvento, $edadFinDeAnio, $edadHoy];
     }
 }
