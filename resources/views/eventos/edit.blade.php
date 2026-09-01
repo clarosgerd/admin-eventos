@@ -332,6 +332,24 @@
                         </span>
                     </label>
                 </div>
+
+                {{-- Purgar datos de Persona/Participante en inscripciones canceladas
+                     (01/09/2026) — a diferencia del resto de los checkboxes de esta
+                     página, este nace TILDADO por default (mantener_datos_persona
+                     default true en la BD — apagarlo es la excepción, no lo
+                     contrario). Ver PurgarDatosPersonaCanceladaAction (ApiRestEvent). --}}
+                <div class="col-span-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold">
+                        <input type="checkbox" name="mantenerDatosPersona" value="1"
+                               {{ ($evento['mantenerDatosPersona'] ?? true) ? 'checked' : '' }}>
+                        Mantener datos de persona
+                        <span class="font-normal text-slate-500">
+                            (si se destilda, una inscripción de este evento que termine cancelada
+                            borra automáticamente al participante y, si no tiene otra inscripción
+                            vigente en ningún otro evento, también su cuenta de persona)
+                        </span>
+                    </label>
+                </div>
                 <div class="col-span-2">
                     <label class="block text-sm font-semibold mb-1">Deslinde de responsabilidad</label>
                     <textarea name="deslinde" rows="2"

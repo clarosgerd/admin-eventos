@@ -329,6 +329,15 @@ class EventoController extends Controller
         // vino tildado) para que destildear también persista.
         $payload['talleresConCosto'] = $request->boolean('talleresConCosto');
 
+        // Purgar datos de Persona/Participante en inscripciones canceladas
+        // (01/09/2026) — mismo motivo que aceptaUsd, se manda siempre para
+        // que destildear también persista. A diferencia de los de arriba,
+        // este nace TILDADO en edit.blade.php (default true, "mantener" es
+        // lo seguro) — no tiene checkbox en create.blade.php a propósito,
+        // así un evento nuevo usa el default `true` de la columna sin que
+        // este controller lo pise.
+        $payload['mantenerDatosPersona'] = $request->boolean('mantenerDatosPersona');
+
         // Orden de secciones en la página del evento (25/08/2026) — la
         // vista manda 9 inputs numéricos, uno por bloque
         // (orden[description], orden[calendar], ...); acá se ordenan por
