@@ -45,6 +45,11 @@ class FormTypeController extends Controller
                 // request->boolean() lea el checkbox real, no un default
                 // fijo acá.
                 'requiere_contacto_emergencia' => $request->boolean('requiere_contacto_emergencia'),
+                // Ocultar Dirección/Ciudad/Teléfono/Alias por tipo de
+                // formulario (01/09/2026) — es un array, no un boolean;
+                // "nada tildado" ya manda [] naturalmente, no necesita el
+                // patrón request->boolean() de los flags de arriba.
+                'campos_ocultos'     => $request->input('campos_ocultos', []),
             ]
         );
 
@@ -76,6 +81,10 @@ class FormTypeController extends Controller
                 'es_ponente'         => $request->boolean('es_ponente'),
                 // Caja para eventos tipo congreso (20/08/2026).
                 'requiere_contacto_emergencia' => $request->boolean('requiere_contacto_emergencia'),
+                // Ocultar Dirección/Ciudad/Teléfono/Alias por tipo de
+                // formulario (01/09/2026) — es un array, no un boolean;
+                // "nada tildado" ya manda [] naturalmente.
+                'campos_ocultos'     => $request->input('campos_ocultos', []),
             ]
         );
 

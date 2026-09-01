@@ -612,6 +612,30 @@
                             Pide contacto de emergencia <span class="text-slate-400">(desmarcar en congresos/talleres donde no aplica — oculta esos 3 campos en el formulario público y en Caja)</span>
                         </label>
                     </div>
+                    {{-- Ocultar Dirección/Ciudad/Teléfono/Alias por tipo de formulario
+                         (01/09/2026) — a diferencia de los checkboxes de arriba, estos 4
+                         ya son opcionales en TODOS los eventos (no bloquean el envío si
+                         quedan vacíos); esto además los saca del formulario. --}}
+                    @php($camposOcultos = $formType['camposOcultos'] ?? [])
+                    <div class="flex flex-wrap gap-4 mt-2">
+                        <span class="text-xs font-semibold text-slate-500 w-full">Ocultar del formulario público:</span>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="campos_ocultos[]" value="direccion" {{ in_array('direccion', $camposOcultos) ? 'checked' : '' }}>
+                            Dirección
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="campos_ocultos[]" value="ciudad" {{ in_array('ciudad', $camposOcultos) ? 'checked' : '' }}>
+                            Ciudad
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="campos_ocultos[]" value="telefono" {{ in_array('telefono', $camposOcultos) ? 'checked' : '' }}>
+                            Teléfono
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="campos_ocultos[]" value="alias" {{ in_array('alias', $camposOcultos) ? 'checked' : '' }}>
+                            Alias <span class="text-slate-400">(en tipos "congreso" este campo también es el Título — ocultarlo lo saca a los dos)</span>
+                        </label>
+                    </div>
                     <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded">Guardar</button>
                 </form>
                 <form method="POST" action="{{ route('formtypes.destroy', $formType['id']) }}" class="mt-2"
@@ -851,6 +875,29 @@
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="requiere_contacto_emergencia" value="1" checked>
                         Pide contacto de emergencia <span class="text-slate-400">(desmarcar en congresos/talleres donde no aplica)</span>
+                    </label>
+                </div>
+                {{-- Ocultar Dirección/Ciudad/Teléfono/Alias por tipo de formulario
+                     (01/09/2026) — a diferencia de los checkboxes de arriba, estos 4
+                     ya son opcionales en TODOS los eventos (no bloquean el envío si
+                     quedan vacíos); esto además los saca del formulario. --}}
+                <div class="flex flex-wrap gap-4 mt-2">
+                    <span class="text-xs font-semibold text-slate-500 w-full">Ocultar del formulario público:</span>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="campos_ocultos[]" value="direccion">
+                        Dirección
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="campos_ocultos[]" value="ciudad">
+                        Ciudad
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="campos_ocultos[]" value="telefono">
+                        Teléfono
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="campos_ocultos[]" value="alias">
+                        Alias <span class="text-slate-400">(en tipos "congreso" este campo también es el Título — ocultarlo lo saca a los dos)</span>
                     </label>
                 </div>
                 <button type="submit" class="text-sm bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-md">Agregar tipo de formulario</button>
