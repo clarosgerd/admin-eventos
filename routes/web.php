@@ -11,8 +11,10 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\CiudadController;
 use App\Http\Controllers\PaisController;
 use App\Http\Controllers\FormasPagoController;
+use App\Http\Controllers\GeneroController;
 use App\Http\Controllers\RelacionContactoController;
 use App\Http\Controllers\SexoController;
+use App\Http\Controllers\SipBancoController;
 use App\Http\Controllers\SubtipoEventoController;
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\CategoryPricePeriodController;
@@ -248,6 +250,12 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
 
     Route::middleware('admin.superadmin')->group(function () {
         Route::resource('usuarios', AdminUserController::class)->except(['show']);
+
+        // Bancos SIP (31/08/2026) — credenciales de cobro por organizador,
+        // más sensible que el resto del panel (config con secretos
+        // reales). Ver ApiRestEvent/brain/api_rest_event/
+        // PLAN-SIP-MULTIBANCO-28082026.md.
+        Route::resource('sip-bancos', SipBancoController::class)->except(['show']);
         Route::get('/auditoria', [AuditLogController::class, 'index'])->name('auditoria.index');
         Route::get('/eventos/create', [EventoController::class, 'create'])->name('eventos.create');
         Route::post('/eventos', [EventoController::class, 'store'])->name('eventos.store');
@@ -288,6 +296,9 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
             Route::resource('paises', PaisController::class)->only(['index', 'store', 'update', 'destroy']);
             Route::resource('ciudades', CiudadController::class)->only(['index', 'store', 'update', 'destroy']);
             Route::resource('sexos', SexoController::class)->only(['index', 'store', 'update', 'destroy']);
+            // Género de participante (31/08/2026) — respalda
+            // participantes.genero, NO confundir con sexos (categories.sexo_id).
+            Route::resource('generos', GeneroController::class)->only(['index', 'store', 'update', 'destroy']);
             Route::resource('tipos-evento', TipoEventoController::class)->only(['index', 'store', 'update', 'destroy']);
             Route::resource('subtipos-evento', SubtipoEventoController::class)->only(['index', 'store', 'update', 'destroy']);
             Route::resource('relaciones-contacto', RelacionContactoController::class)->only(['index', 'store', 'update', 'destroy']);

@@ -22,6 +22,10 @@
         <div class="font-semibold">Sexo</div>
         <div class="text-xs text-slate-500 mt-1">Catálogo de sexo (respalda categories.sexo_id).</div>
     </a>
+    <a href="{{ route('catalogos.generos.index') }}" class="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+        <div class="font-semibold">Género</div>
+        <div class="text-xs text-slate-500 mt-1">Opciones de género del formulario de inscripción (respalda participantes.genero).</div>
+    </a>
     <a href="{{ route('catalogos.tipos-evento.index') }}" class="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
         <div class="font-semibold">Tipo de evento</div>
         <div class="text-xs text-slate-500 mt-1">Disciplinas (Carrera de Ruta, Ciclismo, Congreso...).</div>
