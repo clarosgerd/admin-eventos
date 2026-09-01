@@ -92,6 +92,10 @@
                 class="shrink-0 whitespace-nowrap px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600 focus-visible:-outline-offset-2">
             Tipos de formulario
         </button>
+        <button type="button" role="tab" id="tab-equipos" data-tab-id="equipos" aria-controls="panel-equipos" aria-selected="false" tabindex="-1"
+                class="shrink-0 whitespace-nowrap px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600 focus-visible:-outline-offset-2">
+            Equipos
+        </button>
         <button type="button" role="tab" id="tab-mapa" data-tab-id="mapa" aria-controls="panel-mapa" aria-selected="false" tabindex="-1"
                 class="shrink-0 whitespace-nowrap px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600 focus-visible:-outline-offset-2">
             Mapa
@@ -901,6 +905,55 @@
                     </label>
                 </div>
                 <button type="submit" class="text-sm bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-md">Agregar tipo de formulario</button>
+            </form>
+        </div>
+    </div>
+
+    {{-- 3 bis. Equipos (catálogo por evento, para tipos de formulario "Con equipo") --}}
+    <div id="panel-equipos" role="tabpanel" aria-labelledby="tab-equipos" tabindex="0" class="p-6" hidden>
+        <p class="text-sm text-slate-500 mb-4">
+            Solo importa para tipos de formulario marcados "Con equipo" — el participante elige uno
+            de esta lista al inscribirse. Un nombre que coincide con un club del catálogo global se
+            vincula automáticamente.
+        </p>
+
+        @forelse ($evento['equipos'] as $equipo)
+            <div class="border border-slate-200 rounded-md p-3 mb-2">
+                <form method="POST" action="{{ route('equipos.update', $equipo['id']) }}" class="grid grid-cols-4 gap-2 items-end">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold mb-1">Nombre</label>
+                        <input type="text" name="nombre" value="{{ $equipo['nombre'] }}" required class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                    </div>
+                    <div class="text-xs text-slate-500">
+                        @if ($equipo['clubId'])
+                            <span class="inline-block bg-slate-100 rounded px-2 py-1">Vinculado a club</span>
+                        @endif
+                    </div>
+                    <div>
+                        <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-2 py-1 rounded">Guardar</button>
+                    </div>
+                </form>
+                <form method="POST" action="{{ route('equipos.destroy', $equipo['id']) }}" class="mt-1"
+                      onsubmit="return confirm('¿Eliminar este equipo?')">
+                    @csrf
+                    @method('DELETE')
+                    <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
+                    <button type="submit" class="text-xs text-red-600 hover:underline">Eliminar equipo</button>
+                </form>
+            </div>
+        @empty
+            <p class="text-sm text-slate-500 mb-3">Todavía no hay equipos cargados para este evento.</p>
+        @endforelse
+
+        <div class="border border-dashed border-slate-300 rounded-md p-3 mt-3">
+            <p class="text-xs font-semibold text-slate-500 mb-2">+ Agregar equipos</p>
+            <form method="POST" action="{{ route('equipos.store', $evento['id']) }}">
+                @csrf
+                <textarea name="nombres" rows="4" placeholder="Un equipo por línea" class="w-full border border-slate-300 rounded px-2 py-1 text-sm mb-2"></textarea>
+                <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-2 py-1 rounded">Agregar</button>
             </form>
         </div>
     </div>

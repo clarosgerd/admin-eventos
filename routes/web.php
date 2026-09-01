@@ -23,6 +23,7 @@ use App\Http\Controllers\CoordinateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardInscripcionesController;
 use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\FormTypeController;
 use App\Http\Controllers\ItemBodegaController;
@@ -165,6 +166,11 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::post('/eventos/{evento}/agenda', [AgendaItemController::class, 'store'])->name('agenda.store');
     Route::put('/agenda/{agenda_item}', [AgendaItemController::class, 'update'])->name('agenda.update');
     Route::delete('/agenda/{agenda_item}', [AgendaItemController::class, 'destroy'])->name('agenda.destroy');
+
+    // Catálogo de equipos (01/09/2026).
+    Route::post('/eventos/{evento}/equipos', [EquipoController::class, 'store'])->name('equipos.store');
+    Route::put('/equipos/{equipo}', [EquipoController::class, 'update'])->name('equipos.update');
+    Route::delete('/equipos/{equipo}', [EquipoController::class, 'destroy'])->name('equipos.destroy');
 
     Route::patch('/eventos/{evento}/despublicar', [EventoController::class, 'despublicar'])->name('eventos.despublicar');
 
