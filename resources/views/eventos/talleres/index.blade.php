@@ -29,6 +29,7 @@
                 <th class="px-4 py-2">Precio USD</th>
                 <th class="px-4 py-2">Sesiones</th>
                 <th class="px-4 py-2">Activo</th>
+                <th class="px-4 py-2">Permite inscripción</th>
                 <th class="px-4 py-2"></th>
             </tr>
         </thead>
@@ -63,6 +64,16 @@
                     <td class="px-4 py-2">
                         {{ $taller['activo'] ? 'Sí' : 'No' }}
                     </td>
+                    <td class="px-4 py-2">
+                        {{-- Deshabilitar un taller sin ocultarlo (28/08/2026) —
+                             distinto de "Activo": esto no afecta si el taller
+                             se ve, solo si se puede elegir. --}}
+                        @if ($taller['permite_inscripcion'] ?? true)
+                            Sí
+                        @else
+                            <span class="text-amber-600 font-semibold">No</span>
+                        @endif
+                    </td>
                     <td class="px-4 py-2 text-right space-x-2 whitespace-nowrap">
                         <a href="#edit-taller-{{ $taller['id'] }}" class="text-brand-600 hover:underline">Editar</a>
                         <form method="POST" action="{{ route('talleres.destroy', [$evento['id'], $taller['id']]) }}" class="inline"
@@ -74,7 +85,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="px-4 py-6 text-center text-slate-400">No hay talleres registrados todavía.</td></tr>
+                <tr><td colspan="8" class="px-4 py-6 text-center text-slate-400">No hay talleres registrados todavía.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -125,6 +136,24 @@
             <input type="checkbox" name="activo" value="1" @checked(old('activo', $taller['activo']))>
             Activo
         </label>
+        {{-- Deshabilitar un taller sin ocultarlo (28/08/2026) — a diferencia
+             de "Activo" (que también lo oculta), esto solo bloquea que se
+             elija: el taller sigue apareciendo en la lista del participante,
+             marcado como no disponible.
+
+             Input hidden con value=0 antes del checkbox (28/08/2026) — un
+             <input type="checkbox"> destildado no manda NADA en el POST,
+             así que el controller nunca puede distinguir "destildado" de
+             "el campo ni se tocó" y el default (`?? true`) gana siempre.
+             Con el hidden, destildar el checkbox igual manda
+             permite_inscripcion=0 (el checkbox, si está tildado, pisa el
+             hidden porque el navegador manda ambos y PHP se queda con el
+             último valor del mismo nombre). --}}
+        <label class="flex items-center gap-2 text-sm">
+            <input type="hidden" name="permite_inscripcion" value="0">
+            <input type="checkbox" name="permite_inscripcion" value="1" @checked(old('permite_inscripcion', $taller['permite_inscripcion'] ?? true))>
+            Permite inscripción <span class="text-xs text-slate-500">(destildar deja el taller visible pero no seleccionable)</span>
+        </label>
         <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-md">
             Guardar cambios
         </button>
@@ -173,6 +202,11 @@
         <label class="flex items-center gap-2 text-sm">
             <input type="checkbox" name="activo" value="1" @checked(old('activo', true))>
             Activo
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+            <input type="hidden" name="permite_inscripcion" value="0">
+            <input type="checkbox" name="permite_inscripcion" value="1" @checked(old('permite_inscripcion', true))>
+            Permite inscripción <span class="text-xs text-slate-500">(destildar deja el taller visible pero no seleccionable)</span>
         </label>
         <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-md">
             Crear taller

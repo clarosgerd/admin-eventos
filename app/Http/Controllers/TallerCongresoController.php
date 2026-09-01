@@ -41,7 +41,7 @@ class TallerCongresoController extends Controller
         $this->assertCanViewEvento($evento);
 
         $response = $client->forward('POST', "/event/{$evento}/talleres", body: $request->only(
-            'nombre', 'descripcion', 'modalidad', 'precio', 'price_usd', 'orden', 'activo'
+            'nombre', 'descripcion', 'modalidad', 'precio', 'price_usd', 'orden', 'activo', 'permite_inscripcion'
         ));
 
         if (!$response || !$response->json('success')) {
@@ -56,7 +56,7 @@ class TallerCongresoController extends Controller
         $this->assertCanViewEvento($evento);
 
         $response = $client->forward('PUT', "/event/{$evento}/talleres/{$taller}", body: $request->only(
-            'nombre', 'descripcion', 'modalidad', 'precio', 'price_usd', 'orden', 'activo'
+            'nombre', 'descripcion', 'modalidad', 'precio', 'price_usd', 'orden', 'activo', 'permite_inscripcion'
         ));
 
         if (!$response || !$response->json('success')) {
