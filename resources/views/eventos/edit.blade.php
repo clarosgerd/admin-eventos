@@ -337,6 +337,24 @@
                     </label>
                 </div>
 
+                {{-- "Pagar en el evento (efectivo)" al agregar un taller a una
+                     inscripción ya pagada — configurable por evento (02/09/2026).
+                     Default apagado: se siguen ofreciendo ambas opciones (efectivo y
+                     QR), igual que hoy. Ver PLAN-COBRO-SIP-ADICIONAL-26082026.md para
+                     el contexto original de esa pantalla. --}}
+                <div class="col-span-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold">
+                        <input type="checkbox" name="forzarQrPagoAdicional" value="1"
+                               {{ !empty($evento['forzarQrPagoAdicional']) ? 'checked' : '' }}>
+                        Forzar QR en el pago adicional (editar inscripción pagada)
+                        <span class="font-normal text-slate-500">
+                            (si está tildado, un participante que agrega un taller a una
+                            inscripción ya pagada solo puede pagar el monto adicional con QR —
+                            se saca la opción de pagar en efectivo el día del evento)
+                        </span>
+                    </label>
+                </div>
+
                 {{-- Purgar datos de Persona/Participante en inscripciones canceladas
                      (01/09/2026) — a diferencia del resto de los checkboxes de esta
                      página, este nace TILDADO por default (mantener_datos_persona
