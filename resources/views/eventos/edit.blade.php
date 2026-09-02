@@ -716,6 +716,25 @@
                                     aparece en el formulario de inscripción.
                                 </p>
                             </div>
+                            {{-- Cargo de servicio por souvenir individual (01/09/2026) —
+                                 checkbox opt-in (destildado por defecto): un ítem nace SIN
+                                 sumar al cargo de servicio, igual que siempre. Pensado para
+                                 souvenirs con costo real (ej. una polera) — no tildar en
+                                 ítems ya incluidos en el precio de la inscripción (ej. una
+                                 medalla), que no deberían sumar cargo aparte. --}}
+                            <div class="mt-2">
+                                <label class="text-xs flex items-center gap-1">
+                                    <input type="checkbox" name="aplica_cargo_servicio" form="souvenir-form-{{ $souvenir['id'] }}" value="1" @checked($souvenir['aplica_cargo_servicio'] ?? false)>
+                                    Aplicar cargo de servicio a este ítem
+                                </label>
+                                <p class="text-xs text-slate-400 mt-0.5">
+                                    Destildado (default): este ítem no suma a la base del
+                                    cargo de servicio, igual que siempre. Tildado: su precio
+                                    se incluye junto con inscripción/talleres — usalo para
+                                    souvenirs con costo real, no para los incluidos en el
+                                    precio de la inscripción.
+                                </p>
+                            </div>
                             {{-- Gestionar stock aplica a CUALQUIER ítem, tenga o no talla/sexo
                                  (ej. una medalla): sin filas ahí, el ítem queda con
                                  "disponibilidad no controlada" — ver stock.blade.php. Antes este

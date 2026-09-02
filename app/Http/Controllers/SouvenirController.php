@@ -56,6 +56,10 @@ class SouvenirController extends Controller
                 // que los de arriba, si está destildado no manda nada, por
                 // eso el default explícito acá.
                 'visible_participante' => $request->boolean('visible_participante'),
+                // Cargo de servicio por souvenir individual (01/09/2026) —
+                // checkbox opt-in (destildado por defecto), mismo motivo
+                // del default explícito que los de arriba.
+                'aplica_cargo_servicio' => $request->boolean('aplica_cargo_servicio'),
             ]
         );
 
