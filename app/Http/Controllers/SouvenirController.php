@@ -21,7 +21,7 @@ class SouvenirController extends Controller
         // nada si están destildados, por eso el default explícito acá
         // (no en ApiRestEvent, que ya trata su ausencia como false).
         $payload = array_merge(
-            $request->only('name', 'icon', 'price', 'foto_url'),
+            $request->only('name', 'icon', 'price', 'foto_url', 'texto_promocional'),
             [
                 'form_types_id'  => $form_type,
                 'incluido'       => $request->boolean('incluido'),
@@ -46,7 +46,7 @@ class SouvenirController extends Controller
     public function update(Request $request, int $souvenir, ApiRestEventClient $client): RedirectResponse
     {
         $payload = array_merge(
-            $request->only('name', 'icon', 'price', 'foto_url'),
+            $request->only('name', 'icon', 'price', 'foto_url', 'texto_promocional'),
             [
                 'incluido'       => $request->boolean('incluido'),
                 'requiere_talla' => $request->boolean('requiere_talla'),

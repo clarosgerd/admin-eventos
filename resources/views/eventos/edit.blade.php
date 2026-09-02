@@ -683,6 +683,10 @@
                             </div>
                             {{-- Foto + flags — mismos <input>/<checkbox> pero mandados con el
                                  form de arriba (name/icon/price) via el atributo form="..." --}}
+                            {{-- Texto promocional (02/09/2026) — texto libre opcional, no
+                                 afecta precio/disponibilidad, solo se muestra junto al ítem
+                                 en el formulario público (ej. "La mejor Coca-Cola bien fría"). --}}
+                            <input type="text" name="texto_promocional" value="{{ $souvenir['texto_promocional'] ?? '' }}" maxlength="500" placeholder="Texto promocional (opcional, ej. &quot;La mejor Coca-Cola bien fría&quot;)" form="souvenir-form-{{ $souvenir['id'] }}" class="w-full border border-slate-300 rounded px-2 py-1 text-xs mt-2">
                             <div class="grid grid-cols-5 gap-2 items-center mt-2">
                                 <input type="url" name="foto_url" value="{{ $souvenir['foto_url'] ?? '' }}" placeholder="URL de foto (opcional)" form="souvenir-form-{{ $souvenir['id'] }}" class="col-span-2 w-full border border-slate-300 rounded px-2 py-1 text-xs">
                                 <label class="text-xs flex items-center gap-1">
@@ -752,6 +756,7 @@
                         <input type="text" name="icon" placeholder="Ícono" maxlength="10" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                         <input type="number" step="0.01" min="0" name="price" placeholder="Precio" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                         <button type="submit" class="text-xs text-brand-600 hover:underline">+ Agregar ítem</button>
+                        <input type="text" name="texto_promocional" maxlength="500" placeholder="Texto promocional (opcional)" class="col-span-5 w-full border border-slate-300 rounded px-2 py-1 text-xs mt-1">
                     </form>
                 </div>
 
