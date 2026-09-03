@@ -194,15 +194,19 @@
     </table>
 </div>
 
-{{-- Poleras (sexo/talla) --}}
+{{-- Poleras (sexo/talla) — Costo unitario/Total (03/09/2026, pedido del
+     usuario): costoUnitario es el promedio real cobrado por fila
+     (montoTotal / cantidad), no un precio fijo asumido. --}}
 <h2 class="font-bold text-sm text-brand-600 mb-2">Reporte de poleras</h2>
 <div class="overflow-x-auto">
-    <table class="w-full bg-white rounded-lg shadow text-sm max-w-md">
+    <table class="w-full bg-white rounded-lg shadow text-sm max-w-lg">
         <thead>
             <tr class="bg-brand-600 text-white text-left">
                 <th class="px-3 py-2 font-semibold">Sexo</th>
                 <th class="px-3 py-2 font-semibold">Talla</th>
                 <th class="px-3 py-2 font-semibold text-right">Cantidad</th>
+                <th class="px-3 py-2 font-semibold text-right">Costo unitario</th>
+                <th class="px-3 py-2 font-semibold text-right">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -211,13 +215,17 @@
                     <td class="px-3 py-2">{{ $fila['sexo'] }}</td>
                     <td class="px-3 py-2">{{ $fila['talla'] }}</td>
                     <td class="px-3 py-2 text-right">{{ $fila['cantidad'] }}</td>
+                    <td class="px-3 py-2 text-right">${{ number_format($fila['costoUnitario'], 2) }}</td>
+                    <td class="px-3 py-2 text-right">${{ number_format($fila['montoTotal'], 2) }}</td>
                 </tr>
             @empty
-                <tr><td class="px-3 py-2 text-slate-500" colspan="3">Nadie pagado eligió polera todavía.</td></tr>
+                <tr><td class="px-3 py-2 text-slate-500" colspan="5">Nadie pagado eligió polera todavía.</td></tr>
             @endforelse
             <tr class="border-t border-slate-200 font-semibold bg-slate-50">
                 <td class="px-3 py-2" colspan="2">Total</td>
                 <td class="px-3 py-2 text-right">{{ $reporteInscritos['poleras']['total'] }}</td>
+                <td class="px-3 py-2 text-right"></td>
+                <td class="px-3 py-2 text-right">${{ number_format($reporteInscritos['poleras']['totalMonto'], 2) }}</td>
             </tr>
         </tbody>
     </table>
