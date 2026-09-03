@@ -505,14 +505,24 @@
         const select = document.getElementById('f_aliasTitulo');
         const otro = document.getElementById('f_aliasTituloOtro');
 
-        label.textContent = isCongreso ? 'Título' : 'Alias';
+        label.textContent = isCongreso ? 'Título *' : 'Alias';
         input.style.display = isCongreso ? 'none' : '';
         select.style.display = isCongreso ? '' : 'none';
+
+        // Título obligatorio en congresos (03/09/2026, mismo pedido que en
+        // elascenso/event/index.php::validateForm()) — este form no tiene
+        // un validador JS propio, se apoya en el `required` nativo del
+        // HTML5 (ver f_nombre/f_apellido), así que alcanza con togglear el
+        // atributo en el <select> visible. El navegador ignora `required`
+        // en elementos display:none, así que `input` (oculto acá) no
+        // necesita tocarse.
+        select.required = isCongreso;
 
         if (isCongreso) {
             syncAliasTituloUI();
         } else {
             otro.style.display = 'none';
+            otro.required = false;
         }
     }
 
@@ -529,14 +539,17 @@
         if (opciones.includes(current)) {
             select.value = current;
             otro.style.display = 'none';
+            otro.required = false;
             otro.value = '';
         } else if (current) {
             select.value = 'Otro';
             otro.value = current;
             otro.style.display = '';
+            otro.required = select.required; // solo exige si el título ya es obligatorio en este modo
         } else {
             select.value = '';
             otro.style.display = 'none';
+            otro.required = false;
             otro.value = '';
         }
     }
@@ -546,10 +559,12 @@
         const otro = document.getElementById('f_aliasTituloOtro');
         if (sel === 'Otro') {
             otro.style.display = '';
+            otro.required = true;
             otro.focus();
             document.getElementById('f_alias').value = otro.value.trim();
         } else {
             otro.style.display = 'none';
+            otro.required = false;
             otro.value = '';
             document.getElementById('f_alias').value = sel;
         }
