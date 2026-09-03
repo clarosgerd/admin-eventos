@@ -757,6 +757,27 @@
                                     precio de la inscripción.
                                 </p>
                             </div>
+                            {{-- Reporte de poleras (03/09/2026) — bug real reportado: el
+                                 reporte mostraba "No shirt" en vez de la talla elegida
+                                 porque leía un campo legacy sin datos reales. Ahora sale de
+                                 la talla que el participante eligió en ESTE ítem — hace
+                                 falta marcarlo a mano porque un form_type puede tener más
+                                 de un ítem con talla (ej. una mochila) y no hay forma de
+                                 adivinar cuál es la polera de verdad. Requiere que "Talla"
+                                 esté tildado arriba — ApiRestEvent rechaza la combinación
+                                 inversa. --}}
+                            <div class="mt-2">
+                                <label class="text-xs flex items-center gap-1">
+                                    <input type="checkbox" name="es_polera" form="souvenir-form-{{ $souvenir['id'] }}" value="1" @checked($souvenir['es_polera'] ?? false)>
+                                    Es la polera (para el Reporte de poleras)
+                                </label>
+                                <p class="text-xs text-slate-400 mt-0.5">
+                                    Marcá este ítem si es la polera/camiseta del evento —
+                                    el Reporte de poleras del dashboard va a mostrar las
+                                    tallas que los participantes eligieron acá. Requiere
+                                    "Talla" tildado.
+                                </p>
+                            </div>
                             {{-- Gestionar stock aplica a CUALQUIER ítem, tenga o no talla/sexo
                                  (ej. una medalla): sin filas ahí, el ítem queda con
                                  "disponibilidad no controlada" — ver stock.blade.php. Antes este

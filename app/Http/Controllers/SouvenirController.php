@@ -27,6 +27,10 @@ class SouvenirController extends Controller
                 'incluido'       => $request->boolean('incluido'),
                 'requiere_talla' => $request->boolean('requiere_talla'),
                 'requiere_sexo'  => $request->boolean('requiere_sexo'),
+                // Reporte de poleras (03/09/2026) — checkbox opt-in
+                // (destildado por defecto), mismo motivo del default
+                // explícito que requiere_talla/requiere_sexo arriba.
+                'es_polera'      => $request->boolean('es_polera'),
             ]
         );
 
@@ -60,6 +64,9 @@ class SouvenirController extends Controller
                 // checkbox opt-in (destildado por defecto), mismo motivo
                 // del default explícito que los de arriba.
                 'aplica_cargo_servicio' => $request->boolean('aplica_cargo_servicio'),
+                // Reporte de poleras (03/09/2026) — checkbox opt-in
+                // (destildado por defecto), mismo motivo que los de arriba.
+                'es_polera'      => $request->boolean('es_polera'),
             ]
         );
 
