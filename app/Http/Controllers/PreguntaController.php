@@ -77,10 +77,20 @@ class PreguntaController extends Controller
      * Una opción por línea en el textarea → array de {option_text, order}.
      * Líneas vacías se descartan (espaciado accidental del organizador no
      * debe crear una opción en blanco).
+     *
+     * `?string` a propósito (bug real en producción, 03/09/2026): cuando
+     * `tipo_input` no usa opciones (text/email/tel/date/number/textarea),
+     * el textarea `opciones_texto` llega vacío — el middleware
+     * `ConvertEmptyStringsToNull` lo convierte a `null` ANTES de que el
+     * controller lo vea, así que `$request->input('opciones_texto', '')`
+     * nunca aplica su default (la clave sí existe, solo que en `null`).
+     * Con el parámetro tipado `string` estricto (sin `?`), eso tiraba un
+     * TypeError sin capturar → 500 al crear o editar CUALQUIER pregunta
+     * sin opciones — que es el caso más común.
      */
-    private function parseOpciones(string $texto): array
+    private function parseOpciones(?string $texto): array
     {
-        $lineas = array_values(array_filter(array_map('trim', explode("\n", $texto)), fn ($l) => $l !== ''));
+        $lineas = array_values(array_filter(array_map('trim', explode("\n", $texto ?? '')), fn ($l) => $l !== ''));
 
         return array_map(fn ($l, $i) => ['option_text' => $l, 'order' => $i], $lineas, array_keys($lineas));
     }
