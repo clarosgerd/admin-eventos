@@ -38,6 +38,16 @@
     <noscript><button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-md">Filtrar</button></noscript>
 </form>
 
+{{-- Buscador (03/09/2026) — el listado ya viene completo del servidor (sin
+     paginar, ver ParticipantesController::index()), así que filtra en el
+     cliente sobre lo ya renderizado en vez de ir y volver a la API. --}}
+<div class="mb-4">
+    <label class="block text-xs font-semibold text-slate-600 mb-1">Buscar</label>
+    <input type="text" id="buscarParticipante" oninput="filtrarParticipantes(this.value)"
+           placeholder="Nombre, apellido, documento, alias o correo"
+           class="w-full sm:max-w-sm border border-slate-300 rounded-md px-3 py-2 text-sm">
+</div>
+
 @if (session('status'))
     <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded-md mb-5 text-sm">
         {{ session('status') }}
@@ -49,11 +59,16 @@
     </div>
 @endif
 
-<p class="text-sm text-slate-500 mb-3">{{ count($participantes) }} participante(s)</p>
+<p class="text-sm text-slate-500 mb-3">
+    <span id="contadorParticipantes">{{ count($participantes) }}</span> participante(s)
+</p>
+
+<p id="sinResultados" hidden class="text-sm text-slate-500">Ningún participante coincide con la búsqueda.</p>
 
 @forelse ($participantes as $p)
     @php($tienePolera = !empty($p['polera']) && $p['polera'] !== 'No shirt')
-    <section class="bg-white rounded-lg shadow p-5 mb-4">
+    @php($textoBusqueda = Str::lower(collect([$p['nombre'], $p['apellido'], $p['numeroDocumento'], $p['alias'], $p['correo']])->filter()->implode(' ')))
+    <section class="participante-card bg-white rounded-lg shadow p-5 mb-4" data-search="{{ $textoBusqueda }}">
         <form method="POST" action="{{ route('participantes.update', ['evento' => $evento['id'], 'participante' => $p['id']]) }}">
             @csrf
             @method('PATCH')
@@ -137,4 +152,23 @@
         No hay participantes {{ $categoriaSeleccionada !== '' ? 'en esta categoría' : 'inscritos todavía' }}.
     </p>
 @endforelse
+
+<script>
+const totalParticipantes = {{ count($participantes) }};
+
+function filtrarParticipantes(termino) {
+    termino = termino.trim().toLowerCase();
+    const tarjetas = document.querySelectorAll('.participante-card');
+    let visibles = 0;
+
+    tarjetas.forEach((tarjeta) => {
+        const coincide = termino === '' || (tarjeta.dataset.search || '').includes(termino);
+        tarjeta.hidden = !coincide;
+        if (coincide) visibles++;
+    });
+
+    document.getElementById('contadorParticipantes').textContent = visibles;
+    document.getElementById('sinResultados').hidden = !(totalParticipantes > 0 && visibles === 0);
+}
+</script>
 @endsection
