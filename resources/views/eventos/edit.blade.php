@@ -484,6 +484,19 @@
                             @endforeach
                         </select>
                     </div>
+                    {{-- Deshabilitar una categoría sin ocultarla (04/09/2026) —
+                         mismo patrón que talleres.permite_inscripcion (ver
+                         eventos/talleres/index.blade.php): la categoría sigue
+                         visible para el participante, pero no se puede elegir.
+                         Input hidden con value=0 antes del checkbox — un
+                         checkbox destildado no manda nada en el POST. --}}
+                    <div class="col-span-6">
+                        <label class="flex items-center gap-2 text-xs">
+                            <input type="hidden" name="permite_inscripcion" value="0">
+                            <input type="checkbox" name="permite_inscripcion" value="1" @checked($categoria['permiteInscripcion'] ?? true)>
+                            Permite inscripción <span class="text-slate-500">(destildar la deja visible pero no seleccionable)</span>
+                        </label>
+                    </div>
                 </form>
                 <form method="POST" action="{{ route('categorias.destroy', $categoria['id']) }}" class="mt-1 inline"
                       onsubmit="return confirm('¿Eliminar esta categoría?')">
@@ -502,6 +515,9 @@
                     @if (!empty($categoria['periodo_vigente_nombre']))
                         <span class="text-red-600 font-semibold">({{ $categoria['periodo_vigente_nombre'] }})</span>
                     @endif
+                    @unless ($categoria['permiteInscripcion'] ?? true)
+                        · <span class="text-amber-600 font-semibold">No permite inscripción</span>
+                    @endunless
                     ·
                     <a href="{{ route('categorias.periodos.index', $categoria['id']) }}?evento_id={{ $evento['id'] }}" class="text-brand-600 hover:underline">Períodos de precio →</a>
                 </p>
@@ -536,6 +552,13 @@
                             <option value="{{ $formType['id'] }}">{{ $formType['name'] }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div class="col-span-6">
+                    <label class="flex items-center gap-2 text-xs">
+                        <input type="hidden" name="permite_inscripcion" value="0">
+                        <input type="checkbox" name="permite_inscripcion" value="1" checked>
+                        Permite inscripción <span class="text-slate-500">(destildar la deja visible pero no seleccionable)</span>
+                    </label>
                 </div>
             </form>
         </div>
