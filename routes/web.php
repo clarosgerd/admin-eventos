@@ -34,6 +34,7 @@ use App\Http\Controllers\NumeracionController;
 use App\Http\Controllers\OrganizadorController;
 use App\Http\Controllers\ParticipantesController;
 use App\Http\Controllers\ParticipantesDetalleController;
+use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\PresupuestoCategoriaController;
 use App\Http\Controllers\PresupuestoController;
 use App\Http\Controllers\PromoCodeController;
@@ -280,6 +281,16 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
         // CRUD de organizadores — config global (dueños de eventos), solo
         // super_admin. Ver PRD-organizadores-crud.md (sesión 11/08/2026).
         Route::resource('organizadores', OrganizadorController::class)->only(['index', 'store', 'update', 'destroy']);
+
+        // Administración de Personas (cuentas públicas del sitio de
+        // inscripción) — solo super_admin (03/09/2026, pedido explícito
+        // del usuario: propio ítem de menú, NO dentro de Catálogos — no es
+        // una lista de referencia fija, son datos reales de participantes,
+        // potencialmente miles de filas). El CRUD real vive en ApiRestEvent
+        // (PersonaController ahí, desde 21/08/2026) — acá solo la pantalla.
+        // Ver elascenso/event/brain/PLAN-PERSONAS-ADMIN-03092026.md.
+        Route::resource('personas', PersonaController::class)
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 
         // Formas de pago activas por organizador (19/08/2026) — ver
         // elascenso/event/brain/PLAN-INTEGRACION-PAGO-MERU-19082026.md.
