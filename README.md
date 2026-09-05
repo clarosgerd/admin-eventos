@@ -1,6 +1,6 @@
 # admin-eventos — Panel de administración de eventos
 
-Panel de administración (el "tercer frontend" del ecosistema Pass2Go,
+Panel de administración (el "tercer frontend" del ecosistema Inscrito,
 junto a [`elascenso/event`](../event) y [`elascenso/delivery`](../delivery))
 para dar de alta, editar, publicar/despublicar y borrar eventos —
 categorías, form_types, souvenirs, promo codes, coordenadas, ruta,
