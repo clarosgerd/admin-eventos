@@ -610,6 +610,12 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1">Costo edición</label>
                             <input type="number" step="0.01" min="0" name="costo_edicion" value="{{ $formType['costo_edicion'] }}" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                            {{-- Auto-confirmar inscripciones en $0 (04/09/2026) — costo_edicion
+                                 es un cargo fijo independiente del precio base, no se ajusta
+                                 solo. Si este tipo de formulario es gratis (ej. ponente/staff)
+                                 y no querés cobrarle nada a alguien que después agregue un
+                                 taller, poné 0 acá también. --}}
+                            <p class="text-xs text-slate-400 mt-1">Si el "Precio base" es 0 (ej. ponente/staff), poné esto también en 0 si no querés cobrar un cargo fijo cuando agreguen un taller después.</p>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold mb-1">Expira (min)</label>
@@ -655,6 +661,10 @@
                         <label class="inline-flex items-center gap-2 text-sm">
                             <input type="checkbox" name="requiere_contacto_emergencia" value="1" {{ ($formType['requiereContactoEmergencia'] ?? true) ? 'checked' : '' }}>
                             Pide contacto de emergencia <span class="text-slate-400">(desmarcar en congresos/talleres donde no aplica — oculta esos 3 campos en el formulario público y en Caja)</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="edicion_solo_extras" value="1" {{ ($formType['edicionSoloExtras'] ?? false) ? 'checked' : '' }}>
+                            Edición restringida a solo souvenirs/talleres <span class="text-slate-400">(el participante no puede editar sus datos personales ni la categoría al modificar su inscripción, solo agregar souvenirs/talleres)</span>
                         </label>
                     </div>
                     {{-- Ocultar Dirección/Ciudad/Teléfono/Alias por tipo de formulario
@@ -965,6 +975,10 @@
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="requiere_contacto_emergencia" value="1" checked>
                         Pide contacto de emergencia <span class="text-slate-400">(desmarcar en congresos/talleres donde no aplica)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="edicion_solo_extras" value="1">
+                        Edición restringida a solo souvenirs/talleres <span class="text-slate-400">(el participante no puede editar sus datos personales ni la categoría al modificar su inscripción, solo agregar souvenirs/talleres)</span>
                     </label>
                 </div>
                 {{-- Ocultar Dirección/Ciudad/Teléfono/Alias por tipo de formulario

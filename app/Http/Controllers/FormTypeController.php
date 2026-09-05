@@ -50,6 +50,8 @@ class FormTypeController extends Controller
                 // "nada tildado" ya manda [] naturalmente, no necesita el
                 // patrón request->boolean() de los flags de arriba.
                 'campos_ocultos'     => $request->input('campos_ocultos', []),
+                // Edición restringida a solo souvenirs/talleres (04/09/2026).
+                'edicion_solo_extras' => $request->boolean('edicion_solo_extras'),
             ]
         );
 
@@ -85,6 +87,8 @@ class FormTypeController extends Controller
                 // formulario (01/09/2026) — es un array, no un boolean;
                 // "nada tildado" ya manda [] naturalmente.
                 'campos_ocultos'     => $request->input('campos_ocultos', []),
+                // Edición restringida a solo souvenirs/talleres (04/09/2026).
+                'edicion_solo_extras' => $request->boolean('edicion_solo_extras'),
             ]
         );
 

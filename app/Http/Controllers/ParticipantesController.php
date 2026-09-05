@@ -11,9 +11,10 @@ use Illuminate\View\View;
 /**
  * Edición restringida de datos de contacto/identidad de un participante —
  * nombre, apellido, alias, correo, teléfono, dirección, ciudad, género,
- * fecha de nacimiento, y talla de camiseta (solo si el participante ya
- * tiene una asignada). Nunca toca categoría, souvenirs, donación, promo
- * code ni numeración de corredor/chip (eso vive en NumeracionController).
+ * fecha de nacimiento, número de documento, y talla de camiseta (solo si
+ * el participante ya tiene una asignada). Nunca toca categoría, souvenirs,
+ * donación, promo code ni numeración de corredor/chip (eso vive en
+ * NumeracionController).
  *
  * Del lado de ApiRestEvent: GET /event/{evento}/participantes (mismo
  * endpoint que ya usa NumeracionController, extendido con los campos de
@@ -55,6 +56,11 @@ class ParticipantesController extends Controller
         $data = $request->only([
             'nombre', 'apellido', 'alias', 'correo', 'telefono', 'direccion',
             'ciudad', 'genero', 'fecha_nacimiento', 'polera',
+            // numero_documento (04/09/2026) — antes intocable desde acá
+            // (identidad, anti-fraude); habilitado a pedido del usuario
+            // para corregir un documento mal cargado. Queda auditado del
+            // lado de ApiRestEvent (AdminAuditLogger).
+            'numero_documento',
         ]);
 
         $response = $client->forward('PATCH', "/participantes/{$participante}", body: $data);

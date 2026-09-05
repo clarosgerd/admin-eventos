@@ -101,6 +101,16 @@
                            class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
                 </div>
                 <div>
+                    {{-- numero_documento (04/09/2026) — antes solo de
+                         solo-lectura acá (ver Doc. en el encabezado de
+                         arriba). Corregir un documento mal cargado es
+                         responsabilidad de un admin, no del participante —
+                         queda auditado del lado de ApiRestEvent. --}}
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Número de documento</label>
+                    <input type="text" name="numero_documento" value="{{ $p['numeroDocumento'] }}" maxlength="50"
+                           class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                </div>
+                <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Correo</label>
                     <input type="email" name="correo" value="{{ $p['correo'] }}" maxlength="255"
                            class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
