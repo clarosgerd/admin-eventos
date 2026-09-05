@@ -50,10 +50,20 @@
     </a>
 </div>
 @if ($balance)
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+<div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
     <div class="bg-white rounded-lg shadow p-4 text-center">
         <div class="text-xl font-bold text-brand-600">${{ number_format($balance['ingresosInscripciones'], 2) }}</div>
         <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Ingreso por inscripciones</div>
+    </div>
+    {{-- Ingresos por ediciones de inscripciones pagadas (04/09/2026) — el
+         cargo fijo de editar (agregar taller, subir categoría), acumulado.
+         La diferencia de precio de esas ediciones ya está contada en
+         "Ingreso por inscripciones" (esa cifra lee el estado actual/post-
+         edición) — sumar el costo_adicion completo acá hubiera duplicado
+         esa parte. Ver BalanceEventoData. --}}
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xl font-bold text-brand-600">${{ number_format($balance['ingresosEdiciones'], 2) }}</div>
+        <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Ingreso por ediciones</div>
     </div>
     <div class="bg-white rounded-lg shadow p-4 text-center">
         <div class="text-xl font-bold text-brand-600">${{ number_format($balance['ingresosManuales'], 2) }}</div>
