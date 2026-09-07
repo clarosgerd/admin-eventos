@@ -41,13 +41,14 @@ class ParticipantesDetalleController extends Controller
         $eventoData = $eventoResponse?->json('eventos');
         abort_if(!$eventoData, 404);
 
-        [$categoria, $pagoStatus, $perPage, $page] = $this->filtrosDesde($request);
+        [$categoria, $pagoStatus, $perPage, $page, $search] = $this->filtrosDesde($request);
 
         $response = $client->forward('GET', "/event/{$evento}/participantes", query: array_filter([
             'categoria' => $categoria !== '' ? $categoria : null,
             'pago_status' => $pagoStatus !== '' ? $pagoStatus : null,
             'per_page' => $perPage,
             'page' => $page,
+            'search' => $search !== '' ? $search : null,
         ]));
 
         abort_if(!$response || !$response->json('success'), 502, 'No se pudo cargar el detalle de inscritos.');
@@ -56,6 +57,7 @@ class ParticipantesDetalleController extends Controller
             'evento' => $eventoData,
             'categoriaSeleccionada' => $categoria,
             'pagoStatusSeleccionado' => $pagoStatus,
+            'searchSeleccionado' => $search,
             'participantes' => $response->json('participantes') ?? [],
             'meta' => $response->json('meta'),
         ]);
@@ -86,7 +88,7 @@ class ParticipantesDetalleController extends Controller
     {
         $this->assertCanViewEvento($evento);
 
-        [$categoria, $pagoStatus] = $this->filtrosDesde($request);
+        [$categoria, $pagoStatus, , , $search] = $this->filtrosDesde($request);
 
         // Igual que NumeracionController::csvDownload — `categoria` viaja
         // como ID, se resuelve el nombre acá solo para que la columna del
@@ -111,6 +113,7 @@ class ParticipantesDetalleController extends Controller
         $response = $client->forward('GET', "/event/{$evento}/participantes", query: array_filter([
             'categoria' => $categoria !== '' ? $categoria : null,
             'pago_status' => $pagoStatus !== '' ? $pagoStatus : null,
+            'search' => $search !== '' ? $search : null,
         ]));
         abort_if(!$response || !$response->json('success'), 502, 'No se pudo generar el archivo.');
 
@@ -159,8 +162,15 @@ class ParticipantesDetalleController extends Controller
         $pagoStatus = $request->query('pago_status', '');
         $perPage = min((int) $request->query('per_page', self::PER_PAGE_DEFAULT), self::PER_PAGE_MAX);
         $page = max((int) $request->query('page', 1), 1);
+        // Buscador (07/09/2026, pedido del usuario: buscar desde "Pagados"
+        // en el dashboard por documento/nombre/apellido/correo) — filtra
+        // server-side en ApiRestEvent (ParticipanteController::porEvento),
+        // no client-side, porque esta pantalla pagina (a diferencia del
+        // buscador de eventos.participantes, que sí es client-side porque
+        // esa pantalla trae todo sin paginar — ver project_buscador_participantes_evento_admin).
+        $search = trim((string) $request->query('search', ''));
 
-        return [$categoria, $pagoStatus, $perPage, $page];
+        return [$categoria, $pagoStatus, $perPage, $page, $search];
     }
 
     private function estadoLabel(string $pagoStatus): string

@@ -44,8 +44,17 @@
             @endforeach
         </select>
     </div>
-    <noscript><button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-md">Filtrar</button></noscript>
-    <a href="{{ route('participantes.detalle.csv', array_filter(['evento' => $evento['id'], 'categoria' => $categoriaSeleccionada ?: null, 'pago_status' => $pagoStatusSeleccionado ?: null])) }}"
+    <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Buscar</label>
+        <input type="text" name="search" value="{{ $searchSeleccionado }}" placeholder="Documento, nombre, apellido o correo"
+               class="border border-slate-300 rounded-md px-3 py-2 text-sm min-w-[240px]">
+    </div>
+    <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-md">Buscar</button>
+    @if ($searchSeleccionado !== '')
+        <a href="{{ route('participantes.detalle', array_filter(['evento' => $evento['id'], 'categoria' => $categoriaSeleccionada ?: null, 'pago_status' => $pagoStatusSeleccionado ?: null])) }}"
+           class="text-sm text-slate-500 hover:underline self-center">Limpiar búsqueda</a>
+    @endif
+    <a href="{{ route('participantes.detalle.csv', array_filter(['evento' => $evento['id'], 'categoria' => $categoriaSeleccionada ?: null, 'pago_status' => $pagoStatusSeleccionado ?: null, 'search' => $searchSeleccionado ?: null])) }}"
        class="inline-block bg-white border border-slate-300 hover:bg-slate-50 text-sm font-semibold px-3 py-2 rounded-md">
         Descargar CSV (todo, sin paginar)
     </a>
@@ -117,11 +126,11 @@
         <span>Página {{ $meta['currentPage'] }} de {{ $meta['lastPage'] }} — {{ $meta['total'] }} inscrito(s) en total</span>
         <div class="flex gap-2">
             @if ($meta['currentPage'] > 1)
-                <a href="{{ route('participantes.detalle', array_filter(['evento' => $evento['id'], 'categoria' => $categoriaSeleccionada ?: null, 'pago_status' => $pagoStatusSeleccionado ?: null, 'page' => $meta['currentPage'] - 1])) }}"
+                <a href="{{ route('participantes.detalle', array_filter(['evento' => $evento['id'], 'categoria' => $categoriaSeleccionada ?: null, 'pago_status' => $pagoStatusSeleccionado ?: null, 'search' => $searchSeleccionado ?: null, 'page' => $meta['currentPage'] - 1])) }}"
                    class="bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md">← Anterior</a>
             @endif
             @if ($meta['currentPage'] < $meta['lastPage'])
-                <a href="{{ route('participantes.detalle', array_filter(['evento' => $evento['id'], 'categoria' => $categoriaSeleccionada ?: null, 'pago_status' => $pagoStatusSeleccionado ?: null, 'page' => $meta['currentPage'] + 1])) }}"
+                <a href="{{ route('participantes.detalle', array_filter(['evento' => $evento['id'], 'categoria' => $categoriaSeleccionada ?: null, 'pago_status' => $pagoStatusSeleccionado ?: null, 'search' => $searchSeleccionado ?: null, 'page' => $meta['currentPage'] + 1])) }}"
                    class="bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-md">Siguiente →</a>
             @endif
         </div>
