@@ -43,6 +43,7 @@ use App\Http\Controllers\SesionCongresoController;
 use App\Http\Controllers\TallerCongresoController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RegistroManualController;
+use App\Http\Controllers\ReporteTrazabilidadController;
 use App\Http\Controllers\RouteController as PanelRouteController;
 use App\Http\Controllers\SocioController;
 use App\Http\Controllers\SouvenirController;
@@ -291,6 +292,12 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
         // Ver elascenso/event/brain/PLAN-PERSONAS-ADMIN-03092026.md.
         Route::resource('personas', PersonaController::class)
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+
+        // Reporte de trazabilidad de inscripciones (10/09/2026) — cross-
+        // evento, solo super_admin. Ver ApiRestEvent/brain/api_rest_event/
+        // PLAN-REPORTE-TRAZABILIDAD-10092026.md.
+        Route::get('/reporte-trazabilidad', [ReporteTrazabilidadController::class, 'index'])->name('reporte-trazabilidad.index');
+        Route::get('/reporte-trazabilidad/csv', [ReporteTrazabilidadController::class, 'csvDownload'])->name('reporte-trazabilidad.csv');
 
         // Formas de pago activas por organizador (19/08/2026) — ver
         // elascenso/event/brain/PLAN-INTEGRACION-PAGO-MERU-19082026.md.
