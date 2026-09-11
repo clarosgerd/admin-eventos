@@ -38,6 +38,7 @@ use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\PresupuestoCategoriaController;
 use App\Http\Controllers\PresupuestoController;
 use App\Http\Controllers\PromoCodeController;
+use App\Http\Controllers\PromoCodeReporteController;
 use App\Http\Controllers\AsistenciaSesionController;
 use App\Http\Controllers\SesionCongresoController;
 use App\Http\Controllers\TallerCongresoController;
@@ -210,6 +211,11 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::get('/eventos/{evento}/participantes/detalle', [ParticipantesDetalleController::class, 'index'])->name('participantes.detalle');
     Route::get('/eventos/{evento}/participantes/detalle/csv', [ParticipantesDetalleController::class, 'csvDownload'])->name('participantes.detalle.csv');
     Route::post('/eventos/{evento}/participantes/detalle/{referencia}/confirmar-pago-manual', [ParticipantesDetalleController::class, 'confirmarPagoManual'])->name('participantes.detalle.confirmar-pago-manual');
+
+    // Reporte de códigos promocionales usados (11/09/2026) — ver
+    // PromoCodeReporteController, reachable desde la pestaña Promos del
+    // editor de evento.
+    Route::get('/eventos/{evento}/promo-codes-reporte', [PromoCodeReporteController::class, 'index'])->name('promocodes.reporte');
 
     // Presupuesto de un evento (control financiero del organizador) —
     // mismo criterio de permisos que Numeración/Participantes: super_admin

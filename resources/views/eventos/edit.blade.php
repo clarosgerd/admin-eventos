@@ -1150,6 +1150,11 @@
 
     {{-- 5. Códigos promocionales --}}
     <div id="panel-promos" role="tabpanel" aria-labelledby="tab-promos" tabindex="0" class="p-6" hidden>
+        <div class="mb-4">
+            <a href="{{ route('promocodes.reporte', $evento['id']) }}" class="text-sm text-brand-600 hover:underline">
+                📊 Ver reporte de códigos usados
+            </a>
+        </div>
         @foreach ($evento['promoCodes'] as $promoCode)
             <div class="border border-slate-200 rounded-md p-3 mb-2">
                 <form method="POST" action="{{ route('promocodes.update', $promoCode['id']) }}" class="grid grid-cols-6 gap-2 items-end">
