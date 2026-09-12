@@ -227,6 +227,11 @@
 
     <div class="bg-white rounded-lg shadow p-5 caja-section">
         <h2 class="font-semibold mb-3">Resumen de cobro</h2>
+        {{-- Precio USD fijo en Caja (12/09/2026) — mismo aviso corto que ya
+             usa el registro público para estos eventos. --}}
+        <p id="usdFijoAviso" class="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2" style="display:none">
+            Este evento cobra en USD fijo — cobrá en efectivo en dólares, el monto exacto de abajo.
+        </p>
         <dl class="text-sm space-y-1">
             <div class="flex justify-between"><dt>Inscripción</dt><dd id="r_inscripcion">0.00</dd></div>
             {{-- Filas condicionales (20/08/2026) — ocultas si el tipo de
@@ -264,6 +269,14 @@
     // Congresos con talleres desde Caja (20/08/2026) — mismo shape que
     // ParticipanteTallerSesionResource: sesionCongresoId/tallerId.
     const PREFILL_TALLERES = {!! json_encode($prefill['talleres'] ?? []) !!};
+    // Precio USD fijo en Caja (12/09/2026) — ver
+    // CurrencyResolverData::resolverPrecioFijo() (ApiRestEvent) y
+    // brain/PLAN-CAJA-USD-FIJO-EXTRANJEROS-27082026.md. Mismo criterio que
+    // el registro público: solo inscripción por categoría, sin talleres/
+    // souvenirs/donación en este modo todavía (alcance acotado a lo
+    // esencial — el servidor igual rechaza cualquier intento de colarse).
+    const USD_PRECIO_FIJO = !!EVENTO.usdPrecioFijo;
+    document.getElementById('usdFijoAviso').style.display = USD_PRECIO_FIJO ? '' : 'none';
     const FEE_PCT = Number(EVENTO.fee_pct || 0);
     const FEE_INCLUYE_TALLERES = EVENTO.feeIncluyeTalleres !== false;
     const TALLERES_CON_COSTO = !!EVENTO.talleresConCosto;
@@ -291,7 +304,7 @@
             c => c.formulario_id == null || String(c.formulario_id) === String(ft.id)
         );
         select.innerHTML = '<option value="">— seleccionar —</option>' + categoriasDelFormType.map(c =>
-            `<option value="${c.id}" data-precio="${c.precio_vigente}">${c.name} (${Number(c.precio_vigente).toFixed(2)})</option>`
+            `<option value="${c.id}" data-precio="${c.precio_vigente}" data-precio-usd="${c.precio_usd_vigente ?? ''}">${c.name} (${Number(c.precio_vigente).toFixed(2)})</option>`
         ).join('');
         // Bug real 27/08/2026 (reportado por el usuario: "no me muestra la
         // opción de modificar/adición de talleres incluso cuando hago
@@ -783,10 +796,12 @@
     function calcular() {
         const ft = formTypeActual();
         let inscripcion = 0;
+        let inscripcionUsd = 0;
         if (ft) {
             if (ft.requiereCategoria) {
                 const opt = document.getElementById('categoria')?.selectedOptions?.[0];
                 inscripcion = opt ? Number(opt.dataset.precio || 0) : 0;
+                inscripcionUsd = (opt && opt.dataset.precioUsd !== '') ? Number(opt.dataset.precioUsd) : 0;
             } else {
                 inscripcion = Number(ft.precio_base || 0);
             }
@@ -811,20 +826,53 @@
         const baseConDescuento = Math.max(0, inscripcion - descuento);
         const baseFee = baseConDescuento + (FEE_INCLUYE_TALLERES ? talleresTotal : 0);
         const fee = Math.round(baseFee * FEE_PCT * 100) / 100;
+        // grand_total (Bs) es SIEMPRE el bookkeeping real de la categoría,
+        // sin importar en qué moneda se cobre de verdad — ver
+        // CurrencyResolverData::resolverPrecioFijo() (ApiRestEvent):
+        // "sin tocar para nada el bookkeeping en BOB". Nunca se pisa con
+        // el número en USD.
         const total = Math.round((baseConDescuento + souvenirsTotal + talleresTotal + donacion + fee) * 100) / 100;
 
-        document.getElementById('r_inscripcion').textContent = inscripcion.toFixed(2);
+        // Precio USD fijo en Caja (12/09/2026) — total REAL a cobrar en
+        // efectivo, en paralelo al bookkeeping de arriba. Mismo alcance
+        // que el registro público hoy: solo inscripción por categoría,
+        // sin souvenirs/donación/talleres en este modo (el submit más
+        // abajo bloquea si hay alguno de esos, antes de llegar al 422 del
+        // servidor).
+        const feeUsd = Math.round(inscripcionUsd * FEE_PCT * 100) / 100;
+        const totalUsd = Math.round((inscripcionUsd + feeUsd) * 100) / 100;
+
+        document.getElementById('r_inscripcion').textContent = (USD_PRECIO_FIJO ? inscripcionUsd : inscripcion).toFixed(2);
         document.getElementById('r_talleres').textContent = talleresTotal.toFixed(2);
         document.getElementById('r_souvenirs').textContent = souvenirsTotal.toFixed(2);
         document.getElementById('r_descuento').textContent = '-' + descuento.toFixed(2);
         document.getElementById('r_donacion').textContent = donacion.toFixed(2);
-        document.getElementById('r_fee').textContent = fee.toFixed(2);
-        document.getElementById('r_total').textContent = total.toFixed(2);
+        document.getElementById('r_fee').textContent = (USD_PRECIO_FIJO ? feeUsd : fee).toFixed(2);
+        document.getElementById('r_total').textContent = (USD_PRECIO_FIJO ? totalUsd : total).toFixed(2);
 
         return {
             inscripcion, donacion, souvenirs: souvenirsTotal, talleres: talleresTotal, fee,
             descuento, descuento_registrante: 0, grand_total: total,
+            moneda_pago: USD_PRECIO_FIJO ? 'USD' : 'BOB',
+            tipo_cambio_aplicado: null,
+            total_pagado: USD_PRECIO_FIJO ? totalUsd : null,
         };
+    }
+
+    /**
+     * Precio USD fijo en Caja (12/09/2026) — mismo alcance que el
+     * registro público: solo inscripción por categoría, todavía sin
+     * souvenirs/donación/talleres-con-costo. Bloquea ANTES de mandar el
+     * request (el servidor igual lo rechaza, esto solo evita un 422 crudo
+     * y le da al cajero un mensaje claro de qué sacar del carrito).
+     */
+    function errorUsdFijoCarritoInvalido() {
+        if (!USD_PRECIO_FIJO) return null;
+        const donacion = Number(document.getElementById('f_donacion')?.value || 0);
+        if (donacion > 0) return 'Este evento cobra en USD solo la inscripción — sacá la donación antes de cobrar.';
+        if (souvenirsSeleccionados().length > 0) return 'Este evento cobra en USD solo la inscripción — sacá los souvenirs antes de cobrar.';
+        if (collectSelectedTalleres().length > 0) return 'Este evento cobra en USD solo la inscripción — sacá los talleres antes de cobrar.';
+        return null;
     }
 
     function actualizarSecciones() {
@@ -858,6 +906,13 @@
         if (gate && !gate.checked) {
             e.preventDefault();
             alert('Tenés que confirmar el cobro del adicional antes de guardar.');
+            return;
+        }
+
+        const errorUsdFijo = errorUsdFijoCarritoInvalido();
+        if (errorUsdFijo) {
+            e.preventDefault();
+            alert(errorUsdFijo);
             return;
         }
 
