@@ -155,6 +155,13 @@ class EventoController extends Controller
         // ya creado). Default false.
         $payload['usdPrecioFijo'] = $request->boolean('usdPrecioFijo');
 
+        // Gafetes/certificados parametrizables por evento (13/09/2026) —
+        // sin checkbox/inputs en create.blade.php a propósito, mismo motivo
+        // que usdPrecioFijo (se configuran después, en la pestaña de edición
+        // del evento ya creado). Default false/null.
+        $payload['certificadoSoloNombre'] = $request->boolean('certificadoSoloNombre');
+        $payload['gafeteConfig'] = null;
+
         $response = $client->forward('POST', '/event', body: $payload);
 
         if (!$response || !$response->json('success')) {
@@ -355,6 +362,22 @@ class EventoController extends Controller
             asort($ordenSecciones);
             $payload['seccionesOrden'] = array_keys($ordenSecciones);
         }
+
+        // Gafetes/certificados parametrizables por evento (13/09/2026) —
+        // pedido real de COLABIOCLI 2026. Mismo motivo que aceptaUsd:
+        // certificadoSoloNombre se manda siempre para que destildear también
+        // persista. gafeteConfig se manda como null cuando el organizador
+        // vacía el ancho (el resto de los campos son opcionales solo con el
+        // ancho presente) — así vuelve al tamaño estándar en vez de guardar
+        // un JSON incompleto.
+        $payload['certificadoSoloNombre'] = $request->boolean('certificadoSoloNombre');
+        $payload['gafeteConfig'] = $request->filled('gafeteWidthCm') ? [
+            'width_cm'    => (float) $request->input('gafeteWidthCm'),
+            'height_cm'   => (float) $request->input('gafeteHeightCm'),
+            'per_row'     => (int) $request->input('gafetePerRow', 3),
+            'paper'       => $request->input('gafetePaper', 'a4'),
+            'orientation' => $request->input('gafeteOrientation', 'landscape'),
+        ] : null;
 
         $response = $client->forward('PUT', "/event/{$evento}", body: $payload);
 
