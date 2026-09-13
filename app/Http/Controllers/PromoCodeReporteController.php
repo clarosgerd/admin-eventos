@@ -35,6 +35,9 @@ class PromoCodeReporteController extends Controller
             'filas' => $response->json('filas') ?? [],
             'totalCodigos' => $response->json('totalCodigos') ?? 0,
             'totalUsados' => $response->json('totalUsados') ?? 0,
+            // Multi-uso (13/09/2026) — dimensión nueva: cuántos usos reales
+            // pasaron en total, aparte de "cuántos códigos se tocaron".
+            'totalUsos' => $response->json('totalUsos') ?? 0,
             'totalDescontado' => $response->json('totalDescontado') ?? 0,
         ]);
     }

@@ -17,7 +17,7 @@ class PromoCodeController extends Controller
     public function store(Request $request, int $evento, ApiRestEventClient $client): RedirectResponse
     {
         $payload = array_merge(
-            $request->only('promo_code', 'price', 'discount_type', 'discount_percent'),
+            $request->only('promo_code', 'price', 'discount_type', 'discount_percent', 'max_uses'),
             ['event_id' => $evento]
         );
 
@@ -35,7 +35,7 @@ class PromoCodeController extends Controller
 
     public function update(Request $request, int $promo_code, ApiRestEventClient $client): RedirectResponse
     {
-        $response = $client->forward('PUT', "/promo-code/{$promo_code}", body: $request->only('promo_code', 'price', 'discount_type', 'discount_percent'));
+        $response = $client->forward('PUT', "/promo-code/{$promo_code}", body: $request->only('promo_code', 'price', 'discount_type', 'discount_percent', 'max_uses'));
 
         $eventoId = $request->input('evento_id');
         if (!$response || !$response->json('success')) {

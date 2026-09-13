@@ -427,7 +427,7 @@
 </template>
 
 <template id="promocode-template">
-    <div class="promocode-row border border-slate-200 rounded-md p-3 mb-2 grid grid-cols-5 gap-2 items-end">
+    <div class="promocode-row border border-slate-200 rounded-md p-3 mb-2 grid grid-cols-6 gap-2 items-end">
         <div>
             <label class="block text-xs font-semibold mb-1">Código</label>
             <input type="text" name="promoCodes[__P_INDEX__][promo_code]" required
@@ -448,6 +448,11 @@
         <div>
             <label class="block text-xs font-semibold mb-1">% descuento</label>
             <input type="number" step="0.01" min="0" max="1" name="promoCodes[__P_INDEX__][discount_percent]"
+                   class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">Usos máximos</label>
+            <input type="number" step="1" min="1" value="1" name="promoCodes[__P_INDEX__][max_uses]"
                    class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
         </div>
         <div>

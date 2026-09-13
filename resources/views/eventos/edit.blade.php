@@ -1157,7 +1157,7 @@
         </div>
         @foreach ($evento['promoCodes'] as $promoCode)
             <div class="border border-slate-200 rounded-md p-3 mb-2">
-                <form method="POST" action="{{ route('promocodes.update', $promoCode['id']) }}" class="grid grid-cols-6 gap-2 items-end">
+                <form method="POST" action="{{ route('promocodes.update', $promoCode['id']) }}" class="grid grid-cols-7 gap-2 items-end">
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="evento_id" value="{{ $evento['id'] }}">
@@ -1180,8 +1180,19 @@
                         <label class="block text-xs font-semibold mb-1">% descuento</label>
                         <input type="number" step="0.01" min="0" max="1" name="discount_percent" value="{{ $promoCode['discount_percent'] }}" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Usos máximos</label>
+                        <input type="number" step="1" min="1" name="max_uses" value="{{ $promoCode['max_uses'] ?? 1 }}" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                    </div>
                     <div class="text-xs text-slate-500">
-                        {{ $promoCode['usado'] ? 'Usado' : 'Sin usar' }}
+                        {{-- Multi-uso (13/09/2026) — mismo texto de siempre para
+                             códigos de un solo uso (max_uses=1, todos los
+                             existentes), N/M solo cuando el código admite más. --}}
+                        @if (($promoCode['max_uses'] ?? 1) > 1)
+                            {{ $promoCode['times_used'] ?? 0 }}/{{ $promoCode['max_uses'] }} usos
+                        @else
+                            {{ $promoCode['usado'] ? 'Usado' : 'Sin usar' }}
+                        @endif
                     </div>
                     <div>
                         <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-2 py-1 rounded">Guardar</button>
@@ -1199,7 +1210,7 @@
 
         <div class="border border-dashed border-slate-300 rounded-md p-3 mt-3">
             <p class="text-xs font-semibold text-slate-500 mb-2">+ Agregar código promocional</p>
-            <form method="POST" action="{{ route('promocodes.store', $evento['id']) }}" class="grid grid-cols-6 gap-2 items-end">
+            <form method="POST" action="{{ route('promocodes.store', $evento['id']) }}" class="grid grid-cols-7 gap-2 items-end">
                 @csrf
                 <input type="text" name="promo_code" placeholder="Código" required class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                 <input type="number" step="0.01" min="0" name="price" placeholder="Precio fijo" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
@@ -1208,6 +1219,7 @@
                     <option value="percentage">percentage</option>
                 </select>
                 <input type="number" step="0.01" min="0" max="1" name="discount_percent" placeholder="% descuento" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                <input type="number" step="1" min="1" name="max_uses" value="1" title="Usos máximos" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                 <div></div>
                 <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-2 py-1 rounded">Agregar</button>
             </form>
