@@ -241,6 +241,13 @@
             <div id="r_souvenirs_row" class="flex justify-between" style="display:none"><dt>Souvenirs</dt><dd id="r_souvenirs">0.00</dd></div>
             <div id="r_descuento_row" class="flex justify-between" style="display:none"><dt>Descuento promo</dt><dd id="r_descuento">-0.00</dd></div>
             <div id="r_donacion_row" class="flex justify-between" style="display:none"><dt>Donación</dt><dd id="r_donacion">0.00</dd></div>
+            {{-- Cargo de edición (17/09/2026) — fijo por form_type
+                 (formType.costo_edicion), cobrado por ActualizarInscripcionPagadaAction
+                 en TODA edición de una inscripción pagada, sin importar si además
+                 hay delta de categoría/talleres. El resumen no lo mostraba (bug real,
+                 incidente CIACRUZ) — el "Total a cobrar" quedaba sistemáticamente por
+                 debajo de lo que el backend cobraba de verdad. --}}
+            <div id="r_costoEdicion_row" class="flex justify-between" style="display:none"><dt>Cargo de edición</dt><dd id="r_costoEdicion">0.00</dd></div>
             <div class="flex justify-between"><dt>Cargo de servicio</dt><dd id="r_fee">0.00</dd></div>
             <div class="flex justify-between font-bold text-base border-t pt-1 mt-1"><dt>Total a cobrar</dt><dd id="r_total">0.00</dd></div>
         </dl>
@@ -269,6 +276,24 @@
     // Congresos con talleres desde Caja (20/08/2026) — mismo shape que
     // ParticipanteTallerSesionResource: sesionCongresoId/tallerId.
     const PREFILL_TALLERES = {!! json_encode($prefill['talleres'] ?? []) !!};
+    // Cobro correcto al editar una inscripción pagada (17/09/2026, bug
+    // real en UAT: incidente CIACRUZ LA-CD34EA70) — el "Resumen de cobro"
+    // mostraba el precio VIGENTE de la categoría y la suma de TODOS los
+    // talleres seleccionados (incluidos los ya pagados de antes), en vez
+    // del delta real a cobrar. Ver calcular() más abajo — mismo criterio
+    // que EdicionPagadaCategoriaData::resolver() del lado de ApiRestEvent:
+    // sin cambio de categoría, delta 0 (sin importar si el precio de
+    // catálogo subió desde que se pagó).
+    const MODO = @json($modo);
+    const PAGO_STATUS = @json($pagoStatus ?? null);
+    const ES_EDICION_PAGADA = MODO === 'editar' && PAGO_STATUS === 'paid';
+    const PRECIO_ANTERIOR = @json($prefill['precioCategoria'] ?? null);
+    const CATEGORIA_ANTERIOR = @json($prefill['categoria'] ?? null);
+    const TALLERES_ANTERIORES_IDS = new Set((PREFILL_TALLERES || []).map(t => Number(t.sesionCongresoId)));
+    // Cargo de edición (17/09/2026, mismo incidente) — fijo por form_type,
+    // cobrado siempre por ActualizarInscripcionPagadaAction en cualquier
+    // edición de pagada; el resumen no lo sumaba. Ver calcular().
+    const COSTO_EDICION = @json((float) ($costoEdicion ?? 0));
     // Precio USD fijo en Caja (12/09/2026) — ver
     // CurrencyResolverData::resolverPrecioFijo() (ApiRestEvent) y
     // brain/PLAN-CAJA-USD-FIJO-EXTRANJEROS-27082026.md. Mismo criterio que
@@ -802,6 +827,23 @@
                 const opt = document.getElementById('categoria')?.selectedOptions?.[0];
                 inscripcion = opt ? Number(opt.dataset.precio || 0) : 0;
                 inscripcionUsd = (opt && opt.dataset.precioUsd !== '') ? Number(opt.dataset.precioUsd) : 0;
+
+                // Edición de inscripción pagada (17/09/2026) — "Inscripción"
+                // acá debe ser el DELTA a cobrar, no el precio completo:
+                // sin cambio de categoría, 0 (mismo criterio que
+                // EdicionPagadaCategoriaData::resolver() en el backend, que
+                // ni siquiera mira el precio vigente si la categoría no
+                // cambió). Con cambio, la diferencia real contra lo que ya
+                // se pagó — puede dar negativo (Caja permite bajar de
+                // categoría). Si no hay PRECIO_ANTERIOR (dato faltante),
+                // cae al comportamiento de siempre (precio completo) en vez
+                // de arriesgar un cálculo con datos incompletos.
+                if (ES_EDICION_PAGADA && PRECIO_ANTERIOR !== null) {
+                    const categoriaId = document.getElementById('categoria')?.value || null;
+                    inscripcion = (categoriaId === String(CATEGORIA_ANTERIOR))
+                        ? 0
+                        : Math.round((inscripcion - Number(PRECIO_ANTERIOR)) * 100) / 100;
+                }
             } else {
                 inscripcion = Number(ft.precio_base || 0);
             }
@@ -812,7 +854,15 @@
         // CrearInscripcionAction::validateFeePct(): el fee se calcula
         // sobre inscripción + talleres salvo que el evento tenga
         // feeIncluyeTalleres=false.
-        const talleresTotal = collectSelectedTalleres().reduce((sum, s) => sum + Number(s.unit_price || 0), 0);
+        // Edición de inscripción pagada (17/09/2026) — solo cuenta el
+        // delta (talleres NUEVOS); los ya existentes (TALLERES_ANTERIORES_IDS)
+        // no se vuelven a sumar, ya se cobraron o siguen figurando como
+        // pendientes de una edición previa sin tocar acá.
+        const talleresSeleccionados = collectSelectedTalleres();
+        const talleresParaTotal = ES_EDICION_PAGADA
+            ? talleresSeleccionados.filter(s => !TALLERES_ANTERIORES_IDS.has(Number(s.sesion_congreso_id)))
+            : talleresSeleccionados;
+        const talleresTotal = talleresParaTotal.reduce((sum, s) => sum + Number(s.unit_price || 0), 0);
         const donacion = ft && ft.hasDonation ? Number(document.getElementById('f_donacion')?.value || 0) : 0;
 
         let descuento = 0;
@@ -826,12 +876,17 @@
         const baseConDescuento = Math.max(0, inscripcion - descuento);
         const baseFee = baseConDescuento + (FEE_INCLUYE_TALLERES ? talleresTotal : 0);
         const fee = Math.round(baseFee * FEE_PCT * 100) / 100;
+        // Cargo de edición (17/09/2026) — fijo, cobrado por el backend en
+        // TODA edición de una inscripción pagada (ver ActualizarInscripcionPagadaAction,
+        // $costoAdicion siempre incluye $costoEdicion), sin importar si
+        // además hay delta de categoría/talleres/souvenirs.
+        const costoEdicion = ES_EDICION_PAGADA ? Number(COSTO_EDICION || 0) : 0;
         // grand_total (Bs) es SIEMPRE el bookkeeping real de la categoría,
         // sin importar en qué moneda se cobre de verdad — ver
         // CurrencyResolverData::resolverPrecioFijo() (ApiRestEvent):
         // "sin tocar para nada el bookkeeping en BOB". Nunca se pisa con
         // el número en USD.
-        const total = Math.round((baseConDescuento + souvenirsTotal + talleresTotal + donacion + fee) * 100) / 100;
+        const total = Math.round((baseConDescuento + souvenirsTotal + talleresTotal + donacion + fee + costoEdicion) * 100) / 100;
 
         // Precio USD fijo en Caja (12/09/2026) — total REAL a cobrar en
         // efectivo, en paralelo al bookkeeping de arriba. Mismo alcance
@@ -847,6 +902,8 @@
         document.getElementById('r_souvenirs').textContent = souvenirsTotal.toFixed(2);
         document.getElementById('r_descuento').textContent = '-' + descuento.toFixed(2);
         document.getElementById('r_donacion').textContent = donacion.toFixed(2);
+        document.getElementById('r_costoEdicion_row').style.display = ES_EDICION_PAGADA ? '' : 'none';
+        document.getElementById('r_costoEdicion').textContent = costoEdicion.toFixed(2);
         document.getElementById('r_fee').textContent = (USD_PRECIO_FIJO ? feeUsd : fee).toFixed(2);
         document.getElementById('r_total').textContent = (USD_PRECIO_FIJO ? totalUsd : total).toFixed(2);
 

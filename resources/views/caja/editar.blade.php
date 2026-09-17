@@ -48,6 +48,12 @@
         'contactoCelular' => $p['contacto_emergencia']['celular'] ?? '',
         'contactoRelacion' => $p['contacto_emergencia']['relacion'] ?? '',
         'categoria' => $p['categoria'] ?? null,
+        // Cobro correcto al editar una inscripción pagada (17/09/2026) —
+        // ver caja/_formulario.blade.php calcular(): sin esto, el resumen
+        // de cobro usaba el precio VIGENTE de la categoría (que puede
+        // haber subido desde que se pagó) en vez de compararlo contra lo
+        // que ya se pagó de verdad.
+        'precioCategoria' => $p['precioCategoria'] ?? null,
         'equipoId' => $p['equipoId'] ?? null,
         'quiereDelivery' => $p['quiereDelivery'] ?? false,
         'donacion' => $p['donacion'] ?? 0,
