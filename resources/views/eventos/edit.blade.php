@@ -62,6 +62,12 @@
                 @if (($evento['tipoEvento'] ?? null) === 'Congreso / No aplica')
                     <a href="{{ route('sesiones.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Sesiones de congreso</a>
                 @endif
+                {{-- Sync periódico (pull) de participantes de fuente externa (17/09/2026) —
+                     solo super_admin, mismo criterio que Carga masiva/Liquidación (token de
+                     integración sensible). --}}
+                @if ((session('admin_user')['rol'] ?? null) === 'super_admin')
+                    <a href="{{ route('sync-externo.edit', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Sync de participantes (fuente externa)</a>
+                @endif
 
                 <p class="px-3 pt-2 pb-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wide border-t border-slate-100 mt-1">Finanzas</p>
                 <a href="{{ route('presupuesto.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Presupuesto</a>
