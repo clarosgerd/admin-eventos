@@ -54,6 +54,17 @@
         <p class="text-xs text-slate-500">Total movimientos</p>
         <p class="font-semibold">{{ number_format($turno['totalCobrado'] ?? 0, 2) }}</p>
     </div>
+    {{-- Método de pago en Caja (18/09/2026) — desglose informativo; "Esperado"
+         de arriba ya excluye el QR (nunca pasa por el cajón físico), este
+         desglose explica por qué. --}}
+    <div>
+        <p class="text-xs text-slate-500">Efectivo</p>
+        <p class="font-semibold">{{ number_format($turno['totalEfectivo'] ?? 0, 2) }}</p>
+    </div>
+    <div>
+        <p class="text-xs text-slate-500">QR</p>
+        <p class="font-semibold">{{ number_format($turno['totalQr'] ?? 0, 2) }}</p>
+    </div>
 </div>
 
 <h2 class="font-bold text-sm text-brand-600 mb-2">Movimientos ({{ count($turno['movimientos'] ?? []) }})</h2>

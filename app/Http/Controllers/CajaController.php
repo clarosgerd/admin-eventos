@@ -74,6 +74,8 @@ class CajaController extends Controller
             'form_types_id' => $request->input('form_types_id'),
             'participante'  => json_decode((string) $request->input('participante_json'), true) ?? [],
             'totales'       => json_decode((string) $request->input('totales_json'), true) ?? [],
+            // Método de pago en Caja (18/09/2026) — Efectivo o QR.
+            'metodo_pago'   => $request->input('metodo_pago', 'EFECTIVO'),
         ]);
 
         if (!$response || !$response->json('success')) {
@@ -122,9 +124,12 @@ class CajaController extends Controller
         return response()->json($response?->json() ?? ['success' => false, 'error' => 'No se pudo conectar con el servidor.']);
     }
 
-    public function cobrarPendiente(int $evento, string $referencia, ApiRestEventClient $client): JsonResponse
+    public function cobrarPendiente(Request $request, int $evento, string $referencia, ApiRestEventClient $client): JsonResponse
     {
-        $response = $client->forward('POST', "/registrations/{$referencia}/caja/cobrar-pendiente");
+        $response = $client->forward('POST', "/registrations/{$referencia}/caja/cobrar-pendiente", body: [
+            // Método de pago en Caja (18/09/2026) — Efectivo o QR.
+            'metodo_pago' => $request->input('metodo_pago', 'EFECTIVO'),
+        ]);
 
         return response()->json($response?->json() ?? ['success' => false, 'error' => 'No se pudo conectar con el servidor.'], $response?->status() ?? 502);
     }
@@ -166,6 +171,10 @@ class CajaController extends Controller
         ];
         if ($esPagada) {
             $body['confirmacion'] = true;
+            // Método de pago en Caja (18/09/2026) — Efectivo o QR, solo
+            // relevante acá (la única de las 2 rutas de edición que cobra
+            // un adicional real).
+            $body['metodo_pago'] = $request->input('metodo_pago', 'EFECTIVO');
         }
 
         $response = $client->forward('PATCH', $path, body: $body);

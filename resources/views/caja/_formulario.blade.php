@@ -251,6 +251,28 @@
             <div class="flex justify-between"><dt>Cargo de servicio</dt><dd id="r_fee">0.00</dd></div>
             <div class="flex justify-between font-bold text-base border-t pt-1 mt-1"><dt>Total a cobrar</dt><dd id="r_total">0.00</dd></div>
         </dl>
+
+        {{-- Método de pago en Caja (18/09/2026) — Efectivo o QR (QR bancario
+             único del evento, ya impreso/generado de antes, no uno nuevo por
+             transacción). Solo tiene sentido cuando esta pantalla
+             efectivamente cobra algo: alta nueva, o edición de una
+             inscripción YA pagada (el adicional real) — edición de una
+             pendiente no cobra nada acá (ver CajaController::editarPendiente()). --}}
+        @if ($modo === 'nueva' || $pagoStatus === 'paid')
+            <div class="mt-3 pt-3 border-t border-slate-100">
+                <p class="text-xs font-semibold mb-1">Método de pago</p>
+                <div class="flex gap-4 text-sm">
+                    <label class="inline-flex items-center gap-1.5">
+                        <input type="radio" name="metodo_pago" value="EFECTIVO" checked>
+                        Efectivo
+                    </label>
+                    <label class="inline-flex items-center gap-1.5">
+                        <input type="radio" name="metodo_pago" value="QR">
+                        QR
+                    </label>
+                </div>
+            </div>
+        @endif
     </div>
 
     <button type="submit" id="btnSubmit"
