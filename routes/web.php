@@ -15,6 +15,7 @@ use App\Http\Controllers\GeneroController;
 use App\Http\Controllers\RelacionContactoController;
 use App\Http\Controllers\SexoController;
 use App\Http\Controllers\SipBancoController;
+use App\Http\Controllers\SyncExternoConfigController;
 use App\Http\Controllers\SubtipoEventoController;
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\CategoryPricePeriodController;
@@ -316,6 +317,15 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
         // Catálogo de rubros del presupuesto — solo super_admin (config
         // global, igual que Socios).
         Route::resource('presupuesto-categorias', PresupuestoCategoriaController::class)->only(['index', 'store', 'update', 'destroy']);
+
+        // Sync periódico (pull) de participantes de un evento con registro
+        // propio externo (17/09/2026) — solo super_admin, mismo criterio
+        // que Bancos SIP (`token` es una credencial de integración
+        // sensible). Ver ApiRestEvent/brain/api_rest_event/ (sesión
+        // 17/09/2026).
+        Route::get('/eventos/{evento}/sync-externo', [SyncExternoConfigController::class, 'edit'])->name('sync-externo.edit');
+        Route::post('/eventos/{evento}/sync-externo', [SyncExternoConfigController::class, 'store'])->name('sync-externo.store');
+        Route::post('/eventos/{evento}/sync-externo/sincronizar-ahora', [SyncExternoConfigController::class, 'sincronizarAhora'])->name('sync-externo.sincronizar-ahora');
 
         // Catálogos globales (15/08/2026) — País/Ciudad/Sexo/Tipo de
         // evento/Subtipo de evento/Relación de contacto, todos config
