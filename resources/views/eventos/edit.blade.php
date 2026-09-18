@@ -49,7 +49,15 @@
             </summary>
             <div class="absolute right-0 mt-1 w-64 bg-white border border-slate-200 rounded-md shadow-lg py-1.5 z-20">
                 <p class="px-3 pt-1 pb-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Inscripciones</p>
-                <a href="{{ route('numeracion.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Numeración de corredor y chip</a>
+                {{-- Campos de carrera/congreso en reportes al cliente (18/09/2026) —
+                     numeración de corredor/chip no aplica a congresos, mismo criterio
+                     (por tipo de evento) que ya usa "Sesiones de congreso" más abajo. --}}
+                @if (($evento['tipoEvento'] ?? null) !== 'Congreso / No aplica')
+                    <a href="{{ route('numeracion.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Numeración de corredor y chip</a>
+                    {{-- Exportación a ChronoTrack (18/09/2026) — mismo gate,
+                         ChronoTrack es exclusivo de carreras. --}}
+                    <a href="{{ route('chronotrack.csv.download', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Exportar a ChronoTrack (CSV)</a>
+                @endif
                 <a href="{{ route('acreditacion.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Acreditación</a>
                 @if ((session('admin_user')['rol'] ?? null) === 'super_admin')
                     <a href="{{ route('registro-manual.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Carga masiva de inscripciones</a>
@@ -555,6 +563,20 @@
                             @endforeach
                         </select>
                     </div>
+                    {{-- Aviso de numeración vs. género/edad real (16/09/2026) —
+                         define qué edad se usa al comparar contra los rangos de
+                         numeración de esta categoría (ver "Rangos de numeración →"
+                         más abajo). Sin elegir nada, se usa "Edad al inscribirse"
+                         por default — no rompe categorías existentes. --}}
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold mb-1">Cálculo de edad</label>
+                        <select name="calculo_edad_id" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                            <option value="">Edad al inscribirse (default)</option>
+                            @foreach ($calculoEdades as $calculoEdad)
+                                <option value="{{ $calculoEdad['id'] }}" @selected(($categoria['calculo_edad_id'] ?? null) == $calculoEdad['id'])>{{ $calculoEdad['nombre'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     {{-- Deshabilitar una categoría sin ocultarla (04/09/2026) —
                          mismo patrón que talleres.permite_inscripcion (ver
                          eventos/talleres/index.blade.php): la categoría sigue
@@ -591,6 +613,8 @@
                     @endunless
                     ·
                     <a href="{{ route('categorias.periodos.index', $categoria['id']) }}?evento_id={{ $evento['id'] }}" class="text-brand-600 hover:underline">Períodos de precio →</a>
+                    ·
+                    <a href="{{ route('categorias.rangos.index', $categoria['id']) }}?evento_id={{ $evento['id'] }}" class="text-brand-600 hover:underline">Rangos de numeración →</a>
                 </p>
             </div>
         @endforeach
@@ -621,6 +645,15 @@
                         <option value="">General (todos los tipos de este evento)</option>
                         @foreach ($evento['formTypes'] as $formType)
                             <option value="{{ $formType['id'] }}">{{ $formType['name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs font-semibold mb-1">Cálculo de edad</label>
+                    <select name="calculo_edad_id" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                        <option value="">Edad al inscribirse (default)</option>
+                        @foreach ($calculoEdades as $calculoEdad)
+                            <option value="{{ $calculoEdad['id'] }}">{{ $calculoEdad['nombre'] }}</option>
                         @endforeach
                     </select>
                 </div>

@@ -107,6 +107,14 @@ class ParticipantesDetalleController extends Controller
         $fechaEvento = $eventoResponse?->json('eventos.date');
         $finDeAnioEvento = $fechaEvento ? Carbon::parse($fechaEvento)->endOfYear() : null;
 
+        // Campos de carrera/congreso en reportes al cliente (18/09/2026) —
+        // 'numero_corredor' solo tiene sentido si el evento usa numeración,
+        // mismo criterio (por tipo de evento) que ya usa ApiRestEvent
+        // (OrganizadorDashboardController::exportCsv()) para la misma
+        // columna en el CSV firmado — ver análisis en la memoria del
+        // proyecto (project_reportes_csv_campos_carrera_congreso).
+        $usaNumeracion = mb_strtolower(trim($eventoResponse?->json('eventos.tipoEvento') ?? '')) !== 'congreso / no aplica';
+
         // Sin `per_page` a propósito: la descarga CSV es una acción
         // explícita del usuario, no la carga de pantalla por defecto —
         // mismo criterio que ya usa la exportación de Numeración.
@@ -128,7 +136,8 @@ class ParticipantesDetalleController extends Controller
         // de servicio, que se cobra por registro completo, no por
         // participante — ver ApiRestEvent ParticipanteController::porEvento.
         fputcsv($handle, [
-            'numero_corredor', 'estado', 'importe', 'importe_taller', 'importe_total', 'numero_documento', 'nombre', 'apellido',
+            ...($usaNumeracion ? ['numero_corredor'] : []),
+            'estado', 'importe', 'importe_taller', 'importe_total', 'numero_documento', 'nombre', 'apellido',
             'sexo', 'celular', 'fecha_inscripcion', 'referencia', 'nacimiento', 'distancia',
             'edad_fecha_evento', 'edad_fin_de_anio', 'edad_hoy',
         ]);
@@ -136,7 +145,8 @@ class ParticipantesDetalleController extends Controller
             [$edadEvento, $edadFinDeAnio, $edadHoy] = $this->edades($p['fechaNacimiento'] ?? null, $fechaEvento, $finDeAnioEvento);
 
             fputcsv($handle, [
-                $p['numeroCorredor'], $this->estadoLabel($p['pagoStatus']), $p['importe'],
+                ...($usaNumeracion ? [$p['numeroCorredor']] : []),
+                $this->estadoLabel($p['pagoStatus']), $p['importe'],
                 $p['importeTaller'] ?? 0, $p['importeTotal'] ?? $p['importe'],
                 $p['numeroDocumento'], $p['nombre'], $p['apellido'], $p['genero'], $p['telefono'],
                 $p['fechaInscripcion'], $p['referencia'], $p['fechaNacimiento'],

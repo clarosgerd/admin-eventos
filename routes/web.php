@@ -19,6 +19,7 @@ use App\Http\Controllers\SyncExternoConfigController;
 use App\Http\Controllers\SubtipoEventoController;
 use App\Http\Controllers\TipoEventoController;
 use App\Http\Controllers\CategoryPricePeriodController;
+use App\Http\Controllers\NumeracionRangoController;
 use App\Http\Controllers\ChronoTrackController;
 use App\Http\Controllers\CoordinateController;
 use App\Http\Controllers\DashboardController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\NumeracionController;
 use App\Http\Controllers\OrganizadorController;
 use App\Http\Controllers\ParticipantesController;
 use App\Http\Controllers\ParticipantesDetalleController;
+use App\Http\Controllers\ChronoTrackExportController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\PresupuestoCategoriaController;
 use App\Http\Controllers\PresupuestoController;
@@ -111,6 +113,13 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::put('/categorias-periodos/{categoryPricePeriod}', [CategoryPricePeriodController::class, 'update'])->name('categorias.periodos.update');
     Route::delete('/categorias-periodos/{categoryPricePeriod}', [CategoryPricePeriodController::class, 'destroy'])->name('categorias.periodos.destroy');
 
+    // Aviso de numeración vs. género/edad real en entrega de kit
+    // (16/09/2026) — mismo criterio de permisos que el resto del bloque.
+    Route::get('/categorias/{category}/rangos', [NumeracionRangoController::class, 'index'])->name('categorias.rangos.index');
+    Route::post('/categorias/{category}/rangos', [NumeracionRangoController::class, 'store'])->name('categorias.rangos.store');
+    Route::put('/categorias-rangos/{numeracionRango}', [NumeracionRangoController::class, 'update'])->name('categorias.rangos.update');
+    Route::delete('/categorias-rangos/{numeracionRango}', [NumeracionRangoController::class, 'destroy'])->name('categorias.rangos.destroy');
+
     Route::post('/eventos/{evento}/formtypes', [FormTypeController::class, 'store'])->name('formtypes.store');
     Route::put('/formtypes/{form_type}', [FormTypeController::class, 'update'])->name('formtypes.update');
     Route::delete('/formtypes/{form_type}', [FormTypeController::class, 'destroy'])->name('formtypes.destroy');
@@ -186,6 +195,10 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::get('/eventos/{evento}/numeracion/csv', [NumeracionController::class, 'csvDownload'])->name('numeracion.csv.download');
     Route::post('/eventos/{evento}/numeracion/csv', [NumeracionController::class, 'csvUpload'])->name('numeracion.csv.upload');
     Route::patch('/numeracion/{referencia}/{participante}', [NumeracionController::class, 'update'])->name('numeracion.update');
+
+    // Exportación a ChronoTrack (18/09/2026) — CSV de carga manual a la
+    // plataforma de ChronoTrack, ver ChronoTrackExportController.
+    Route::get('/eventos/{evento}/chronotrack/csv', [ChronoTrackExportController::class, 'csvDownload'])->name('chronotrack.csv.download');
 
     // Acreditación (check-in) escaneando el QR de referencia — mismo
     // criterio de permisos que Numeración (super_admin o admin scoped a

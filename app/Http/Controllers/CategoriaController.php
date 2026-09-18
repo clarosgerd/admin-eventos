@@ -21,11 +21,17 @@ class CategoriaController extends Controller
         // ApiRestEvent lo trate como "compartida por todos los form_types"
         // en vez de rechazar la validación `nullable|integer`.
         $payload = array_merge(
-            $request->only('name', 'price', 'price_usd', 'description', 'color', 'formulario_id', 'permite_inscripcion'),
+            $request->only('name', 'price', 'price_usd', 'description', 'color', 'formulario_id', 'calculo_edad_id', 'permite_inscripcion'),
             ['event_id' => $evento]
         );
         if (($payload['formulario_id'] ?? '') === '') {
             unset($payload['formulario_id']);
+        }
+        // Aviso de numeración vs. género/edad real (16/09/2026) — mismo
+        // criterio que formulario_id: "" (opción "Sin definir" del select)
+        // debe mandarse como ausente, no como string vacío.
+        if (($payload['calculo_edad_id'] ?? '') === '') {
+            unset($payload['calculo_edad_id']);
         }
 
         $response = $client->forward('POST', '/category', body: $payload);
@@ -47,9 +53,12 @@ class CategoriaController extends Controller
         // vacío, para poder volver una categoría ya asignada a "compartida
         // por todos los form_types" (UpdateCategoryRequest usa `sometimes`,
         // así que omitir el campo entero dejaría el valor anterior intacto).
-        $payload = $request->only('name', 'price', 'price_usd', 'description', 'color', 'formulario_id', 'permite_inscripcion');
+        $payload = $request->only('name', 'price', 'price_usd', 'description', 'color', 'formulario_id', 'calculo_edad_id', 'permite_inscripcion');
         if (($payload['formulario_id'] ?? '') === '') {
             $payload['formulario_id'] = null;
+        }
+        if (($payload['calculo_edad_id'] ?? '') === '') {
+            $payload['calculo_edad_id'] = null;
         }
 
         $response = $client->forward('PUT', "/category/{$categoria}", body: $payload);

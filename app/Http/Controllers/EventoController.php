@@ -58,6 +58,16 @@ class EventoController extends Controller
         return $response?->json('data') ?? [];
     }
 
+    // Aviso de numeración vs. género/edad real en entrega de kit
+    // (16/09/2026) — catálogo fijo para el select "Cálculo de edad" del
+    // formulario de categoría, mismo patrón que tiposEvento()/organizadores().
+    private function calculoEdades(ApiRestEventClient $client): array
+    {
+        $response = $client->forward('GET', '/calculo-edades');
+
+        return $response?->json('data') ?? [];
+    }
+
     public function store(Request $request, ApiRestEventClient $client): RedirectResponse
     {
         $categories = collect($request->input('categories', []))
@@ -226,6 +236,7 @@ class EventoController extends Controller
             'evento' => $eventoData,
             'tiposEvento' => $this->tiposEvento($client),
             'organizadores' => $this->organizadores($client),
+            'calculoEdades' => $this->calculoEdades($client),
         ]);
     }
 
