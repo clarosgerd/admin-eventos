@@ -103,6 +103,7 @@
     <pre class="bg-white rounded p-3 overflow-x-auto text-xs">{
   "participantes": [
     {
+      "external_id": "opcional pero RECOMENDADO — id propio y estable de la fuente para este participante. Sin esto, si más adelante corrigen su numero_documento (ej. typo de CI), el sync no lo va a reconocer y va a crear un participante duplicado en vez de actualizar el existente.",
       "form_type": "opcional — nombre del tipo, si el evento tiene más de uno",
       "numero_documento": "opcional si viene correo",
       "tipo_documento": "opcional, default CI",
@@ -118,5 +119,8 @@
     }
   ]
 }</pre>
+    <p class="mt-2 text-xs">Todos los campos (excepto nombre/apellido) se actualizan en cada
+    corrida posterior si la fuente manda un valor distinto — si un campo se omite o llega vacío,
+    se conserva el valor que ya teníamos guardado, nunca se borra.</p>
 </div>
 @endsection
