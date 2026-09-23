@@ -21,6 +21,11 @@
         le corresponde según su género/edad real, se avisa (sin bloquear nada). Sin ningún rango cargado acá, no se
         muestra ningún aviso — comportamiento actual, sin cambios.
     </p>
+    <p class="text-xs text-slate-400 mt-1">
+        El N° mínimo/máximo es opcional — cargando solo género + edad ya alcanza para mostrar la categoría real por
+        edad/género en el export a ChronoTrack y en el POS de retiro (recategorización visual, nunca cambia la
+        inscripción ni el precio ya cobrado). El rango de números/color solo hace falta además para el aviso de bib.
+    </p>
 </div>
 
 <div class="bg-white rounded-lg shadow overflow-x-auto mb-6">
@@ -58,11 +63,11 @@
                         <input type="color" name="color" value="{{ $rango['color'] }}" form="rango-form-{{ $rango['id'] }}" class="h-8 border border-slate-300 rounded">
                     </td>
                     <td class="px-4 py-2">
-                        <input type="number" min="0" name="numero_min" value="{{ $rango['numero_min'] }}" required
+                        <input type="number" min="0" name="numero_min" value="{{ $rango['numero_min'] }}"
                                form="rango-form-{{ $rango['id'] }}" class="border border-slate-300 rounded px-2 py-1 w-20">
                     </td>
                     <td class="px-4 py-2">
-                        <input type="number" min="0" name="numero_max" value="{{ $rango['numero_max'] }}" required
+                        <input type="number" min="0" name="numero_max" value="{{ $rango['numero_max'] }}"
                                form="rango-form-{{ $rango['id'] }}" class="border border-slate-300 rounded px-2 py-1 w-20">
                     </td>
                     <td class="px-4 py-2 text-right space-x-2">
@@ -119,12 +124,12 @@
         </div>
         <div class="grid grid-cols-2 gap-2">
             <div>
-                <label class="block text-sm font-medium mb-1">N° mínimo</label>
-                <input type="number" name="numero_min" min="0" required class="border border-slate-300 rounded px-2 py-1.5 w-full">
+                <label class="block text-sm font-medium mb-1">N° mínimo <span class="text-slate-400 font-normal">(opcional)</span></label>
+                <input type="number" name="numero_min" min="0" class="border border-slate-300 rounded px-2 py-1.5 w-full">
             </div>
             <div>
-                <label class="block text-sm font-medium mb-1">N° máximo</label>
-                <input type="number" name="numero_max" min="0" required class="border border-slate-300 rounded px-2 py-1.5 w-full">
+                <label class="block text-sm font-medium mb-1">N° máximo <span class="text-slate-400 font-normal">(opcional)</span></label>
+                <input type="number" name="numero_max" min="0" class="border border-slate-300 rounded px-2 py-1.5 w-full">
             </div>
         </div>
         <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-md">

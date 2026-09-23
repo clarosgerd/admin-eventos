@@ -65,10 +65,16 @@ class ChronoTrackExportController extends Controller
                 // COUNTRY_NAME/COUNTRY_CODE: mismo valor (iso2) — así viene
                 // en la muestra real pese al nombre de columna.
                 $paisIso2, $paisIso2, $paisNombre, 'Spanish', $p['telefono'],
-                // CATEGORIA — MVP: nombre de categoría propio. El ideal a
-                // futuro (pedido por el usuario, no implementado ahora) es
-                // recategorizar por NumeracionRango (categoría+edad+género).
-                $categoriaNombre,
+                // CATEGORIA — recategorización visual por edad/género
+                // (23/09/2026): si el evento tiene NumeracionRango cargado
+                // y matchea para este participante, usa esa categoría real
+                // en vez de la que eligió al inscribirse (REG_CHOICE/
+                // RACE_NAME sí siguen siendo la elegida — es "lo que se
+                // inscribió", distinto de "el bracket real de scoring").
+                // Calculado en ApiRestEvent (ParticipanteController::porEvento),
+                // no acá — necesita edad/calculo_edad_id que no vienen en
+                // este payload.
+                $p['categoriaRecalculada'] ?? $categoriaNombre,
             ]);
         }
         rewind($handle);

@@ -37,7 +37,7 @@ class NumeracionRangoController extends Controller
 
     public function store(Request $request, int $category, ApiRestEventClient $client): RedirectResponse
     {
-        $response = $client->forward('POST', "/category/{$category}/numeracion-rangos", body: $request->only('genero_id', 'edad_min', 'edad_max', 'color', 'numero_min', 'numero_max'));
+        $response = $client->forward('POST', "/category/{$category}/numeracion-rangos", body: $this->payload($request));
 
         if (!$response || !$response->json('success')) {
             return back()->withErrors($this->extractErrors($response));
@@ -48,13 +48,32 @@ class NumeracionRangoController extends Controller
 
     public function update(Request $request, int $numeracionRango, ApiRestEventClient $client): RedirectResponse
     {
-        $response = $client->forward('PUT', "/numeracion-rango/{$numeracionRango}", body: $request->only('genero_id', 'edad_min', 'edad_max', 'color', 'numero_min', 'numero_max'));
+        $response = $client->forward('PUT', "/numeracion-rango/{$numeracionRango}", body: $this->payload($request));
 
         if (!$response || !$response->json('success')) {
             return back()->withErrors($this->extractErrors($response));
         }
 
         return redirect($this->volverUrl((int) $request->input('category_id'), $request))->with('status', 'Rango de numeración actualizado correctamente.');
+    }
+
+    /**
+     * numero_min/numero_max opcionales (23/09/2026) — un input number
+     * vacío manda '' (no ausente), y la API rechaza '' contra la regla
+     * `integer` aunque el campo sea `nullable`. Mismo criterio ya usado acá
+     * mismo para formulario_id/calculo_edad_id (CategoriaController::store/update).
+     */
+    private function payload(Request $request): array
+    {
+        $payload = $request->only('genero_id', 'edad_min', 'edad_max', 'color', 'numero_min', 'numero_max');
+
+        foreach (['numero_min', 'numero_max'] as $campo) {
+            if (($payload[$campo] ?? '') === '') {
+                $payload[$campo] = null;
+            }
+        }
+
+        return $payload;
     }
 
     public function destroy(Request $request, int $numeracionRango, ApiRestEventClient $client): RedirectResponse
