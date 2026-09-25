@@ -59,6 +59,7 @@
                     <a href="{{ route('chronotrack.csv.download', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Exportar a ChronoTrack (CSV)</a>
                 @endif
                 <a href="{{ route('acreditacion.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Acreditación</a>
+                <a href="{{ route('pasaporte.show', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Pasaporte médico (sorteo)</a>
                 @if ((session('admin_user')['rol'] ?? null) === 'super_admin')
                     <a href="{{ route('registro-manual.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Carga masiva de inscripciones</a>
                 @endif
@@ -494,7 +495,10 @@
                                       class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">{{ old('expositoresInstrucciones', $evento['expositoresConfig']['instrucciones'] ?? '') }}</textarea>
                         </div>
                     </div>
-                    <p class="text-xs text-slate-500 mt-1">
+                    @include('eventos.partials.expositores-config-fase4', ['evento' => $evento])
+
+
+                    <p class="text-xs text-slate-500 mt-3">
                         Las empresas se inscriben con un tipo de formulario marcado "Es empresa expositora" (las categorías son los tamaños de stand).
                         @if (!empty($evento['id']))
                             <a href="{{ route('expositores.index', $evento['id']) }}" class="text-brand-600 hover:underline">Ver empresas expositoras →</a>

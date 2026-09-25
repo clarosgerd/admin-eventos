@@ -33,6 +33,7 @@ use App\Http\Controllers\ItemBodegaController;
 use App\Http\Controllers\ItemStockController;
 use App\Http\Controllers\ListaEsperaController;
 use App\Http\Controllers\LiquidacionController;
+use App\Http\Controllers\PasaporteController;
 use App\Http\Controllers\NumeracionController;
 use App\Http\Controllers\OrganizadorController;
 use App\Http\Controllers\ParticipantesController;
@@ -219,6 +220,12 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::put('/eventos/{evento}/expositores/{empresa}', [EmpresaExpositoraController::class, 'update'])->name('expositores.update');
     Route::delete('/eventos/{evento}/expositores/{empresa}', [EmpresaExpositoraController::class, 'destroy'])->name('expositores.destroy');
     Route::post('/eventos/{evento}/expositores/{empresa}/reenviar', [EmpresaExpositoraController::class, 'reenviar'])->name('expositores.reenviar');
+
+    // Fase 4 (26/09/2026) — pasaporte médico: sorteo general del organizador entre
+    // los asistentes visitados por varios stands. Proxy hacia ApiRestEvent, que
+    // aplica el scope real por evento y audita cada sorteo.
+    Route::get('/eventos/{evento}/pasaporte', [PasaporteController::class, 'show'])->name('pasaporte.show');
+    Route::post('/eventos/{evento}/pasaporte/sorteo', [PasaporteController::class, 'sortear'])->name('pasaporte.sortear');
 
     // Dashboard de inscripciones (mismo conteo que ya se manda por correo
     // al organizador) y edición restringida de datos de contacto del

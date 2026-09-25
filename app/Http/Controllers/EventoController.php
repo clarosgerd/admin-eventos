@@ -423,6 +423,29 @@ class EventoController extends Controller
             'instrucciones'   => trim((string) $request->input('expositoresInstrucciones')),
             'dashboard_url'   => trim((string) $request->input('expositoresDashboardUrl')),
         ], fn (string $valor) => $valor !== '');
+        // Fase 4 (26/09/2026): mapa de especialidades, pasaporte y seguimiento.
+        // El sello de "confirmó los Términos" se conserva si ya existía (hidden) y
+        // se estampa ahora solo la primera vez que se tilda.
+        foreach ([
+            'especialidad_pregunta' => 'expositoresEspecialidadPregunta',
+            'institucion_pregunta'  => 'expositoresInstitucionPregunta',
+        ] as $clave => $campo) {
+            if (trim((string) $request->input($campo)) !== '') {
+                $expositoresConfig[$clave] = trim((string) $request->input($campo));
+            }
+        }
+        if ($request->filled('expositoresPasaporteMinStands')) {
+            $expositoresConfig['pasaporte_min_stands'] = (int) $request->input('expositoresPasaporteMinStands');
+        }
+        if ($request->filled('expositoresSeguimientoMax')) {
+            $expositoresConfig['seguimiento_max_por_asistente'] = (int) $request->input('expositoresSeguimientoMax');
+        }
+        if ($request->boolean('expositoresSeguimientoTyc')) {
+            $expositoresConfig['seguimiento_tyc_confirmado_at'] = trim((string) $request->input('expositoresSeguimientoTycAt')) ?: now()->toDateTimeString();
+        }
+        if ($request->boolean('expositoresSeguimientoHabilitado')) {
+            $expositoresConfig['seguimiento_habilitado'] = true;
+        }
         $payload['expositoresConfig'] = $expositoresConfig ?: null;
 
         $response = $client->forward('PUT', "/event/{$evento}", body: $payload);
