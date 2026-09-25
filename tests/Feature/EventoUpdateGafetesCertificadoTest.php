@@ -135,6 +135,9 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
             true
         );
         $eventoJson['eventos']['formTypes'][0]['camposOcultos'] = ['nacimiento'];
+        $eventoJson['eventos']['formTypes'][0]['permite_inscripcion_grupal'] = true;
+        $eventoJson['eventos']['formTypes'][0]['max_integrantes_grupo'] = 7;
+        $eventoJson['eventos']['formTypes'][0]['descuento_registrante_pct'] = 0.2;
 
         Http::fake([
             '*/tipos-evento' => Http::response(['tiposEvento' => []], 200),
@@ -150,5 +153,13 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
         // Apellido (26/09/2026): existe el checkbox y, sin estar en camposOcultos, no viene marcado.
         $this->assertStringContainsString('value="apellido"', $html);
         $this->assertDoesNotMatchRegularExpression('/name="campos_ocultos\[\]" value="apellido"\s+checked/', $html);
+
+        // Solo un participante (26/09/2026): el checkbox existe y viene marcado según `unSoloParticipante`.
+        $this->assertStringContainsString('name="un_solo_participante"', $html);
+        // Inscripción grupal (26/09/2026): casilla + N + % del tipo existente con sus valores actuales.
+        $this->assertStringContainsString('name="permite_inscripcion_grupal"', $html);
+        $this->assertMatchesRegularExpression('/name="max_integrantes_grupo" value="7"/', $html);
+        $this->assertMatchesRegularExpression('/name="descuento_registrante_pct" value="20"/', $html);
+        $this->assertMatchesRegularExpression('/name="permite_inscripcion_grupal" value="1"\s+checked/', $html);
     }
 }

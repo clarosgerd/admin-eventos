@@ -174,6 +174,59 @@ class EmpresaExpositoraControllerTest extends TestCase
         Http::assertSent(fn ($r) => $r->method() === 'PUT' && str_contains($r->url(), '/form-type/50') && $r['es_expositor'] === false);
     }
 
+    /** "Solo un participante por inscripción" (26/09/2026): el checkbox llega al API en el alta y en la edición. */
+    public function test_formtype_store_y_update_mandan_un_solo_participante(): void
+    {
+        Http::fake(['*' => Http::response(['success' => true], 200)]);
+
+        $this->comoSuperAdmin()->post('/eventos/7/formtypes', ['name' => 'Expositor', 'un_solo_participante' => '1'])
+            ->assertRedirect();
+        Http::assertSent(fn ($r) => $r->method() === 'POST' && str_contains($r->url(), '/form-type') && $r['un_solo_participante'] === true);
+
+        $this->comoSuperAdmin()->put('/formtypes/50', ['name' => 'Expositor', 'evento_id' => 7])->assertRedirect();
+        Http::assertSent(fn ($r) => $r->method() === 'PUT' && str_contains($r->url(), '/form-type/50') && $r['un_solo_participante'] === false);
+    }
+
+    /** Inscripción grupal (26/09/2026): casilla + N + % (entero 0-100 → fracción de la columna decimal(4,2)). */
+    public function test_formtype_store_y_update_mandan_la_inscripcion_grupal(): void
+    {
+        Http::fake(['*' => Http::response(['success' => true], 200)]);
+
+        $this->comoSuperAdmin()->post('/eventos/7/formtypes', [
+            'name' => 'Corredores', 'permite_inscripcion_grupal' => '1', 'max_integrantes_grupo' => '12', 'descuento_registrante_pct' => '15',
+        ])->assertRedirect();
+        Http::assertSent(fn ($r) => $r->method() === 'POST' && str_contains($r->url(), '/form-type')
+            && $r['permite_inscripcion_grupal'] === true && $r['max_integrantes_grupo'] === 12 && $r['descuento_registrante_pct'] === 0.15);
+
+        // 0 % = solo tope (no se confunde con "vacío").
+        $this->comoSuperAdmin()->put('/formtypes/50', [
+            'name' => 'Corredores', 'evento_id' => 7, 'permite_inscripcion_grupal' => '1', 'max_integrantes_grupo' => '5', 'descuento_registrante_pct' => '0',
+        ])->assertRedirect();
+        Http::assertSent(fn ($r) => $r->method() === 'PUT' && str_contains($r->url(), '/form-type/50')
+            && $r['permite_inscripcion_grupal'] === true && $r['max_integrantes_grupo'] === 5 && $r['descuento_registrante_pct'] === 0.0);
+    }
+
+    public function test_formtype_update_sin_los_campos_grupales_no_pisa_n_ni_el_descuento_y_apaga_la_casilla(): void
+    {
+        Http::fake(['*' => Http::response(['success' => true], 200)]);
+
+        $this->comoSuperAdmin()->put('/formtypes/50', ['name' => 'Corredores', 'evento_id' => 7])->assertRedirect();
+
+        Http::assertSent(fn ($r) => $r->method() === 'PUT' && str_contains($r->url(), '/form-type/50')
+            && $r['permite_inscripcion_grupal'] === false && !isset($r['max_integrantes_grupo']) && !isset($r['descuento_registrante_pct']));
+    }
+
+    public function test_formtype_limita_el_maximo_a_2_o_mas_y_el_descuento_a_0_100(): void
+    {
+        Http::fake(['*' => Http::response(['success' => true], 200)]);
+
+        $this->comoSuperAdmin()->put('/formtypes/50', [
+            'name' => 'X', 'evento_id' => 7, 'permite_inscripcion_grupal' => '1', 'max_integrantes_grupo' => '1', 'descuento_registrante_pct' => '250',
+        ])->assertRedirect();
+
+        Http::assertSent(fn ($r) => $r->method() === 'PUT' && $r['max_integrantes_grupo'] === 2 && $r['descuento_registrante_pct'] === 1.0);
+    }
+
     public function test_update_del_evento_manda_solo_las_claves_de_expositores_con_valor(): void
     {
         Http::fake(['*/event/7' => Http::response(['success' => true], 200)]);

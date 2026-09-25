@@ -55,7 +55,12 @@ class FormTypeController extends Controller
                 'campos_ocultos'     => $request->input('campos_ocultos', []),
                 // Edición restringida a solo souvenirs/talleres (04/09/2026).
                 'edicion_solo_extras' => $request->boolean('edicion_solo_extras'),
-            ]
+                // Solo un participante por inscripción (26/09/2026).
+                'un_solo_participante' => $request->boolean('un_solo_participante'),
+                // Inscripción grupal (26/09/2026): casilla; N y % se agregan aparte (solo si vienen).
+                'permite_inscripcion_grupal' => $request->boolean('permite_inscripcion_grupal'),
+            ],
+            $this->camposGrupales($request)
         );
 
         $response = $client->forward('POST', '/form-type', body: $payload);
@@ -94,7 +99,12 @@ class FormTypeController extends Controller
                 'campos_ocultos'     => $request->input('campos_ocultos', []),
                 // Edición restringida a solo souvenirs/talleres (04/09/2026).
                 'edicion_solo_extras' => $request->boolean('edicion_solo_extras'),
-            ]
+                // Solo un participante por inscripción (26/09/2026).
+                'un_solo_participante' => $request->boolean('un_solo_participante'),
+                // Inscripción grupal (26/09/2026): casilla; N y % se agregan aparte (solo si vienen).
+                'permite_inscripcion_grupal' => $request->boolean('permite_inscripcion_grupal'),
+            ],
+            $this->camposGrupales($request)
         );
 
         $response = $client->forward('PUT', "/form-type/{$form_type}", body: $payload);
@@ -131,5 +141,29 @@ class FormTypeController extends Controller
         }
 
         return ['general' => $response->json('error') ?? $response->json('message') ?? 'Ocurrió un error.'];
+    }
+
+    /**
+     * Inscripción grupal (26/09/2026): N (`max_integrantes_grupo`, a la vez tope de
+     * participantes y umbral del descuento) y el % de descuento. Solo se mandan si
+     * vienen en el formulario, para no pisar el valor guardado desde otro
+     * formulario. El % llega como entero 0-100 y la columna guarda la fracción
+     * (`decimal(4,2)`: 10 → 0.10), por eso solo porcentajes enteros.
+     *
+     * @return array<string, int|float>
+     */
+    private function camposGrupales(Request $request): array
+    {
+        $campos = [];
+
+        if ($request->filled('max_integrantes_grupo')) {
+            $campos['max_integrantes_grupo'] = max(2, (int) $request->input('max_integrantes_grupo'));
+        }
+        if ($request->filled('descuento_registrante_pct')) {
+            $porcentaje = min(100, max(0, (int) round((float) $request->input('descuento_registrante_pct'))));
+            $campos['descuento_registrante_pct'] = round($porcentaje / 100, 2);
+        }
+
+        return $campos;
     }
 }

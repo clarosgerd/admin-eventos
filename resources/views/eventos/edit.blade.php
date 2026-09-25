@@ -829,6 +829,25 @@
                             <input type="checkbox" name="edicion_solo_extras" value="1" {{ ($formType['edicionSoloExtras'] ?? false) ? 'checked' : '' }}>
                             Edición restringida a solo souvenirs/talleres <span class="text-slate-400">(el participante no puede editar sus datos personales ni la categoría al modificar su inscripción, solo agregar souvenirs/talleres)</span>
                         </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="un_solo_participante" value="1" {{ ($formType['unSoloParticipante'] ?? false) ? 'checked' : '' }}>
+                            Solo un participante por inscripción <span class="text-slate-400">(sin el botón "Agregar otro participante"; para empresa expositora, staff o ponente)</span>
+                        </label>
+                        <div class="w-full rounded border border-slate-200 bg-slate-50 p-3">
+                            <label class="inline-flex items-center gap-2 text-sm font-medium">
+                                <input type="checkbox" name="permite_inscripcion_grupal" value="1" {{ ($formType['permite_inscripcion_grupal'] ?? false) ? 'checked' : '' }}>
+                                Inscripción grupal con descuento
+                            </label>
+                            <div class="flex flex-wrap gap-4 mt-2">
+                                <label class="text-xs">Participantes para el descuento (y máximo)
+                                    <input type="number" min="2" step="1" name="max_integrantes_grupo" value="{{ (int) ($formType['max_integrantes_grupo'] ?? 10) }}" class="ml-1 w-20 border border-slate-300 rounded px-2 py-1 text-sm">
+                                </label>
+                                <label class="text-xs">% de descuento
+                                    <input type="number" min="0" max="100" step="1" name="descuento_registrante_pct" value="{{ (int) round(((float) ($formType['descuento_registrante_pct'] ?? 0.10)) * 100) }}" class="ml-1 w-20 border border-slate-300 rounded px-2 py-1 text-sm">
+                                </label>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-2">Al llegar a ese número de participantes se aplica el % sobre el total de inscripción; ese número también es el máximo por inscripción. Con 0 % es solo un tope, sin descuento. Sin marcar: sin descuento y sin límite. Si "Solo un participante" está marcado, esto no aplica.</p>
+                        </div>
                     </div>
                     {{-- Ocultar Dirección/Ciudad/Teléfono/Alias por tipo de formulario
                          (01/09/2026) — a diferencia de los checkboxes de arriba, estos 4
@@ -1159,6 +1178,25 @@
                         <input type="checkbox" name="edicion_solo_extras" value="1">
                         Edición restringida a solo souvenirs/talleres <span class="text-slate-400">(el participante no puede editar sus datos personales ni la categoría al modificar su inscripción, solo agregar souvenirs/talleres)</span>
                     </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="un_solo_participante" value="1">
+                        Solo un participante por inscripción <span class="text-slate-400">(sin el botón "Agregar otro participante"; para empresa expositora, staff o ponente)</span>
+                    </label>
+                    <div class="w-full rounded border border-slate-200 bg-slate-50 p-3">
+                        <label class="inline-flex items-center gap-2 text-sm font-medium">
+                            <input type="checkbox" name="permite_inscripcion_grupal" value="1">
+                            Inscripción grupal con descuento
+                        </label>
+                        <div class="flex flex-wrap gap-4 mt-2">
+                            <label class="text-xs">Participantes para el descuento (y máximo)
+                                <input type="number" min="2" step="1" name="max_integrantes_grupo" value="10" class="ml-1 w-20 border border-slate-300 rounded px-2 py-1 text-sm">
+                            </label>
+                            <label class="text-xs">% de descuento
+                                <input type="number" min="0" max="100" step="1" name="descuento_registrante_pct" value="10" class="ml-1 w-20 border border-slate-300 rounded px-2 py-1 text-sm">
+                            </label>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">Al llegar a ese número de participantes se aplica el % sobre el total de inscripción; ese número también es el máximo por inscripción. Con 0 % es solo un tope, sin descuento. Sin marcar: sin descuento y sin límite. Si "Solo un participante" está marcado, esto no aplica.</p>
+                    </div>
                 </div>
                 {{-- Ocultar Dirección/Ciudad/Teléfono/Alias por tipo de formulario
                      (01/09/2026) — a diferencia de los checkboxes de arriba, estos 4
