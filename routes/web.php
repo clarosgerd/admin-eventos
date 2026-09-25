@@ -274,6 +274,9 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     // Gafetes/credenciales y certificados en PDF — proxy de solo lectura,
     // mismo criterio de permisos que el resto (super_admin o admin scoped).
     Route::get('/eventos/{evento}/gafetes-pdf', [EventoController::class, 'gafetesPdf'])->name('eventos.gafetes-pdf');
+    // Gafete por demanda (23/09/2026) — un participante puntual, usado
+    // desde Acreditación.
+    Route::get('/eventos/{evento}/participantes/{participante}/gafete-pdf', [EventoController::class, 'gafetePdfParticipante'])->name('eventos.gafete-pdf-participante');
     Route::get('/eventos/{evento}/certificados-pdf', [EventoController::class, 'certificadosPdf'])->name('eventos.certificados-pdf');
 
     Route::middleware('admin.superadmin')->group(function () {

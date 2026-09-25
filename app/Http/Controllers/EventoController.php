@@ -264,6 +264,26 @@ class EventoController extends Controller
     }
 
     /**
+     * Gafete de UN participante puntual (23/09/2026) — "impresión por
+     * demanda" desde Acreditación, a diferencia de gafetesPdf() (bulk).
+     * Mismo criterio de proxy — la validación real de que el participante
+     * pertenece a este evento la hace ApiRestEvent
+     * (EventoController::gafetePdfParticipante(), 404 si no cruza).
+     */
+    public function gafetePdfParticipante(int $evento, int $participante, ApiRestEventClient $client)
+    {
+        $this->assertCanViewEvento($evento);
+
+        $response = $client->forward('GET', "/event/{$evento}/participantes/{$participante}/gafete-pdf", timeoutSeconds: 30, retries: 0);
+        abort_if(!$response || !$response->successful(), 502, 'No se pudo generar el PDF del gafete.');
+
+        return response($response->body(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="gafete-participante-'.$participante.'.pdf"',
+        ]);
+    }
+
+    /**
      * Certificados de asistencia/participación en bulk — proxy de
      * GET /event/{event}/certificados-pdf, mismo criterio que gafetesPdf().
      */
@@ -383,6 +403,9 @@ class EventoController extends Controller
         // un JSON incompleto.
         $payload['certificadoSoloNombre'] = $request->boolean('certificadoSoloNombre');
         $payload['gafeteConfig'] = $request->filled('gafeteWidthCm') ? [
+            // tipo (23/09/2026) — 'completo' (default) o 'label' (solo QR,
+            // impresora de etiquetas). Ver plan/memoria del proyecto.
+            'tipo'        => $request->input('gafeteTipo', 'completo'),
             'width_cm'    => (float) $request->input('gafeteWidthCm'),
             'height_cm'   => (float) $request->input('gafeteHeightCm'),
             'per_row'     => (int) $request->input('gafetePerRow', 3),

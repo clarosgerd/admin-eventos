@@ -409,16 +409,26 @@
                         Tamaño de gafete
                         <span class="font-normal text-slate-500">(vacío = tamaño estándar, 7×5cm, 3 por fila)</span>
                     </label>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Tipo</label>
+                            <select name="gafeteTipo" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                                @php
+                                    $gafeteTipo = old('gafeteTipo', $evento['gafeteConfig']['tipo'] ?? 'completo');
+                                @endphp
+                                <option value="completo" {{ $gafeteTipo === 'completo' ? 'selected' : '' }}>Completo</option>
+                                <option value="label" {{ $gafeteTipo === 'label' ? 'selected' : '' }}>Solo QR (pegatina)</option>
+                            </select>
+                        </div>
                         <div>
                             <label class="block text-xs text-slate-500 mb-1">Ancho (cm)</label>
-                            <input type="number" name="gafeteWidthCm" step="0.1" min="3" max="15"
+                            <input type="number" name="gafeteWidthCm" step="0.1" min="2" max="15"
                                    value="{{ old('gafeteWidthCm', $evento['gafeteConfig']['width_cm'] ?? '') }}"
                                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
                         </div>
                         <div>
                             <label class="block text-xs text-slate-500 mb-1">Alto (cm)</label>
-                            <input type="number" name="gafeteHeightCm" step="0.1" min="3" max="15"
+                            <input type="number" name="gafeteHeightCm" step="0.1" min="2" max="15"
                                    value="{{ old('gafeteHeightCm', $evento['gafeteConfig']['height_cm'] ?? '') }}"
                                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
                         </div>
@@ -449,6 +459,7 @@
                             </select>
                         </div>
                     </div>
+                    <p class="text-xs text-slate-500 mt-1">"Solo QR" ignora Por fila/Papel/Orientación — imprime una pegatina por página, del tamaño exacto configurado.</p>
                 </div>
 
                 <div class="col-span-2">

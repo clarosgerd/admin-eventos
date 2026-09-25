@@ -77,6 +77,9 @@
 <script>
 const ACREDITACION_LOOKUP_URL = @json(route('acreditacion.lookup', $evento['id']));
 const ACREDITACION_CHECKIN_URL_BASE = @json(route('acreditacion.checkin', [$evento['id'], '__PARTICIPANTE__']));
+// Gafete por demanda (23/09/2026) — un participante puntual, ver
+// EventoController::gafetePdfParticipante() en este repo.
+const GAFETE_PDF_URL_BASE = @json(route('eventos.gafete-pdf-participante', [$evento['id'], '__PARTICIPANTE__']));
 const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
 
 async function postJson(url, body) {
@@ -183,6 +186,7 @@ function renderParticipantes(data) {
         card.appendChild(info);
 
         const accion = document.createElement('div');
+        accion.className = 'flex items-center gap-2 flex-wrap';
         if (p.checkedInAt) {
             accion.innerHTML = `<span class="text-sm text-green-700 font-semibold">✓ Ya acreditado</span>`;
         } else if (!pagado) {
@@ -195,6 +199,17 @@ function renderParticipantes(data) {
             btn.onclick = () => acreditarParticipante(p.id, card);
             accion.appendChild(btn);
         }
+
+        if (pagado) {
+            const linkGafete = document.createElement('a');
+            linkGafete.href = GAFETE_PDF_URL_BASE.replace('__PARTICIPANTE__', p.id);
+            linkGafete.target = '_blank';
+            linkGafete.rel = 'noopener';
+            linkGafete.className = 'text-sm text-brand-600 hover:underline whitespace-nowrap';
+            linkGafete.textContent = '🖨 Imprimir gafete';
+            accion.appendChild(linkGafete);
+        }
+
         card.appendChild(accion);
 
         listEl.appendChild(card);

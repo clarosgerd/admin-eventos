@@ -46,9 +46,30 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
                 && $request->method() === 'PUT'
                 && $request['certificadoSoloNombre'] === true
                 && $request['gafeteConfig'] === [
+                    'tipo' => 'completo',
                     'width_cm' => 8.0, 'height_cm' => 6.0, 'per_row' => 2,
                     'paper' => 'letter', 'orientation' => 'portrait',
                 ];
+        });
+    }
+
+    /** Gafete tipo "pegatina" (23/09/2026) — gafeteTipo=label persiste en el payload. */
+    public function test_update_manda_gafete_config_tipo_label(): void
+    {
+        Http::fake([
+            '*/event/1' => Http::response(['success' => true], 200),
+        ]);
+
+        $this->withAdminSession()->put('/eventos/1', [
+            'name' => 'Evento Test',
+            'gafeteTipo' => 'label',
+            'gafeteWidthCm' => '3',
+            'gafeteHeightCm' => '3',
+        ]);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/event/1')
+                && $request['gafeteConfig']['tipo'] === 'label';
         });
     }
 
