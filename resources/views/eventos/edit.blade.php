@@ -483,8 +483,8 @@
                                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-500 mb-1">Link del panel web del expositor <span class="text-slate-400">(opcional)</span></label>
-                            <input type="url" name="expositoresDashboardUrl" maxlength="500"
+                            <label class="block text-xs text-slate-500 mb-1">Link del panel web del expositor <span class="text-slate-400">(la página expositor.php del sitio público — desde ahí escanean con la cámara del celular y ven sus contactos; se incluye en el correo de acceso)</span></label>
+                            <input type="url" name="expositoresDashboardUrl" maxlength="500" placeholder="https://tu-sitio-publico/expositor.php"
                                    value="{{ old('expositoresDashboardUrl', $evento['expositoresConfig']['dashboard_url'] ?? '') }}"
                                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
                         </div>
