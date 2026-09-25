@@ -462,6 +462,46 @@
                     <p class="text-xs text-slate-500 mt-1">"Solo QR" ignora Por fila/Papel/Orientación — imprime una pegatina por página, del tamaño exacto configurado.</p>
                 </div>
 
+                {{-- SmartStand (25/09/2026) — empresas expositoras: qué recibe la
+                     empresa en el correo de acceso que se envía al confirmarse su pago. --}}
+                <div class="col-span-2">
+                    <label class="block text-sm font-semibold mb-1">
+                        Empresas expositoras (stands)
+                        <span class="font-normal text-slate-500">(lo que recibe la empresa en su correo de acceso)</span>
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Link de la app — Android</label>
+                            <input type="url" name="expositoresAppUrlAndroid" maxlength="500" placeholder="https://play.google.com/…"
+                                   value="{{ old('expositoresAppUrlAndroid', $evento['expositoresConfig']['app_url_android'] ?? '') }}"
+                                   class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Link de la app — iPhone (iOS)</label>
+                            <input type="url" name="expositoresAppUrlIos" maxlength="500" placeholder="https://apps.apple.com/…"
+                                   value="{{ old('expositoresAppUrlIos', $evento['expositoresConfig']['app_url_ios'] ?? '') }}"
+                                   class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Link del panel web del expositor <span class="text-slate-400">(opcional)</span></label>
+                            <input type="url" name="expositoresDashboardUrl" maxlength="500"
+                                   value="{{ old('expositoresDashboardUrl', $evento['expositoresConfig']['dashboard_url'] ?? '') }}"
+                                   class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Instrucciones para la empresa <span class="text-slate-400">(opcional, aparece en el correo)</span></label>
+                            <textarea name="expositoresInstrucciones" rows="2" maxlength="1000"
+                                      class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">{{ old('expositoresInstrucciones', $evento['expositoresConfig']['instrucciones'] ?? '') }}</textarea>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Las empresas se inscriben con un tipo de formulario marcado "Es empresa expositora" (las categorías son los tamaños de stand).
+                        @if (!empty($evento['id']))
+                            <a href="{{ route('expositores.index', $evento['id']) }}" class="text-brand-600 hover:underline">Ver empresas expositoras →</a>
+                        @endif
+                    </p>
+                </div>
+
                 <div class="col-span-2">
                     <label class="block text-sm font-semibold mb-1">Deslinde de responsabilidad</label>
                     <textarea name="deslinde" rows="2"
@@ -772,6 +812,10 @@
                         <label class="inline-flex items-center gap-2 text-sm">
                             <input type="checkbox" name="es_ponente" value="1" {{ ($formType['esPonente'] ?? false) ? 'checked' : '' }}>
                             Es Ponente/Expositor <span class="text-slate-400">(vinculable a sesiones de congreso)</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="es_expositor" value="1" {{ ($formType['esExpositor'] ?? false) ? 'checked' : '' }}>
+                            Es empresa expositora (stand) <span class="text-slate-400">(al confirmarse el pago se crea la cuenta de la empresa y se le envía su acceso; usa las categorías como tamaños de stand)</span>
                         </label>
                         <label class="inline-flex items-center gap-2 text-sm">
                             <input type="checkbox" name="requiere_contacto_emergencia" value="1" {{ ($formType['requiereContactoEmergencia'] ?? true) ? 'checked' : '' }}>
@@ -1086,6 +1130,10 @@
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="es_ponente" value="1">
                         Es Ponente/Expositor <span class="text-slate-400">(vinculable a sesiones de congreso)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="es_expositor" value="1">
+                        Es empresa expositora (stand) <span class="text-slate-400">(al confirmarse el pago se crea la cuenta de la empresa y se le envía su acceso; usa las categorías como tamaños de stand)</span>
                     </label>
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="requiere_contacto_emergencia" value="1" checked>

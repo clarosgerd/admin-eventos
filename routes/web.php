@@ -22,6 +22,7 @@ use App\Http\Controllers\CategoryPricePeriodController;
 use App\Http\Controllers\NumeracionRangoController;
 use App\Http\Controllers\ChronoTrackController;
 use App\Http\Controllers\CoordinateController;
+use App\Http\Controllers\EmpresaExpositoraController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardInscripcionesController;
 use App\Http\Controllers\DeliveryController;
@@ -207,6 +208,17 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::get('/eventos/{evento}/acreditacion', [AcreditacionController::class, 'index'])->name('acreditacion.index');
     Route::post('/eventos/{evento}/acreditacion/lookup', [AcreditacionController::class, 'lookup'])->name('acreditacion.lookup');
     Route::patch('/eventos/{evento}/acreditacion/{participante}', [AcreditacionController::class, 'checkin'])->name('acreditacion.checkin');
+
+    // SmartStand (25/09/2026) — empresas expositoras del evento: ranking por
+    // leads capturados, alta/edición, reenvío de credenciales y detalle.
+    // Mismo criterio de permisos que el resto del bloque; la autorización
+    // real por empresa la aplica ApiRestEvent.
+    Route::get('/eventos/{evento}/expositores', [EmpresaExpositoraController::class, 'index'])->name('expositores.index');
+    Route::post('/eventos/{evento}/expositores', [EmpresaExpositoraController::class, 'store'])->name('expositores.store');
+    Route::get('/eventos/{evento}/expositores/{empresa}', [EmpresaExpositoraController::class, 'show'])->name('expositores.show');
+    Route::put('/eventos/{evento}/expositores/{empresa}', [EmpresaExpositoraController::class, 'update'])->name('expositores.update');
+    Route::delete('/eventos/{evento}/expositores/{empresa}', [EmpresaExpositoraController::class, 'destroy'])->name('expositores.destroy');
+    Route::post('/eventos/{evento}/expositores/{empresa}/reenviar', [EmpresaExpositoraController::class, 'reenviar'])->name('expositores.reenviar');
 
     // Dashboard de inscripciones (mismo conteo que ya se manda por correo
     // al organizador) y edición restringida de datos de contacto del

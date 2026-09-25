@@ -413,6 +413,18 @@ class EventoController extends Controller
             'orientation' => $request->input('gafeteOrientation', 'landscape'),
         ] : null;
 
+        // SmartStand (25/09/2026) — configuración de empresas expositoras del
+        // evento (links de la app de escaneo + texto del correo de acceso).
+        // Solo viajan las claves con valor; si el organizador las vacía todas,
+        // se manda null para que vuelva a "sin configurar".
+        $expositoresConfig = array_filter([
+            'app_url_ios'     => trim((string) $request->input('expositoresAppUrlIos')),
+            'app_url_android' => trim((string) $request->input('expositoresAppUrlAndroid')),
+            'instrucciones'   => trim((string) $request->input('expositoresInstrucciones')),
+            'dashboard_url'   => trim((string) $request->input('expositoresDashboardUrl')),
+        ], fn (string $valor) => $valor !== '');
+        $payload['expositoresConfig'] = $expositoresConfig ?: null;
+
         $response = $client->forward('PUT', "/event/{$evento}", body: $payload);
 
         // Mejora de visualización (12/08/2026) — '#datos' es la primera

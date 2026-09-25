@@ -38,6 +38,9 @@ class FormTypeController extends Controller
                 'es_staff'           => $request->boolean('es_staff'),
                 // Ver brain/PLAN-VINCULACION-PONENTES-SESIONES-CONGRESO-13082026.md
                 'es_ponente'         => $request->boolean('es_ponente'),
+                // SmartStand (25/09/2026) — inscripción de una EMPRESA
+                // expositora (stand), distinta de es_ponente (quien dicta charlas).
+                'es_expositor'       => $request->boolean('es_expositor'),
                 // Caja para eventos tipo congreso (20/08/2026) — checkbox
                 // "checked" por default en el <form> de alta (mismo
                 // criterio que requiere_categoria), así que a diferencia
@@ -81,6 +84,8 @@ class FormTypeController extends Controller
                 'es_staff'           => $request->boolean('es_staff'),
                 // Ver brain/PLAN-VINCULACION-PONENTES-SESIONES-CONGRESO-13082026.md
                 'es_ponente'         => $request->boolean('es_ponente'),
+                // SmartStand (25/09/2026) — ver store().
+                'es_expositor'       => $request->boolean('es_expositor'),
                 // Caja para eventos tipo congreso (20/08/2026).
                 'requiere_contacto_emergencia' => $request->boolean('requiere_contacto_emergencia'),
                 // Ocultar Dirección/Ciudad/Teléfono/Alias por tipo de
