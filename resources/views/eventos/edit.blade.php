@@ -853,6 +853,18 @@
                             <input type="checkbox" name="campos_ocultos[]" value="alias" {{ in_array('alias', $camposOcultos) ? 'checked' : '' }}>
                             Alias <span class="text-slate-400">(en tipos "congreso" este campo también es el Título — ocultarlo lo saca a los dos)</span>
                         </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="campos_ocultos[]" value="apellido" {{ in_array('apellido', $camposOcultos) ? 'checked' : '' }}>
+                            Apellido <span class="text-slate-400">(para empresas expositoras: se guarda como "-")</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="campos_ocultos[]" value="nacimiento" {{ in_array('nacimiento', $camposOcultos) ? 'checked' : '' }}>
+                            Fecha de nacimiento
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="campos_ocultos[]" value="genero" {{ in_array('genero', $camposOcultos) ? 'checked' : '' }}>
+                            Género <span class="text-slate-400">(si ocultás fecha de nacimiento o género, se guardan como 01/01/1900 y "Otro": no los uses en tipos donde importen los reportes por edad/género)</span>
+                        </label>
                     </div>
                     <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded">Guardar</button>
                 </form>
@@ -1169,6 +1181,18 @@
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="campos_ocultos[]" value="alias">
                         Alias <span class="text-slate-400">(en tipos "congreso" este campo también es el Título — ocultarlo lo saca a los dos)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="campos_ocultos[]" value="apellido">
+                        Apellido <span class="text-slate-400">(para empresas expositoras: se guarda como "-")</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="campos_ocultos[]" value="nacimiento">
+                        Fecha de nacimiento
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="campos_ocultos[]" value="genero">
+                        Género <span class="text-slate-400">(si ocultás fecha de nacimiento o género, se guardan como 01/01/1900 y "Otro": no los uses en tipos donde importen los reportes por edad/género)</span>
                     </label>
                 </div>
                 <button type="submit" class="text-sm bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-md">Agregar tipo de formulario</button>

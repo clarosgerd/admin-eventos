@@ -122,4 +122,33 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
         $response->assertSee('Certificado solo con nombre');
         $response->assertSee('Tamaño de gafete');
     }
+
+    /**
+     * Ocultar Fecha de nacimiento/Género por tipo de formulario (26/09/2026):
+     * los checkboxes existen en el bloque del form_type y quedan marcados
+     * según `camposOcultos`.
+     */
+    public function test_edit_muestra_checkboxes_de_nacimiento_y_genero_marcados_segun_campos_ocultos(): void
+    {
+        $eventoJson = json_decode(
+            file_get_contents(__DIR__ . '/../Fixtures/evento1_real.json'),
+            true
+        );
+        $eventoJson['eventos']['formTypes'][0]['camposOcultos'] = ['nacimiento'];
+
+        Http::fake([
+            '*/tipos-evento' => Http::response(['tiposEvento' => []], 200),
+            '*/organizadores*' => Http::response(['organizadores' => []], 200),
+            '*/event/1' => Http::response($eventoJson, 200),
+        ]);
+
+        $html = $this->withAdminSession()->get('/eventos/1/edit')->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/name="campos_ocultos\[\]" value="nacimiento"\s+checked/', $html);
+        $this->assertDoesNotMatchRegularExpression('/name="campos_ocultos\[\]" value="genero"\s+checked/', $html);
+        $this->assertStringContainsString('value="genero"', $html);
+        // Apellido (26/09/2026): existe el checkbox y, sin estar en camposOcultos, no viene marcado.
+        $this->assertStringContainsString('value="apellido"', $html);
+        $this->assertDoesNotMatchRegularExpression('/name="campos_ocultos\[\]" value="apellido"\s+checked/', $html);
+    }
 }
