@@ -150,7 +150,9 @@
                                 <select name="participante_id" required class="border border-slate-300 rounded px-1.5 py-1 text-xs">
                                     <option value="">+ Vincular ponente…</option>
                                     @foreach ($ponentesDisponiblesParaEsta as $p)
-                                        <option value="{{ $p['id'] }}">{{ $p['nombre'] }} {{ $p['apellido'] }}</option>
+                                        {{-- Lo que el ponente dijo que va a dictar en el formulario (26/09/2026), para vincularlo con criterio. --}}
+                                        @php($dictara = trim(($p['taller_dictara'] ?? '') . ' · ' . ($p['tema_charla'] ?? ''), ' ·'))
+                                        <option value="{{ $p['id'] }}">{{ $p['nombre'] }} {{ $p['apellido'] }}@if ($dictara !== '') — {{ \Illuminate\Support\Str::limit($dictara, 90) }}@endif</option>
                                     @endforeach
                                 </select>
                                 <button type="submit" class="text-brand-600 hover:underline text-xs whitespace-nowrap">Vincular</button>

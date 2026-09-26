@@ -790,7 +790,7 @@
                     </div>
                     <div class="flex flex-wrap gap-4">
                         <label class="inline-flex items-center gap-2 text-sm">
-                            <input type="checkbox" name="requiere_categoria" value="1" {{ ($formType['requiereCategoria'] ?? true) ? 'checked' : '' }}>
+                            <input type="checkbox" name="requiere_categoria" value="1" data-requiere-categoria {{ ($formType['requiereCategoria'] ?? true) ? 'checked' : '' }}>
                             Requiere categoría
                         </label>
                         <label class="inline-flex items-center gap-2 text-sm">
@@ -810,12 +810,12 @@
                             Admite código promocional
                         </label>
                         <label class="inline-flex items-center gap-2 text-sm">
-                            <input type="checkbox" name="es_staff" value="1" {{ ($formType['esStaff'] ?? false) ? 'checked' : '' }}>
-                            Es Staff/Ayudante <span class="text-slate-400">(asignable a sesiones de congreso)</span>
+                            <input type="checkbox" name="es_staff" value="1" data-sin-costo {{ ($formType['esStaff'] ?? false) ? 'checked' : '' }}>
+                            Es Staff/Ayudante <span class="text-slate-400">(asignable a sesiones de congreso; sin categoría, sin costo y sin talleres)</span>
                         </label>
                         <label class="inline-flex items-center gap-2 text-sm">
-                            <input type="checkbox" name="es_ponente" value="1" {{ ($formType['esPonente'] ?? false) ? 'checked' : '' }}>
-                            Es Ponente/Expositor <span class="text-slate-400">(vinculable a sesiones de congreso)</span>
+                            <input type="checkbox" name="es_ponente" value="1" data-sin-costo {{ ($formType['esPonente'] ?? false) ? 'checked' : '' }}>
+                            Es Ponente/Expositor <span class="text-slate-400">(vinculable a sesiones de congreso; sin categoría, sin costo y sin talleres como asistente; se le agregan las preguntas "Taller o sesión que dictará" y "Tema de la charla")</span>
                         </label>
                         <label class="inline-flex items-center gap-2 text-sm">
                             <input type="checkbox" name="es_expositor" value="1" {{ ($formType['esExpositor'] ?? false) ? 'checked' : '' }}>
@@ -1139,7 +1139,7 @@
                 </div>
                 <div class="flex flex-wrap gap-4">
                     <label class="inline-flex items-center gap-2 text-sm">
-                        <input type="checkbox" name="requiere_categoria" value="1" checked>
+                        <input type="checkbox" name="requiere_categoria" value="1" data-requiere-categoria checked>
                         Requiere categoría
                     </label>
                     <label class="inline-flex items-center gap-2 text-sm">
@@ -1159,12 +1159,12 @@
                         Admite código promocional
                     </label>
                     <label class="inline-flex items-center gap-2 text-sm">
-                        <input type="checkbox" name="es_staff" value="1">
-                        Es Staff/Ayudante <span class="text-slate-400">(asignable a sesiones de congreso)</span>
+                        <input type="checkbox" name="es_staff" value="1" data-sin-costo>
+                        Es Staff/Ayudante <span class="text-slate-400">(asignable a sesiones de congreso; sin categoría, sin costo y sin talleres)</span>
                     </label>
                     <label class="inline-flex items-center gap-2 text-sm">
-                        <input type="checkbox" name="es_ponente" value="1">
-                        Es Ponente/Expositor <span class="text-slate-400">(vinculable a sesiones de congreso)</span>
+                        <input type="checkbox" name="es_ponente" value="1" data-sin-costo>
+                        Es Ponente/Expositor <span class="text-slate-400">(vinculable a sesiones de congreso; sin categoría, sin costo y sin talleres como asistente; se le agregan las preguntas "Taller o sesión que dictará" y "Tema de la charla")</span>
                     </label>
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="es_expositor" value="1">
@@ -1669,6 +1669,22 @@
     // desde las pantallas de Períodos de precio / Stock.
     var fromHash = tabs.filter(function (t) { return '#' + t.dataset.tabId === location.hash; })[0];
     activate(fromHash || tabs[0], { focus: false });
+})();
+// Staff y ponente son siempre sin categoría y sin costo (26/09/2026): al marcarlos se desmarca y
+// bloquea "Requiere categoría". El API lo impone igual al guardar; esto solo evita la confusión.
+(function () {
+    function sincronizar(form) {
+        var sinCosto = form.querySelector('[data-sin-costo]:checked');
+        var cat = form.querySelector('[data-requiere-categoria]');
+        if (!cat) return;
+        if (sinCosto) { cat.checked = false; cat.disabled = true; cat.title = 'Staff y ponente no eligen categoría'; }
+        else { cat.disabled = false; cat.title = ''; }
+    }
+    document.querySelectorAll('form').forEach(function (form) {
+        if (!form.querySelector('[data-sin-costo]')) return;
+        form.querySelectorAll('[data-sin-costo]').forEach(function (c) { c.addEventListener('change', function () { sincronizar(form); }); });
+        sincronizar(form);
+    });
 })();
 </script>
 @endsection

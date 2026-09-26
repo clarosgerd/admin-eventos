@@ -156,6 +156,11 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
 
         // Solo un participante (26/09/2026): el checkbox existe y viene marcado según `unSoloParticipante`.
         $this->assertStringContainsString('name="un_solo_participante"', $html);
+        // Staff/ponente (26/09/2026): las casillas marcan "sin costo" y "Requiere categoría" se puede bloquear.
+        $this->assertStringContainsString('name="es_staff" value="1" data-sin-costo', $html);
+        $this->assertStringContainsString('name="es_ponente" value="1" data-sin-costo', $html);
+        $this->assertStringContainsString('data-requiere-categoria', $html);
+        $this->assertStringContainsString('Tema de la charla', $html);
         // Inscripción grupal (26/09/2026): casilla + N + % del tipo existente con sus valores actuales.
         $this->assertStringContainsString('name="permite_inscripcion_grupal"', $html);
         $this->assertMatchesRegularExpression('/name="max_integrantes_grupo" value="7"/', $html);
