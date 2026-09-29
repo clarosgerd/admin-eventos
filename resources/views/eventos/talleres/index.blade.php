@@ -30,6 +30,7 @@
                 <th class="px-4 py-2">Sesiones</th>
                 <th class="px-4 py-2">Activo</th>
                 <th class="px-4 py-2">Permite inscripción</th>
+                <th class="px-4 py-2">Precongreso / Formato</th>
                 <th class="px-4 py-2"></th>
             </tr>
         </thead>
@@ -74,6 +75,23 @@
                             <span class="text-amber-600 font-semibold">No</span>
                         @endif
                     </td>
+                    <td class="px-4 py-2">
+                        {{-- Identificar talleres precongreso/formato (28/09/2026) --}}
+                        <div class="flex flex-wrap gap-1">
+                            @if ($taller['es_precongreso'] ?? false)
+                                <span class="inline-block text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">Precongreso</span>
+                            @endif
+                            @php($formato = $taller['formato'] ?? null)
+                            @if ($formato)
+                                <span class="inline-block text-xs px-2 py-0.5 rounded-full bg-sky-100 text-sky-700">
+                                    {{ ['VIRTUAL' => 'Virtual', 'PRESENCIAL' => 'Presencial', 'HIBRIDO' => 'Híbrido'][$formato] ?? $formato }}
+                                </span>
+                            @endif
+                            @if (!($taller['es_precongreso'] ?? false) && !$formato)
+                                <span class="text-xs text-slate-400">—</span>
+                            @endif
+                        </div>
+                    </td>
                     <td class="px-4 py-2 text-right space-x-2 whitespace-nowrap">
                         <a href="#edit-taller-{{ $taller['id'] }}" class="text-brand-600 hover:underline">Editar</a>
                         <form method="POST" action="{{ route('talleres.destroy', [$evento['id'], $taller['id']]) }}" class="inline"
@@ -85,7 +103,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="px-4 py-6 text-center text-slate-400">No hay talleres registrados todavía.</td></tr>
+                <tr><td colspan="9" class="px-4 py-6 text-center text-slate-400">No hay talleres registrados todavía.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -154,6 +172,26 @@
             <input type="checkbox" name="permite_inscripcion" value="1" @checked(old('permite_inscripcion', $taller['permite_inscripcion'] ?? true))>
             Permite inscripción <span class="text-xs text-slate-500">(destildar deja el taller visible pero no seleccionable)</span>
         </label>
+        {{-- Identificar talleres precongreso/formato (28/09/2026) — mismo
+             truco de hidden+checkbox que permite_inscripcion arriba, un
+             checkbox destildado no manda nada en el POST. --}}
+        <div class="grid grid-cols-2 gap-3 items-end">
+            <label class="flex items-center gap-2 text-sm">
+                <input type="hidden" name="es_precongreso" value="0">
+                <input type="checkbox" name="es_precongreso" value="1" @checked(old('es_precongreso', $taller['es_precongreso'] ?? false))>
+                Es taller precongreso
+            </label>
+            <div>
+                <label class="block text-sm font-medium mb-1">Formato</label>
+                @php($formatoActual = old('formato', $taller['formato'] ?? ''))
+                <select name="formato" class="border border-slate-300 rounded px-2 py-1.5 w-full">
+                    <option value="" @selected($formatoActual === '')>Sin definir</option>
+                    <option value="VIRTUAL" @selected($formatoActual === 'VIRTUAL')>Virtual</option>
+                    <option value="PRESENCIAL" @selected($formatoActual === 'PRESENCIAL')>Presencial</option>
+                    <option value="HIBRIDO" @selected($formatoActual === 'HIBRIDO')>Híbrido</option>
+                </select>
+            </div>
+        </div>
         <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-md">
             Guardar cambios
         </button>
@@ -208,6 +246,23 @@
             <input type="checkbox" name="permite_inscripcion" value="1" @checked(old('permite_inscripcion', true))>
             Permite inscripción <span class="text-xs text-slate-500">(destildar deja el taller visible pero no seleccionable)</span>
         </label>
+        {{-- Identificar talleres precongreso/formato (28/09/2026) --}}
+        <div class="grid grid-cols-2 gap-3 items-end">
+            <label class="flex items-center gap-2 text-sm">
+                <input type="hidden" name="es_precongreso" value="0">
+                <input type="checkbox" name="es_precongreso" value="1" @checked(old('es_precongreso', false))>
+                Es taller precongreso
+            </label>
+            <div>
+                <label class="block text-sm font-medium mb-1">Formato</label>
+                <select name="formato" class="border border-slate-300 rounded px-2 py-1.5 w-full">
+                    <option value="" @selected(old('formato', '') === '')>Sin definir</option>
+                    <option value="VIRTUAL" @selected(old('formato') === 'VIRTUAL')>Virtual</option>
+                    <option value="PRESENCIAL" @selected(old('formato') === 'PRESENCIAL')>Presencial</option>
+                    <option value="HIBRIDO" @selected(old('formato') === 'HIBRIDO')>Híbrido</option>
+                </select>
+            </div>
+        </div>
         <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-md">
             Crear taller
         </button>
