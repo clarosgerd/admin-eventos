@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesEventoScope;
 use App\Services\ApiRestEventClient;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 
@@ -26,9 +28,24 @@ class ChronoTrackExportController extends Controller
 {
     use AuthorizesEventoScope;
 
-    public function csvDownload(int $evento, ApiRestEventClient $client): Response
+    /**
+     * Filtros del reporte (26/09/2026). Antes bajaba a TODOS los participantes, con o
+     * sin número de corredor/chip y de cualquier estado de pago. Ahora solo
+     * inscripciones PAGADAS y, según el filtro: con numeración (predeterminado), con
+     * chip, o todas las pagadas.
+     */
+    private const FILTROS = [
+        'con_numeracion' => 'con numeración',
+        'con_chip'       => 'con chip',
+        'todos'          => 'todos los pagados',
+    ];
+
+    public function csvDownload(Request $request, int $evento, ApiRestEventClient $client): Response|RedirectResponse
     {
         $this->assertCanViewEvento($evento);
+
+        $filtro = (string) $request->query('filtro', 'con_numeracion');
+        abort_unless(array_key_exists($filtro, self::FILTROS), 422, 'Filtro no válido.');
 
         $eventoResponse = $client->forward('GET', "/event/{$evento}");
         $eventoData = $eventoResponse?->json('eventos');
@@ -42,10 +59,28 @@ class ChronoTrackExportController extends Controller
         $paisIso2 = $eventoData['pais']['iso2'] ?? '';
         $paisNombre = $eventoData['pais']['nombre'] ?? '';
 
-        $response = $client->forward('GET', "/event/{$evento}/participantes");
+        // Solo inscripciones pagadas: una pendiente, cancelada o fallida no debe cronometrarse
+        // ni llevar número (26/09/2026). El filtro por numeración/chip se aplica abajo.
+        $response = $client->forward('GET', "/event/{$evento}/participantes", query: ['pago_status' => 'paid']);
         abort_if(!$response || !$response->json('success'), 502, 'No se pudo generar el archivo.');
 
-        $participantes = $response->json('participantes') ?? [];
+        $participantes = collect($response->json('participantes') ?? [])
+            ->filter(fn ($p) => match ($filtro) {
+                'con_numeracion' => trim((string) ($p['numeroCorredor'] ?? '')) !== '',
+                'con_chip'       => trim((string) ($p['chip'] ?? '')) !== '',
+                default          => true,
+            })
+            ->values()
+            ->all();
+
+        // Sin coincidencias: no se baja un CSV con solo el encabezado (parece un archivo válido
+        // y vacío); se vuelve al evento con un mensaje claro.
+        if ($participantes === []) {
+            return redirect()->route('eventos.edit', $evento)->withErrors([
+                'general' => 'No hay participantes pagados ' . self::FILTROS[$filtro] . ' para exportar a ChronoTrack.'
+                    . ($filtro === 'todos' ? '' : ' Asigna la numeración/chip primero o usa la opción "todos".'),
+            ]);
+        }
 
         $handle = fopen('php://temp', 'w+');
         fwrite($handle, "\xEF\xBB\xBF");
@@ -81,7 +116,7 @@ class ChronoTrackExportController extends Controller
         $csv = stream_get_contents($handle);
         fclose($handle);
 
-        $filename = 'chronotrack-evento-'.$evento.'.csv';
+        $filename = 'chronotrack-evento-'.$evento.'-'.str_replace('_', '-', $filtro).'.csv';
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',

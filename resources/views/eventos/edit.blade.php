@@ -56,7 +56,10 @@
                     <a href="{{ route('numeracion.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Numeración de corredor y chip</a>
                     {{-- Exportación a ChronoTrack (18/09/2026) — mismo gate,
                          ChronoTrack es exclusivo de carreras. --}}
-                    <a href="{{ route('chronotrack.csv.download', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Exportar a ChronoTrack (CSV)</a>
+                    {{-- Solo inscripciones pagadas; el enlace sin parámetro es "con numeración" (26/09/2026). --}}
+                    <a href="{{ route('chronotrack.csv.download', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Exportar a ChronoTrack (CSV) — con numeración</a>
+                    <a href="{{ route('chronotrack.csv.download', [$evento['id'], 'filtro' => 'con_chip']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Exportar a ChronoTrack (CSV) — con chip</a>
+                    <a href="{{ route('chronotrack.csv.download', [$evento['id'], 'filtro' => 'todos']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Exportar a ChronoTrack (CSV) — todos los pagados</a>
                 @endif
                 <a href="{{ route('acreditacion.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Acreditación</a>
                 <a href="{{ route('pasaporte.show', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Pasaporte médico (sorteo)</a>

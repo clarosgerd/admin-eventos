@@ -167,4 +167,27 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
         $this->assertMatchesRegularExpression('/name="descuento_registrante_pct" value="20"/', $html);
         $this->assertMatchesRegularExpression('/name="permite_inscripcion_grupal" value="1"\s+checked/', $html);
     }
+
+    /**
+     * Exportación a ChronoTrack (26/09/2026): en una carrera (el enlace no existe en congresos) el menú ofrece tres
+     * exportaciones: con numeración (el enlace sin parámetro), con chip y todos los pagados.
+     */
+    public function test_edit_de_una_carrera_ofrece_las_tres_exportaciones_a_chronotrack(): void
+    {
+        $eventoJson = json_decode(file_get_contents(__DIR__ . '/../Fixtures/evento1_real.json'), true);
+        $eventoJson['eventos']['tipoEvento'] = 'Carrera';
+
+        Http::fake([
+            '*/tipos-evento' => Http::response(['tiposEvento' => []], 200),
+            '*/organizadores*' => Http::response(['organizadores' => []], 200),
+            '*/event/1' => Http::response($eventoJson, 200),
+        ]);
+
+        $html = $this->withAdminSession()->get('/eventos/1/edit')->assertOk()->getContent();
+
+        $this->assertStringContainsString('chronotrack/csv"', $html);
+        $this->assertStringContainsString('chronotrack/csv?filtro=con_chip', $html);
+        $this->assertStringContainsString('chronotrack/csv?filtro=todos', $html);
+        $this->assertStringContainsString('con numeración</a>', $html);
+    }
 }
