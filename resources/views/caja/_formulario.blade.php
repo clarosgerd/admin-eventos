@@ -36,9 +36,11 @@
             <p>
                 Guardar los cambios cobra un cargo base de edición de
                 <strong>{{ number_format($costoEdicion ?? 0, 2) }}</strong>, más la diferencia real de
-                cualquier taller agregado o cambio de categoría — esto último puede ser una
-                <strong>devolución</strong> al participante si la categoría nueva es más barata. El
-                monto final se confirma al guardar.
+                cualquier taller agregado, cambio de categoría, {{-- Quitar/cambiar un taller ya
+                pagado (29/09/2026) — antes solo mencionaba categoría. --}}
+                o taller ya pagado que se quite o cambie por otro — cualquiera de estos puede
+                terminar en una <strong>devolución</strong> al participante si lo nuevo sale más
+                barato. El monto final se confirma al guardar.
             </p>
             <label class="inline-flex items-center gap-2 mt-2">
                 <input type="checkbox" id="confirmarAdicional">
@@ -183,6 +185,23 @@
         <p class="text-xs text-slate-400 mb-3">Los obligatorios van primero. El precio final lo recalcula el servidor al confirmar.</p>
         <div id="talleresGrid" class="space-y-2"></div>
         <p id="talleresRequiredWarning" class="text-xs text-red-600 mt-2" style="display:none">Faltan talleres obligatorios por seleccionar.</p>
+
+        {{-- Quitar/cambiar un taller ya pagado (29/09/2026) — pedido
+             explícito del usuario: mostrar el cambio bien documentado (qué
+             se quita, qué se agrega, la diferencia), no solo un número
+             suelto en el resumen de abajo. Solo aparece en edición de una
+             inscripción pagada, y solo si de verdad se destildó algo. --}}
+        @if ($modo === 'editar' && $pagoStatus === 'paid')
+            <div id="tallerCambioResumen" class="mt-3 border border-slate-200 rounded p-2 text-xs" style="display:none"></div>
+            <div id="tallerMotivoGroup" class="mt-3" style="display:none">
+                <label class="block text-xs font-semibold mb-1" for="f_motivo">
+                    Motivo del cambio de taller <span class="text-red-600">*</span>
+                </label>
+                <textarea id="f_motivo" name="motivo" rows="2" maxlength="500"
+                          placeholder="Ej.: no se concretó el ponente, se pasó a otro taller."
+                          class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></textarea>
+            </div>
+        @endif
     </div>
 
     <div id="equipoSection" class="bg-white rounded-lg shadow p-5 caja-section" style="display:none">
@@ -261,16 +280,36 @@
         @if ($modo === 'nueva' || $pagoStatus === 'paid')
             <div class="mt-3 pt-3 border-t border-slate-100">
                 <p class="text-xs font-semibold mb-1">Método de pago</p>
-                <div class="flex gap-4 text-sm">
+                {{-- Métodos nuevos (30/09/2026) — Depósito/Organizador son
+                     dinero real por fuera del cajón (mismo criterio que QR
+                     para "monto esperado"); Cortesía pone el total en $0
+                     sin importar categoría/talleres elegidos (ver
+                     CajaController::aplicarCortesia() en ApiRestEvent). --}}
+                <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                     <label class="inline-flex items-center gap-1.5">
-                        <input type="radio" name="metodo_pago" value="EFECTIVO" checked>
+                        <input type="radio" name="metodo_pago" value="EFECTIVO" id="mp_efectivo" checked>
                         Efectivo
                     </label>
                     <label class="inline-flex items-center gap-1.5">
-                        <input type="radio" name="metodo_pago" value="QR">
+                        <input type="radio" name="metodo_pago" value="QR" id="mp_qr">
                         QR
                     </label>
+                    <label class="inline-flex items-center gap-1.5">
+                        <input type="radio" name="metodo_pago" value="DEPOSITO" id="mp_deposito">
+                        Depósito
+                    </label>
+                    <label class="inline-flex items-center gap-1.5">
+                        <input type="radio" name="metodo_pago" value="ORGANIZADOR" id="mp_organizador">
+                        Organizador
+                    </label>
+                    <label class="inline-flex items-center gap-1.5">
+                        <input type="radio" name="metodo_pago" value="CORTESIA" id="mp_cortesia">
+                        Cortesía
+                    </label>
                 </div>
+                <p id="cortesiaAviso" class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-2" style="display:none">
+                    El total de esta inscripción queda en <strong>Bs 0.00</strong> — la categoría/talleres elegidos se conservan igual, solo no se cobra nada.
+                </p>
             </div>
         @endif
     </div>
@@ -729,7 +768,57 @@
         });
         const warn = document.getElementById('talleresRequiredWarning');
         if (warn) warn.style.display = allRequiredTalleresSelected() ? 'none' : '';
+        renderTallerCambioResumen();
         calcular();
+    }
+
+    /**
+     * Quitar/cambiar un taller ya pagado (29/09/2026) — lista, en texto
+     * simple, qué taller se quita (con su precio ya pagado, de
+     * PREFILL_TALLERES) y qué taller se agrega (con el precio real de la
+     * sesión), para que la cajera vea el cambio antes de confirmar — no
+     * solo un total agregado. También muestra/exige el campo de motivo. No
+     * calcula nada que ya no calcule calcular(); es puramente informativo.
+     */
+    function tallerCambio() {
+        if (!ES_EDICION_PAGADA) return { removidos: [], agregados: [] };
+        const seleccionadasIds = new Set(collectSelectedTalleres().map(s => Number(s.sesion_congreso_id)));
+        const removidos = PREFILL_TALLERES.filter(t => !seleccionadasIds.has(Number(t.sesionCongresoId)));
+        const agregados = collectSelectedTalleres().filter(s => !TALLERES_ANTERIORES_IDS.has(Number(s.sesion_congreso_id)));
+        return { removidos, agregados };
+    }
+
+    function renderTallerCambioResumen() {
+        const resumen = document.getElementById('tallerCambioResumen');
+        const motivoGroup = document.getElementById('tallerMotivoGroup');
+        const motivoInput = document.getElementById('f_motivo');
+        if (!resumen || !motivoGroup) return;
+
+        const { removidos, agregados } = tallerCambio();
+        if (removidos.length === 0) {
+            resumen.style.display = 'none';
+            motivoGroup.style.display = 'none';
+            return;
+        }
+
+        const talleresPorSesion = {};
+        getEventTalleres().forEach(t => (t.sesiones || []).forEach(s => { talleresPorSesion[Number(s.id)] = { taller: t, sesion: s }; }));
+
+        const lineas = [];
+        removidos.forEach(t => lineas.push(`− Se quita: ${t.tallerNombre || ('Taller #' + t.tallerId)} (Bs ${Number(t.total || 0).toFixed(2)})`));
+        agregados.forEach(a => {
+            const nombre = talleresPorSesion[Number(a.sesion_congreso_id)]?.taller?.nombre || ('Taller #' + a.taller_id);
+            lineas.push(`+ Se agrega: ${nombre} (Bs ${Number(a.unit_price || 0).toFixed(2)})`);
+        });
+        const removidoTotal = removidos.reduce((sum, t) => sum + Number(t.total || 0), 0);
+        const agregadoTotal = agregados.reduce((sum, a) => sum + Number(a.unit_price || 0), 0);
+        const diferencia = Math.round((agregadoTotal - removidoTotal) * 100) / 100;
+        lineas.push(`<strong>Diferencia por talleres: Bs ${diferencia.toFixed(2)} ${diferencia < 0 ? '(devolución)' : diferencia > 0 ? '(a cobrar)' : ''}</strong>`);
+
+        resumen.innerHTML = lineas.join('<br>');
+        resumen.style.display = '';
+        motivoGroup.style.display = '';
+        if (motivoInput) motivoInput.required = true;
     }
 
     function renderTalleresSelector(ft) {
@@ -884,7 +973,15 @@
         const talleresParaTotal = ES_EDICION_PAGADA
             ? talleresSeleccionados.filter(s => !TALLERES_ANTERIORES_IDS.has(Number(s.sesion_congreso_id)))
             : talleresSeleccionados;
-        const talleresTotal = talleresParaTotal.reduce((sum, s) => sum + Number(s.unit_price || 0), 0);
+        const talleresAgregadoTotal = talleresParaTotal.reduce((sum, s) => sum + Number(s.unit_price || 0), 0);
+        // Quitar/cambiar un taller ya pagado (29/09/2026, solo Caja) — mismo
+        // criterio que el backend (ActualizarInscripcionPagadaAction): resta
+        // el precio YA PAGADO (persistido en PREFILL_TALLERES, no
+        // recalculado) de cualquier taller anterior que se haya destildado.
+        // Puede quedar negativo (devolución) — solo una estimación en vivo,
+        // el monto real siempre lo recalcula el servidor.
+        const talleresRemovidoTotal = ES_EDICION_PAGADA ? tallerCambio().removidos.reduce((sum, t) => sum + Number(t.total || 0), 0) : 0;
+        const talleresTotal = Math.round((talleresAgregadoTotal - talleresRemovidoTotal) * 100) / 100;
         const donacion = ft && ft.hasDonation ? Number(document.getElementById('f_donacion')?.value || 0) : 0;
 
         let descuento = 0;
@@ -896,7 +993,12 @@
         }
 
         const baseConDescuento = Math.max(0, inscripcion - descuento);
-        const baseFee = baseConDescuento + (FEE_INCLUYE_TALLERES ? talleresTotal : 0);
+        // El fee nunca se reduce cuando algo baja de precio (29/09/2026,
+        // mismo criterio que EdicionPagadaFeeData::calcular() del lado de
+        // ApiRestEvent) — clampeado acá también para que la estimación en
+        // vivo coincida con lo que el servidor va a cobrar de verdad.
+        const talleresTotalParaFee = Math.max(0, talleresTotal);
+        const baseFee = baseConDescuento + (FEE_INCLUYE_TALLERES ? talleresTotalParaFee : 0);
         const fee = Math.round(baseFee * FEE_PCT * 100) / 100;
         // Cargo de edición (17/09/2026) — fijo, cobrado por el backend en
         // TODA edición de una inscripción pagada (ver ActualizarInscripcionPagadaAction,
@@ -919,15 +1021,24 @@
         const feeUsd = Math.round(inscripcionUsd * FEE_PCT * 100) / 100;
         const totalUsd = Math.round((inscripcionUsd + feeUsd) * 100) / 100;
 
-        document.getElementById('r_inscripcion').textContent = (USD_PRECIO_FIJO ? inscripcionUsd : inscripcion).toFixed(2);
-        document.getElementById('r_talleres').textContent = talleresTotal.toFixed(2);
-        document.getElementById('r_souvenirs').textContent = souvenirsTotal.toFixed(2);
-        document.getElementById('r_descuento').textContent = '-' + descuento.toFixed(2);
-        document.getElementById('r_donacion').textContent = donacion.toFixed(2);
+        // Cortesía (30/09/2026) — el servidor fuerza el total a 0 sin
+        // importar lo que se elija (ver CajaController::aplicarCortesia()),
+        // así que el resumen en vivo ya lo muestra en 0 para no confundir
+        // al cajero con un número que después no se va a cobrar.
+        const cortesiaEl = document.getElementById('mp_cortesia');
+        const esCortesia = !!(cortesiaEl && cortesiaEl.checked);
+        const avisoCortesia = document.getElementById('cortesiaAviso');
+        if (avisoCortesia) avisoCortesia.style.display = esCortesia ? '' : 'none';
+
+        document.getElementById('r_inscripcion').textContent = esCortesia ? '0.00' : (USD_PRECIO_FIJO ? inscripcionUsd : inscripcion).toFixed(2);
+        document.getElementById('r_talleres').textContent = esCortesia ? '0.00' : talleresTotal.toFixed(2);
+        document.getElementById('r_souvenirs').textContent = esCortesia ? '0.00' : souvenirsTotal.toFixed(2);
+        document.getElementById('r_descuento').textContent = esCortesia ? '-0.00' : '-' + descuento.toFixed(2);
+        document.getElementById('r_donacion').textContent = esCortesia ? '0.00' : donacion.toFixed(2);
         document.getElementById('r_costoEdicion_row').style.display = ES_EDICION_PAGADA ? '' : 'none';
-        document.getElementById('r_costoEdicion').textContent = costoEdicion.toFixed(2);
-        document.getElementById('r_fee').textContent = (USD_PRECIO_FIJO ? feeUsd : fee).toFixed(2);
-        document.getElementById('r_total').textContent = (USD_PRECIO_FIJO ? totalUsd : total).toFixed(2);
+        document.getElementById('r_costoEdicion').textContent = esCortesia ? '0.00' : costoEdicion.toFixed(2);
+        document.getElementById('r_fee').textContent = esCortesia ? '0.00' : (USD_PRECIO_FIJO ? feeUsd : fee).toFixed(2);
+        document.getElementById('r_total').textContent = esCortesia ? '0.00' : (USD_PRECIO_FIJO ? totalUsd : total).toFixed(2);
 
         return {
             inscripcion, donacion, souvenirs: souvenirsTotal, talleres: talleresTotal, fee,
@@ -986,6 +1097,19 @@
             e.preventDefault();
             alert('Tenés que confirmar el cobro del adicional antes de guardar.');
             return;
+        }
+
+        // Quitar/cambiar un taller ya pagado (29/09/2026) — guard de UX,
+        // no de seguridad real (la validación real es la de ApiRestEvent,
+        // ver ActualizarInscripcionPagadaAction) — solo evita un 422 crudo
+        // por olvidarse de escribir el motivo.
+        if (ES_EDICION_PAGADA && tallerCambio().removidos.length > 0) {
+            const motivo = (document.getElementById('f_motivo')?.value || '').trim();
+            if (!motivo) {
+                e.preventDefault();
+                alert('Tenés que indicar un motivo para quitar un taller ya pagado.');
+                return;
+            }
         }
 
         const errorUsdFijo = errorUsdFijoCarritoInvalido();

@@ -175,6 +175,11 @@ class CajaController extends Controller
             // relevante acá (la única de las 2 rutas de edición que cobra
             // un adicional real).
             $body['metodo_pago'] = $request->input('metodo_pago', 'EFECTIVO');
+            // Quitar/cambiar un taller ya pagado (29/09/2026) — motivo
+            // opcional acá (el request lo manda vacío si no aplica),
+            // ApiRestEvent lo exige solo cuando el request de verdad quita
+            // un taller ya cobrado (ver ActualizarInscripcionPagadaAction).
+            $body['motivo'] = $request->input('motivo');
         }
 
         $response = $client->forward('PATCH', $path, body: $body);

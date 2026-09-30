@@ -42,12 +42,16 @@
             const estado = r.pago_status === 'paid' ? 'Pagada' : (r.pago_status === 'pending' ? 'Pendiente' : r.pago_status);
             const editarUrl = editarUrlBase.replace('__REF__', r.referencia);
             const eticketUrl = eticketUrlBase.replace('__REF__', r.referencia);
-            {{-- Método de pago en Caja (18/09/2026) — 2 botones en vez de un
-                 diálogo con 3 opciones (más rápido para el cajero con cola
-                 de gente, un solo click). --}}
+            {{-- Método de pago en Caja (18/09/2026, ampliado 30/09/2026 con
+                 Depósito/Organizador/Cortesía) — botones en vez de un
+                 diálogo (más rápido para el cajero con cola de gente, un
+                 solo click). --}}
             const cobrarBtn = r.pago_status === 'pending'
-                ? `<button type="button" class="btn-cobrar bg-brand-600 hover:bg-brand-700 text-white rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="EFECTIVO">Cobrar efectivo</button>
-                   <button type="button" class="btn-cobrar bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="QR">Cobrar QR</button>`
+                ? `<button type="button" class="btn-cobrar bg-brand-600 hover:bg-brand-700 text-white rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="EFECTIVO">Efectivo</button>
+                   <button type="button" class="btn-cobrar bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="QR">QR</button>
+                   <button type="button" class="btn-cobrar bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="DEPOSITO">Depósito</button>
+                   <button type="button" class="btn-cobrar bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="ORGANIZADOR">Organizador</button>
+                   <button type="button" class="btn-cobrar bg-white border border-amber-400 text-amber-700 hover:bg-amber-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="CORTESIA">Cortesía</button>`
                 : '';
             return `<div class="bg-white rounded-lg shadow p-4 flex flex-wrap justify-between items-center gap-3">
                 <div>
@@ -66,12 +70,16 @@
             const textoOriginal = btn.textContent;
             btn.addEventListener('click', async function () {
                 const metodo = btn.dataset.metodo;
-                const etiqueta = metodo === 'QR' ? 'por QR' : 'en efectivo';
+                const etiquetas = {
+                    EFECTIVO: 'en efectivo', QR: 'por QR', DEPOSITO: 'por depósito',
+                    ORGANIZADOR: 'a cargo del organizador', CORTESIA: 'como cortesía (Bs 0.00)',
+                };
+                const etiqueta = etiquetas[metodo] || 'en efectivo';
                 if (!confirm(`¿Confirmás el cobro ${etiqueta} de esta inscripción?`)) return;
 
-                // Deshabilitar los 2 botones de la fila (efectivo/QR), no
+                // Deshabilitar los botones de la fila (uno por método), no
                 // solo el clickeado — evita un doble cobro si el cajero
-                // apreta el otro mientras la request está en vuelo.
+                // apreta otro mientras la request está en vuelo.
                 const fila = btn.closest('div.flex.gap-2') || btn.parentElement;
                 const botonesFila = fila ? fila.querySelectorAll('.btn-cobrar') : [btn];
                 botonesFila.forEach(b => b.disabled = true);

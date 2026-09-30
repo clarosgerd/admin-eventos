@@ -65,6 +65,20 @@
         <p class="text-xs text-slate-500">QR</p>
         <p class="font-semibold">{{ number_format($turno['totalQr'] ?? 0, 2) }}</p>
     </div>
+    {{-- Métodos de pago nuevos (30/09/2026) — mismo criterio: ninguno pasa
+         por el cajón, "Esperado" de arriba no los incluye. --}}
+    <div>
+        <p class="text-xs text-slate-500">Depósito</p>
+        <p class="font-semibold">{{ number_format($turno['totalDeposito'] ?? 0, 2) }}</p>
+    </div>
+    <div>
+        <p class="text-xs text-slate-500">Organizador</p>
+        <p class="font-semibold">{{ number_format($turno['totalOrganizador'] ?? 0, 2) }}</p>
+    </div>
+    <div>
+        <p class="text-xs text-slate-500">Cortesía</p>
+        <p class="font-semibold">{{ number_format($turno['totalCortesia'] ?? 0, 2) }}</p>
+    </div>
 </div>
 
 <h2 class="font-bold text-sm text-brand-600 mb-2">Movimientos ({{ count($turno['movimientos'] ?? []) }})</h2>
@@ -83,7 +97,15 @@
             @forelse ($turno['movimientos'] ?? [] as $m)
                 <tr class="border-t border-slate-100">
                     <td class="px-3 py-2">{{ \Illuminate\Support\Carbon::parse($m['createdAt'])->format('d/m/Y H:i') }}</td>
-                    <td class="px-3 py-2">{{ $tipoLabels[$m['tipo']] ?? $m['tipo'] }}</td>
+                    <td class="px-3 py-2">
+                        {{ $tipoLabels[$m['tipo']] ?? $m['tipo'] }}
+                        {{-- Quitar/cambiar un taller ya pagado (29/09/2026) —
+                             solo aparece cuando el movimiento incluyó
+                             quitar un taller ya cobrado. --}}
+                        @if (!empty($m['motivo']))
+                            <div class="text-xs text-slate-500 font-normal mt-0.5">{{ $m['motivo'] }}</div>
+                        @endif
+                    </td>
                     <td class="px-3 py-2">
                         @if ($m['registrationReferencia'])
                             <a href="{{ route('caja.eticket', [$evento['id'], $m['registrationReferencia']]) }}" class="text-brand-600 hover:underline">{{ $m['registrationReferencia'] }}</a>
