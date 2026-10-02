@@ -896,7 +896,7 @@
                     `</span>`;
             }
             return `<label class="flex items-center text-sm">
-                <input type="checkbox" class="sv-check mr-2" data-sv="${sv.id}" data-precio="${sv.price}" data-incluido="${sv.incluido ? 1 : 0}" data-nombre="${sv.name}" ${checked}>
+                <input type="checkbox" class="sv-check mr-2" data-sv="${sv.id}" data-precio="${sv.price}" data-incluido="${sv.incluido ? 1 : 0}" data-nombre="${sv.name}" data-aplica-cargo="${sv.aplica_cargo_servicio ? 1 : 0}" ${checked}>
                 ${sv.name} — ${sv.incluido ? 'incluido' : Number(sv.price).toFixed(2)}
                 ${variantHtml}
             </label>`;
@@ -914,6 +914,10 @@
                 precio: chk.dataset.incluido === '1' ? 0 : Number(chk.dataset.precio),
                 talla: talla ? (talla.value || null) : null,
                 sexo: sexo ? (sexo.value || null) : null,
+                // Cargo de servicio por souvenir individual (01/09/2026) —
+                // mismo criterio que CrearInscripcionAction::validateFeePct()/
+                // EdicionPagadaSouvenirsData del lado servidor.
+                aplicaCargoServicio: chk.dataset.aplicaCargo === '1',
             };
         });
     }
@@ -961,6 +965,17 @@
         }
 
         const souvenirsTotal = souvenirsSeleccionados().reduce((sum, s) => sum + s.precio, 0);
+        // Cargo de servicio por souvenir individual (01/09/2026) — bug real
+        // (02/10/2026): esta base nunca sumaba el souvenir con
+        // aplica_cargo_servicio=true al fee, a diferencia del servidor
+        // (CrearInscripcionAction::validateFeePct()/EdicionPagadaSouvenirsData),
+        // que sí lo hace siempre — con un souvenir con cargo seleccionado, el
+        // fee estimado acá quedaba más bajo que el real y
+        // validateFeePct() rechazaba el alta con "El cargo de servicio no
+        // coincide con el vigente para este evento".
+        const souvenirsConCargo = souvenirsSeleccionados()
+            .filter(s => s.aplicaCargoServicio)
+            .reduce((sum, s) => sum + s.precio, 0);
         // Talleres de congreso (20/08/2026) — mismo criterio que
         // CrearInscripcionAction::validateFeePct(): el fee se calcula
         // sobre inscripción + talleres salvo que el evento tenga
@@ -998,7 +1013,7 @@
         // ApiRestEvent) — clampeado acá también para que la estimación en
         // vivo coincida con lo que el servidor va a cobrar de verdad.
         const talleresTotalParaFee = Math.max(0, talleresTotal);
-        const baseFee = baseConDescuento + (FEE_INCLUYE_TALLERES ? talleresTotalParaFee : 0);
+        const baseFee = baseConDescuento + (FEE_INCLUYE_TALLERES ? talleresTotalParaFee : 0) + souvenirsConCargo;
         const fee = Math.round(baseFee * FEE_PCT * 100) / 100;
         // Cargo de edición (17/09/2026) — fijo, cobrado por el backend en
         // TODA edición de una inscripción pagada (ver ActualizarInscripcionPagadaAction,
