@@ -40,4 +40,27 @@ class CajaFeeSouvenirConCargoTest extends TestCase
         $this->assertStringContainsString('const souvenirsConCargo', $html);
         $this->assertStringContainsString('+ souvenirsConCargo', $html);
     }
+
+    /**
+     * Bug real (02/10/2026, mismo síntoma reportado por el usuario usando un
+     * cupón en Caja): calcular() restaba `descuento` (el cupón/promo) ANTES
+     * de calcular el fee (`baseConDescuento = inscripcion - descuento`) — a
+     * diferencia del servidor (CrearInscripcionAction::validateFeePct()) y
+     * del formulario público (_registro_validacion.php), que SIEMPRE
+     * calculan el fee sobre la inscripción completa, sin restar el cupón
+     * (el descuento solo se resta al final, sobre el grand_total). Con un
+     * cupón real aplicado, el fee estimado acá quedaba más bajo que el real
+     * y el alta se rechazaba con el mismo "El cargo de servicio no
+     * coincide con el vigente para este evento".
+     */
+    public function test_calcular_no_resta_el_descuento_de_la_base_del_fee(): void
+    {
+        Http::fake(['*/event/7' => Http::response(['eventos' => ['id' => 7, 'name' => 'Congreso', 'formTypes' => []]], 200)]);
+
+        $html = $this->comoAdmin()->get('/eventos/7/caja/nueva')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('baseConDescuento + (FEE_INCLUYE_TALLERES', $html);
+        $this->assertStringContainsString('const inscripcionParaFee = Math.max(0, inscripcion);', $html);
+        $this->assertStringContainsString('const baseFee = inscripcionParaFee + (FEE_INCLUYE_TALLERES', $html);
+    }
 }

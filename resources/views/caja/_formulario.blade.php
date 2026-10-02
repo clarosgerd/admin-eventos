@@ -1007,13 +1007,23 @@
                 : Math.max(0, Math.round((inscripcion - Number(promo.price || 0)) * 100) / 100);
         }
 
-        const baseConDescuento = Math.max(0, inscripcion - descuento);
-        // El fee nunca se reduce cuando algo baja de precio (29/09/2026,
-        // mismo criterio que EdicionPagadaFeeData::calcular() del lado de
-        // ApiRestEvent) — clampeado acá también para que la estimación en
-        // vivo coincida con lo que el servidor va a cobrar de verdad.
+        // El fee SIEMPRE se calcula sobre la inscripción completa, nunca
+        // reducida por un cupón/promo — mismo criterio que
+        // CrearInscripcionAction::validateFeePct() y el formulario público
+        // (_registro_validacion.php: $baseFee usa $totalInscripcion crudo,
+        // jamás resta $totalDescuento; el descuento solo se resta al final,
+        // sobre el grand_total). Bug real (02/10/2026, mismo síntoma que el
+        // souvenir con cargo): esto restaba `descuento` antes de calcular
+        // el fee — con un cupón real aplicado, el fee estimado acá quedaba
+        // más bajo que el que exige el servidor, y el alta se rechazaba con
+        // "El cargo de servicio no coincide con el vigente para este
+        // evento". El clamp a ≥0 se mantiene (no para el cupón, sino para
+        // edición: ahí `inscripcion` puede venir negativa como delta de una
+        // bajada de categoría — el fee nunca "devuelve" comisión ya
+        // cobrada, mismo criterio que EdicionPagadaFeeData::calcular()).
+        const inscripcionParaFee = Math.max(0, inscripcion);
         const talleresTotalParaFee = Math.max(0, talleresTotal);
-        const baseFee = baseConDescuento + (FEE_INCLUYE_TALLERES ? talleresTotalParaFee : 0) + souvenirsConCargo;
+        const baseFee = inscripcionParaFee + (FEE_INCLUYE_TALLERES ? talleresTotalParaFee : 0) + souvenirsConCargo;
         const fee = Math.round(baseFee * FEE_PCT * 100) / 100;
         // Cargo de edición (17/09/2026) — fijo, cobrado por el backend en
         // TODA edición de una inscripción pagada (ver ActualizarInscripcionPagadaAction,
