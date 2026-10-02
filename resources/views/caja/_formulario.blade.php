@@ -1010,7 +1010,17 @@
         // CurrencyResolverData::resolverPrecioFijo() (ApiRestEvent):
         // "sin tocar para nada el bookkeeping en BOB". Nunca se pisa con
         // el número en USD.
-        const total = Math.round((baseConDescuento + souvenirsTotal + talleresTotal + donacion + fee + costoEdicion) * 100) / 100;
+        //
+        // Bug real (30/09/2026, 2 casos confirmados en producción) — acá
+        // usaba `baseConDescuento` (clampeado a ≥0, correcto SOLO para la
+        // base del fee, igual que EdicionPagadaFeeData del lado servidor)
+        // para el TOTAL también — una bajada real de categoría (ej. -1100,
+        // una devolución legítima) se mostraba como "Total a cobrar: 10.00"
+        // en vez de "-1090.00", aunque el servidor sí cobraba/devolvía bien.
+        // El total tiene que usar la diferencia real (inscripcion-descuento),
+        // sin clampear — el clamp es solo para que el fee nunca "devuelva"
+        // comisión ya cobrada, no para esconder una devolución real.
+        const total = Math.round(((inscripcion - descuento) + souvenirsTotal + talleresTotal + donacion + fee + costoEdicion) * 100) / 100;
 
         // Precio USD fijo en Caja (12/09/2026) — total REAL a cobrar en
         // efectivo, en paralelo al bookkeeping de arriba. Mismo alcance
