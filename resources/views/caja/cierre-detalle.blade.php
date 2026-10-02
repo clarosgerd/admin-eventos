@@ -8,6 +8,7 @@
         'inscripcion_nueva' => 'Inscripción nueva',
         'cobro_pendiente'   => 'Cobro pendiente',
         'edicion_pagada'    => 'Edición pagada',
+        'anulacion'         => 'Anulación',
     ];
 @endphp
 

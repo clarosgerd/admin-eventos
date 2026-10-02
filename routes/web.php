@@ -76,6 +76,9 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     // Prellenado desde `personas` (20/08/2026).
     Route::get('/eventos/{evento}/caja/persona', [CajaController::class, 'buscarPersona'])->name('caja.persona');
     Route::post('/eventos/{evento}/caja/registrations/{referencia}/cobrar-pendiente', [CajaController::class, 'cobrarPendiente'])->name('caja.cobrar-pendiente');
+    // Anular un cobro (02/10/2026) — historia de movimientos + anulación puntual.
+    Route::get('/eventos/{evento}/caja/registrations/{referencia}/movimientos', [CajaController::class, 'movimientos'])->name('caja.movimientos');
+    Route::post('/eventos/{evento}/caja/registrations/{referencia}/anular-cobro', [CajaController::class, 'anularCobro'])->name('caja.anular-cobro');
     Route::get('/eventos/{evento}/caja/registrations/{referencia}/editar', [CajaController::class, 'editar'])->name('caja.editar');
     Route::post('/eventos/{evento}/caja/registrations/{referencia}/editar', [CajaController::class, 'storeEditar'])->name('caja.editar.store');
     // Comprobante imprimible (20/08/2026) — el cajero necesita algo físico

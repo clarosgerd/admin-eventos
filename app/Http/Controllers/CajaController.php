@@ -134,6 +134,28 @@ class CajaController extends Controller
         return response()->json($response?->json() ?? ['success' => false, 'error' => 'No se pudo conectar con el servidor.'], $response?->status() ?? 502);
     }
 
+    /**
+     * Anular un cobro (02/10/2026) — historia de caja_movimientos de una
+     * inscripción, para que el cajero elija cuál revertir. Ver
+     * resources/views/caja/buscar.blade.php.
+     */
+    public function movimientos(int $evento, string $referencia, ApiRestEventClient $client): JsonResponse
+    {
+        $response = $client->forward('GET', "/registrations/{$referencia}/caja/movimientos");
+
+        return response()->json($response?->json() ?? ['success' => false, 'error' => 'No se pudo conectar con el servidor.'], $response?->status() ?? 502);
+    }
+
+    public function anularCobro(Request $request, int $evento, string $referencia, ApiRestEventClient $client): JsonResponse
+    {
+        $response = $client->forward('POST', "/registrations/{$referencia}/caja/anular-cobro", body: [
+            'movimiento_id' => $request->input('movimiento_id'),
+            'motivo'        => $request->input('motivo'),
+        ]);
+
+        return response()->json($response?->json() ?? ['success' => false, 'error' => 'No se pudo conectar con el servidor.'], $response?->status() ?? 502);
+    }
+
     public function editar(int $evento, string $referencia, ApiRestEventClient $client): View
     {
         $eventoData = $this->fetchEvento($evento, $client);
