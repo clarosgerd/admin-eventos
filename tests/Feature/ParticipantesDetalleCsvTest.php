@@ -110,4 +110,30 @@ class ParticipantesDetalleCsvTest extends TestCase
 
         $this->assertSame('OTRA_COSA', $csv['fila'][22]);
     }
+    public function test_carrera_con_formulario_de_equipo_muestra_la_columna_equipo(): void
+    {
+        $csv = $this->csvDe('Carrera de Ruta', $this->participante([
+            'eventoConEquipo' => true, 'equipo' => 'Los Veloces',
+        ]));
+
+        $this->assertContains('EQUIPO', $csv['encabezados']);
+        $posicion = array_search('EQUIPO', $csv['encabezados'], true);
+        $this->assertSame('Los Veloces', $csv['fila'][$posicion]);
+    }
+
+    public function test_sin_formulario_de_equipo_no_muestra_la_columna(): void
+    {
+        $csv = $this->csvDe('Carrera de Ruta', $this->participante(['eventoConEquipo' => false]));
+
+        $this->assertNotContains('EQUIPO', $csv['encabezados']);
+    }
+
+    public function test_congreso_nunca_muestra_la_columna_equipo(): void
+    {
+        $csv = $this->csvDe('Congreso / No aplica', $this->participante([
+            'eventoConEquipo' => true, 'equipo' => 'Los Veloces', 'importeTaller' => 0, 'tipoPago' => 'EFECTIVO',
+        ]));
+
+        $this->assertNotContains('EQUIPO', $csv['encabezados']);
+    }
 }

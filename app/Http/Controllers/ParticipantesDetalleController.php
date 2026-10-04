@@ -53,14 +53,19 @@ class ParticipantesDetalleController extends Controller
 
         abort_if(!$response || !$response->json('success'), 502, 'No se pudo cargar el detalle de inscritos.');
 
+        $participantes = $response->json('participantes') ?? [];
+
         return view('eventos.participantes-detalle', [
             'evento' => $eventoData,
             // Carrera vs congreso: numeración y distancia solo aplican a carreras.
             'usaNumeracion' => $this->esCarrera($eventoData),
+            // Equipo: solo carreras, y solo si algún formulario del evento tiene has_team.
+            'mostrarEquipo' => $this->esCarrera($eventoData)
+                && collect($participantes)->contains(fn ($p) => ($p['eventoConEquipo'] ?? false) === true),
             'categoriaSeleccionada' => $categoria,
             'pagoStatusSeleccionado' => $pagoStatus,
             'searchSeleccionado' => $search,
-            'participantes' => $response->json('participantes') ?? [],
+            'participantes' => $participantes,
             'meta' => $response->json('meta'),
         ]);
     }
@@ -146,6 +151,9 @@ class ParticipantesDetalleController extends Controller
         // IMPORTE_TOTAL no cambia en ningún caso (sigue = importe + polera + taller).
         $preguntas = collect($participantes[0]['respuestas'] ?? [])->values();
 
+        // Equipo: solo en carreras, y solo si algún formulario del evento tiene el flag has_team.
+        $mostrarEquipo = $usaNumeracion && collect($participantes)->contains(fn ($p) => ($p['eventoConEquipo'] ?? false) === true);
+
         fputcsv($handle, [
             'N°',
             ...($usaNumeracion ? ['NUMERO_CORREDOR'] : []),
@@ -158,6 +166,7 @@ class ParticipantesDetalleController extends Controller
             ...($usaNumeracion ? [] : ['DEN.']),
             'NOMBRE', 'APELLIDO',
             ...($usaNumeracion ? ['ALIAS'] : []),
+            ...($mostrarEquipo ? ['EQUIPO'] : []),
             'SEXO', 'CELULAR', 'FECHA_INSCRIPCION', 'REFERENCIA', 'NACIMIENTO',
             ...($usaNumeracion ? ['DISTANCIA', 'CATEGORIA'] : ['CATEGORIA']),
             'EDAD_FECHA', 'EDAD_FIN_DE_ANIO', 'EDAD_HOY',
@@ -182,6 +191,7 @@ class ParticipantesDetalleController extends Controller
                 ...($usaNumeracion ? [] : [$p['alias'] ?? '']),
                 $p['nombre'], $p['apellido'],
                 ...($usaNumeracion ? [$p['alias'] ?? ''] : []),
+                ...($mostrarEquipo ? [$p['equipo'] ?? ''] : []),
                 $p['genero'], $p['telefono'],
                 $p['fechaInscripcion'], $p['referencia'], $p['fechaNacimiento'],
                 ...($usaNumeracion ? [$distancia, $p['categoriaRecalculada'] ?? ''] : [$distancia]),

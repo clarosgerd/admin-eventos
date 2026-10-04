@@ -78,6 +78,9 @@
                 <th class="px-3 py-2 font-semibold">Apellido</th>
                 {{-- Carreras: alias (etiqueta de corredor). Congresos: título. Mismo campo `alias`. --}}
                 <th class="px-3 py-2 font-semibold">{{ $usaNumeracion ? 'Alias' : 'Título' }}</th>
+                @if ($mostrarEquipo)
+                    <th class="px-3 py-2 font-semibold">Equipo</th>
+                @endif
                 <th class="px-3 py-2 font-semibold">Sexo</th>
                 <th class="px-3 py-2 font-semibold">Celular</th>
                 <th class="px-3 py-2 font-semibold">Fecha inscripción</th>
@@ -109,6 +112,9 @@
                     <td class="px-3 py-2">{{ $p['nombre'] }}</td>
                     <td class="px-3 py-2">{{ $p['apellido'] }}</td>
                     <td class="px-3 py-2">{{ $p['alias'] ?? '' }}</td>
+                    @if ($mostrarEquipo)
+                        <td class="px-3 py-2">{{ $p['equipo'] ?? '' }}</td>
+                    @endif
                     <td class="px-3 py-2">{{ $p['genero'] }}</td>
                     <td class="px-3 py-2">{{ $p['telefono'] }}</td>
                     <td class="px-3 py-2">{{ $p['fechaInscripcion'] ? \Illuminate\Support\Carbon::parse($p['fechaInscripcion'])->format('Y-m-d H:i') : '—' }}</td>
@@ -131,7 +137,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td class="px-3 py-2 text-slate-500" colspan="{{ $usaNumeracion ? 17 : 16 }}">No hay inscritos con estos filtros.</td></tr>
+                <tr><td class="px-3 py-2 text-slate-500" colspan="{{ ($usaNumeracion ? 17 : 16) + ($mostrarEquipo ? 1 : 0) }}">No hay inscritos con estos filtros.</td></tr>
             @endforelse
         </tbody>
     </table>
