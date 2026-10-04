@@ -55,6 +55,8 @@ class ParticipantesDetalleController extends Controller
 
         return view('eventos.participantes-detalle', [
             'evento' => $eventoData,
+            // Carrera vs congreso: numeración y distancia solo aplican a carreras.
+            'usaNumeracion' => $this->esCarrera($eventoData),
             'categoriaSeleccionada' => $categoria,
             'pagoStatusSeleccionado' => $pagoStatus,
             'searchSeleccionado' => $search,
@@ -113,7 +115,7 @@ class ParticipantesDetalleController extends Controller
         // (OrganizadorDashboardController::exportCsv()) para la misma
         // columna en el CSV firmado — ver análisis en la memoria del
         // proyecto (project_reportes_csv_campos_carrera_congreso).
-        $usaNumeracion = mb_strtolower(trim($eventoResponse?->json('eventos.tipoEvento') ?? '')) !== 'congreso / no aplica';
+        $usaNumeracion = $this->esCarrera($eventoResponse?->json('eventos') ?? []);
 
         // Sin `per_page` a propósito: la descarga CSV es una acción
         // explícita del usuario, no la carga de pantalla por defecto —
@@ -135,23 +137,58 @@ class ParticipantesDetalleController extends Controller
         // es lo comparable (importe + importe_taller); no incluye el cargo
         // de servicio, que se cobra por registro completo, no por
         // participante — ver ApiRestEvent ParticipanteController::porEvento.
+        // Mismo formato que los reportes legacy (xlsx de referencia, 04/10/2026):
+        // encabezados en MAYÚSCULAS, N° correlativo, FORMA DE PAGO y
+        // OBSERVACIONES, y al final una columna por pregunta "En reporte".
+        // Carrera: IMPORTE sin polera + IMPORTE_POLERA aparte; DISTANCIA =
+        // categoría del participante, CATEGORIA = grupo de edad recalculado.
+        // Congreso: IMPORTE_TALLER y DEN. (título = alias) antes de NOMBRE.
+        // IMPORTE_TOTAL no cambia en ningún caso (sigue = importe + polera + taller).
+        $preguntas = collect($participantes[0]['respuestas'] ?? [])->values();
+
         fputcsv($handle, [
-            ...($usaNumeracion ? ['numero_corredor'] : []),
-            'estado', 'importe', 'importe_taller', 'importe_total', 'numero_documento', 'nombre', 'apellido',
-            'sexo', 'celular', 'fecha_inscripcion', 'referencia', 'nacimiento', 'distancia',
-            'edad_fecha_evento', 'edad_fin_de_anio', 'edad_hoy',
+            'N°',
+            ...($usaNumeracion ? ['NUMERO_CORREDOR'] : []),
+            'ESTADO',
+            'IMPORTE',
+            ...($usaNumeracion ? ['IMPORTE_POLERA'] : ['IMPORTE_TALLER']),
+            'IMPORTE_TOTAL',
+            'PROMO_CODIGO', 'PROMO_DESCUENTO',
+            'NUMERO_DOCUMENTO',
+            ...($usaNumeracion ? [] : ['DEN.']),
+            'NOMBRE', 'APELLIDO',
+            ...($usaNumeracion ? ['ALIAS'] : []),
+            'SEXO', 'CELULAR', 'FECHA_INSCRIPCION', 'REFERENCIA', 'NACIMIENTO',
+            ...($usaNumeracion ? ['DISTANCIA', 'CATEGORIA'] : ['CATEGORIA']),
+            'EDAD_FECHA', 'EDAD_FIN_DE_ANIO', 'EDAD_HOY',
+            'FORMA DE PAGO', 'OBSERVACIONES',
+            ...$preguntas->map(fn ($r) => mb_strtoupper($r['etiqueta']))->all(),
         ]);
-        foreach ($participantes as $p) {
+        foreach ($participantes as $i => $p) {
             [$edadEvento, $edadFinDeAnio, $edadHoy] = $this->edades($p['fechaNacimiento'] ?? null, $fechaEvento, $finDeAnioEvento);
+            $importePolera = (float) ($p['importePolera'] ?? 0);
+            $importeCarrera = $usaNumeracion ? round((float) $p['importe'] - $importePolera, 2) : $p['importe'];
+            $distancia = $categoriasPorId[$p['categoria']]['name'] ?? $p['categoria'];
 
             fputcsv($handle, [
+                $i + 1,
                 ...($usaNumeracion ? [$p['numeroCorredor']] : []),
-                $this->estadoLabel($p['pagoStatus']), $p['importe'],
-                $p['importeTaller'] ?? 0, $p['importeTotal'] ?? $p['importe'],
-                $p['numeroDocumento'], $p['nombre'], $p['apellido'], $p['genero'], $p['telefono'],
+                $this->estadoLabel($p['pagoStatus']),
+                $importeCarrera,
+                ...($usaNumeracion ? [$importePolera] : [$p['importeTaller'] ?? 0]),
+                $p['importeTotal'] ?? $p['importe'],
+                $p['promoCodigo'] ?? '', $p['promoDescuento'] ?? 0,
+                $p['numeroDocumento'],
+                ...($usaNumeracion ? [] : [$p['alias'] ?? '']),
+                $p['nombre'], $p['apellido'],
+                ...($usaNumeracion ? [$p['alias'] ?? ''] : []),
+                $p['genero'], $p['telefono'],
                 $p['fechaInscripcion'], $p['referencia'], $p['fechaNacimiento'],
-                $categoriasPorId[$p['categoria']]['name'] ?? $p['categoria'],
+                ...($usaNumeracion ? [$distancia, $p['categoriaRecalculada'] ?? ''] : [$distancia]),
                 $edadEvento, $edadFinDeAnio, $edadHoy,
+                $this->formaPagoLabel($p['tipoPago'] ?? null),
+                '',
+                ...collect($p['respuestas'] ?? [])->pluck('valor')->all(),
             ]);
         }
         rewind($handle);
@@ -181,6 +218,43 @@ class ParticipantesDetalleController extends Controller
         $search = trim((string) $request->query('search', ''));
 
         return [$categoria, $pagoStatus, $perPage, $page, $search];
+    }
+
+    /**
+     * Carrera = cualquier tipo de evento distinto de "Congreso / No aplica"
+     * (mismo criterio que ApiRestEvent OrganizadorDashboardController).
+     */
+    private function esCarrera(array $evento): bool
+    {
+        return mb_strtolower(trim((string) ($evento['tipoEvento'] ?? ''))) !== 'congreso / no aplica';
+    }
+
+    /**
+     * FORMA DE PAGO con las etiquetas del reporte legacy. `tipo_pago` guarda
+     * el origen del cobro (pasarela, Caja o sincronización externa); los
+     * valores desconocidos salen tal cual en mayúsculas, sin perder el dato.
+     */
+    private function formaPagoLabel(?string $tipoPago): string
+    {
+        $clave = mb_strtolower(trim((string) $tipoPago));
+
+        return match ($clave) {
+            '' => '',
+            'sip' => 'QR SIP',
+            'qr' => 'QR',
+            'multipago' => 'QR MULTIPAGO',
+            'efectivo' => 'EFECTIVO',
+            'organizador' => 'DIRECTO ORG.',
+            'cortesía', 'cortesia' => 'CORTESIA',
+            'depósito', 'deposito' => 'DEPOSITO',
+            'pendiente' => 'PENDIENTE',
+            'pendiente_usd' => 'PENDIENTE USD',
+            'gratis' => 'GRATIS',
+            'externo' => 'EXTERNO',
+            'legado' => 'LEGADO',
+            'excel' => 'EXCEL',
+            default => mb_strtoupper($clave),
+        };
     }
 
     private function estadoLabel(string $pagoStatus): string

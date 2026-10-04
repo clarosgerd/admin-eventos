@@ -64,35 +64,51 @@
     <table class="w-full bg-white rounded-lg shadow text-sm">
         <thead>
             <tr class="bg-brand-600 text-white text-left">
-                <th class="px-3 py-2 font-semibold">Número</th>
+                @if ($usaNumeracion)
+                    <th class="px-3 py-2 font-semibold">Número</th>
+                @endif
                 <th class="px-3 py-2 font-semibold">Estado</th>
                 <th class="px-3 py-2 font-semibold text-right">Importe</th>
                 {{-- importeTaller/importeTotal (19/08/2026) — para conciliar contra el banco, ver ApiRestEvent. --}}
                 <th class="px-3 py-2 font-semibold text-right">Taller</th>
                 <th class="px-3 py-2 font-semibold text-right">Total</th>
+                <th class="px-3 py-2 font-semibold">Descuento</th>
                 <th class="px-3 py-2 font-semibold">CI</th>
                 <th class="px-3 py-2 font-semibold">Nombre</th>
                 <th class="px-3 py-2 font-semibold">Apellido</th>
+                {{-- Carreras: alias (etiqueta de corredor). Congresos: título. Mismo campo `alias`. --}}
+                <th class="px-3 py-2 font-semibold">{{ $usaNumeracion ? 'Alias' : 'Título' }}</th>
                 <th class="px-3 py-2 font-semibold">Sexo</th>
                 <th class="px-3 py-2 font-semibold">Celular</th>
                 <th class="px-3 py-2 font-semibold">Fecha inscripción</th>
                 <th class="px-3 py-2 font-semibold">Ref</th>
                 <th class="px-3 py-2 font-semibold">Nacimiento</th>
-                <th class="px-3 py-2 font-semibold">Distancia</th>
+                <th class="px-3 py-2 font-semibold">{{ $usaNumeracion ? 'Distancia' : 'Categoría' }}</th>
                 <th class="px-3 py-2 font-semibold">Acción</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($participantes as $p)
                 <tr class="border-t border-slate-100">
-                    <td class="px-3 py-2 font-mono">{{ $p['numeroCorredor'] }}</td>
+                    @if ($usaNumeracion)
+                        <td class="px-3 py-2 font-mono">{{ $p['numeroCorredor'] }}</td>
+                    @endif
                     <td class="px-3 py-2">{{ $estadoLabels[$p['pagoStatus']] ?? $p['pagoStatus'] }}</td>
                     <td class="px-3 py-2 text-right">${{ number_format($p['importe'], 2) }}</td>
                     <td class="px-3 py-2 text-right">${{ number_format($p['importeTaller'] ?? 0, 2) }}</td>
                     <td class="px-3 py-2 text-right font-semibold">${{ number_format($p['importeTotal'] ?? $p['importe'], 2) }}</td>
+                    <td class="px-3 py-2">
+                        @if (!empty($p['promoCodigo']))
+                            <span class="font-mono text-xs">{{ $p['promoCodigo'] }}</span>
+                            <span class="text-emerald-700">−${{ number_format($p['promoDescuento'] ?? 0, 2) }}</span>
+                        @else
+                            <span class="text-slate-400">—</span>
+                        @endif
+                    </td>
                     <td class="px-3 py-2">{{ $p['numeroDocumento'] }}</td>
                     <td class="px-3 py-2">{{ $p['nombre'] }}</td>
                     <td class="px-3 py-2">{{ $p['apellido'] }}</td>
+                    <td class="px-3 py-2">{{ $p['alias'] ?? '' }}</td>
                     <td class="px-3 py-2">{{ $p['genero'] }}</td>
                     <td class="px-3 py-2">{{ $p['telefono'] }}</td>
                     <td class="px-3 py-2">{{ $p['fechaInscripcion'] ? \Illuminate\Support\Carbon::parse($p['fechaInscripcion'])->format('Y-m-d H:i') : '—' }}</td>
@@ -115,7 +131,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td class="px-3 py-2 text-slate-500" colspan="15">No hay inscritos con estos filtros.</td></tr>
+                <tr><td class="px-3 py-2 text-slate-500" colspan="{{ $usaNumeracion ? 17 : 16 }}">No hay inscritos con estos filtros.</td></tr>
             @endforelse
         </tbody>
     </table>
