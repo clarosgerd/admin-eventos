@@ -81,6 +81,9 @@
                 @if ($mostrarEquipo)
                     <th class="px-3 py-2 font-semibold">Equipo</th>
                 @endif
+                @if ($mostrarPolera)
+                    <th class="px-3 py-2 font-semibold">Polera</th>
+                @endif
                 <th class="px-3 py-2 font-semibold">Sexo</th>
                 <th class="px-3 py-2 font-semibold">Celular</th>
                 <th class="px-3 py-2 font-semibold">Fecha inscripción</th>
@@ -114,6 +117,9 @@
                     <td class="px-3 py-2">{{ $p['alias'] ?? '' }}</td>
                     @if ($mostrarEquipo)
                         <td class="px-3 py-2">{{ $p['equipo'] ?? '' }}</td>
+                    @endif
+                    @if ($mostrarPolera)
+                        <td class="px-3 py-2">{{ $p['poleraTalla'] }}</td>
                     @endif
                     <td class="px-3 py-2">{{ $p['genero'] }}</td>
                     <td class="px-3 py-2">{{ $p['telefono'] }}</td>

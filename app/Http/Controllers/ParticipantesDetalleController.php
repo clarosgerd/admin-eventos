@@ -53,7 +53,9 @@ class ParticipantesDetalleController extends Controller
 
         abort_if(!$response || !$response->json('success'), 502, 'No se pudo cargar el detalle de inscritos.');
 
-        $participantes = $response->json('participantes') ?? [];
+        $participantes = collect($response->json('participantes') ?? [])
+            ->map(fn (array $p) => $p + ['poleraTalla' => $this->tallaPolera($p['polera'] ?? null)])
+            ->all();
 
         return view('eventos.participantes-detalle', [
             'evento' => $eventoData,
@@ -62,6 +64,9 @@ class ParticipantesDetalleController extends Controller
             // Equipo: solo carreras, y solo si algún formulario del evento tiene has_team.
             'mostrarEquipo' => $this->esCarrera($eventoData)
                 && collect($participantes)->contains(fn ($p) => ($p['eventoConEquipo'] ?? false) === true),
+            // Talla de polera: solo carreras con souvenir de polera en el evento.
+            'mostrarPolera' => $this->esCarrera($eventoData)
+                && collect($participantes)->contains(fn ($p) => ($p['eventoConPolera'] ?? false) === true),
             'categoriaSeleccionada' => $categoria,
             'pagoStatusSeleccionado' => $pagoStatus,
             'searchSeleccionado' => $search,
@@ -153,6 +158,8 @@ class ParticipantesDetalleController extends Controller
 
         // Equipo: solo en carreras, y solo si algún formulario del evento tiene el flag has_team.
         $mostrarEquipo = $usaNumeracion && collect($participantes)->contains(fn ($p) => ($p['eventoConEquipo'] ?? false) === true);
+        // Talla de polera: solo en carreras con souvenir de polera en el evento.
+        $mostrarPolera = $usaNumeracion && collect($participantes)->contains(fn ($p) => ($p['eventoConPolera'] ?? false) === true);
 
         fputcsv($handle, [
             'N°',
@@ -167,6 +174,7 @@ class ParticipantesDetalleController extends Controller
             'NOMBRE', 'APELLIDO',
             ...($usaNumeracion ? ['ALIAS'] : []),
             ...($mostrarEquipo ? ['EQUIPO'] : []),
+            ...($mostrarPolera ? ['POLERA'] : []),
             'SEXO', 'CELULAR', 'FECHA_INSCRIPCION', 'REFERENCIA', 'NACIMIENTO',
             ...($usaNumeracion ? ['DISTANCIA', 'CATEGORIA'] : ['CATEGORIA']),
             'EDAD_FECHA', 'EDAD_FIN_DE_ANIO', 'EDAD_HOY',
@@ -192,6 +200,7 @@ class ParticipantesDetalleController extends Controller
                 $p['nombre'], $p['apellido'],
                 ...($usaNumeracion ? [$p['alias'] ?? ''] : []),
                 ...($mostrarEquipo ? [$p['equipo'] ?? ''] : []),
+                ...($mostrarPolera ? [$this->tallaPolera($p['polera'] ?? null)] : []),
                 $p['genero'], $p['telefono'],
                 $p['fechaInscripcion'], $p['referencia'], $p['fechaNacimiento'],
                 ...($usaNumeracion ? [$distancia, $p['categoriaRecalculada'] ?? ''] : [$distancia]),
@@ -228,6 +237,17 @@ class ParticipantesDetalleController extends Controller
         $search = trim((string) $request->query('search', ''));
 
         return [$categoria, $pagoStatus, $perPage, $page, $search];
+    }
+
+    /**
+     * Talla de polera para el reporte. El API devuelve el centinela legacy
+     * 'No shirt' cuando el participante no eligió polera: se muestra vacío.
+     */
+    private function tallaPolera(?string $talla): string
+    {
+        $limpia = trim((string) $talla);
+
+        return strcasecmp($limpia, 'No shirt') === 0 ? '' : $limpia;
     }
 
     /**

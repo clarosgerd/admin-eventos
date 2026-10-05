@@ -136,4 +136,40 @@ class ParticipantesDetalleCsvTest extends TestCase
 
         $this->assertNotContains('EQUIPO', $csv['encabezados']);
     }
+    public function test_carrera_con_polera_muestra_la_talla(): void
+    {
+        $csv = $this->csvDe('Carrera de Ruta', $this->participante([
+            'eventoConPolera' => true, 'polera' => 'M',
+        ]));
+
+        $posicion = array_search('POLERA', $csv['encabezados'], true);
+        $this->assertNotFalse($posicion);
+        $this->assertSame('M', $csv['fila'][$posicion]);
+    }
+
+    public function test_polera_no_shirt_sale_vacia(): void
+    {
+        $csv = $this->csvDe('Carrera de Ruta', $this->participante([
+            'eventoConPolera' => true, 'polera' => 'No shirt',
+        ]));
+
+        $posicion = array_search('POLERA', $csv['encabezados'], true);
+        $this->assertSame('', $csv['fila'][$posicion]);
+    }
+
+    public function test_evento_sin_polera_no_muestra_la_columna(): void
+    {
+        $csv = $this->csvDe('Carrera de Ruta', $this->participante(['eventoConPolera' => false]));
+
+        $this->assertNotContains('POLERA', $csv['encabezados']);
+    }
+
+    public function test_congreso_nunca_muestra_la_columna_polera(): void
+    {
+        $csv = $this->csvDe('Congreso / No aplica', $this->participante([
+            'eventoConPolera' => true, 'polera' => 'M', 'importeTaller' => 0, 'tipoPago' => 'EFECTIVO',
+        ]));
+
+        $this->assertNotContains('POLERA', $csv['encabezados']);
+    }
 }
