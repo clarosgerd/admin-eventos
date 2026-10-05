@@ -37,6 +37,7 @@ use App\Http\Controllers\PasaporteController;
 use App\Http\Controllers\NumeracionController;
 use App\Http\Controllers\OrganizadorController;
 use App\Http\Controllers\ParticipantesController;
+use App\Http\Controllers\CalendarioEventoController;
 use App\Http\Controllers\ParticipantesDetalleController;
 use App\Http\Controllers\ChronoTrackExportController;
 use App\Http\Controllers\PersonaController;
@@ -235,6 +236,8 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     // participante — mismo criterio de permisos que el resto del bloque:
     // super_admin o el admin scoped a su propio evento.
     Route::get('/eventos/{evento}/dashboard', [DashboardInscripcionesController::class, 'show'])->name('eventos.dashboard');
+    // Calendario del evento: agenda y sesiones por mes, semana y día (05/10/2026).
+    Route::get('/eventos/{evento}/calendario', [CalendarioEventoController::class, 'index'])->name('eventos.calendario');
     // CSV del Reporte de talleres (20/08/2026) — sin agrupar, ordenado por
     // fecha, ver DashboardInscripcionesController::csvTalleres().
     Route::get('/eventos/{evento}/dashboard/talleres/csv', [DashboardInscripcionesController::class, 'csvTalleres'])->name('eventos.dashboard.talleres.csv');
