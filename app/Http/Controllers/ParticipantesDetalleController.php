@@ -65,6 +65,8 @@ class ParticipantesDetalleController extends Controller
             'mostrarEquipo' => $this->esCarrera($eventoData)
                 && collect($participantes)->contains(fn ($p) => ($p['eventoConEquipo'] ?? false) === true),
             // Talla de polera: solo carreras con souvenir de polera en el evento.
+            // Descuento grupal: depende del flag del formulario, no del tipo de evento.
+            'mostrarGrupal' => collect($participantes)->contains(fn ($p) => ($p['eventoConGrupal'] ?? false) === true),
             'mostrarPolera' => $this->esCarrera($eventoData)
                 && collect($participantes)->contains(fn ($p) => ($p['eventoConPolera'] ?? false) === true),
             'categoriaSeleccionada' => $categoria,
@@ -160,6 +162,8 @@ class ParticipantesDetalleController extends Controller
         $mostrarEquipo = $usaNumeracion && collect($participantes)->contains(fn ($p) => ($p['eventoConEquipo'] ?? false) === true);
         // Talla de polera: solo en carreras con souvenir de polera en el evento.
         $mostrarPolera = $usaNumeracion && collect($participantes)->contains(fn ($p) => ($p['eventoConPolera'] ?? false) === true);
+        // Descuento grupal: depende del flag del formulario, no del tipo de evento.
+        $mostrarGrupal = collect($participantes)->contains(fn ($p) => ($p['eventoConGrupal'] ?? false) === true);
 
         fputcsv($handle, [
             'N°',
@@ -169,6 +173,7 @@ class ParticipantesDetalleController extends Controller
             ...($usaNumeracion ? ['IMPORTE_POLERA'] : ['IMPORTE_TALLER']),
             'IMPORTE_TOTAL',
             'PROMO_CODIGO', 'PROMO_DESCUENTO',
+            ...($mostrarGrupal ? ['DESCUENTO_GRUPAL'] : []),
             'NUMERO_DOCUMENTO',
             ...($usaNumeracion ? [] : ['DEN.']),
             'NOMBRE', 'APELLIDO',
@@ -195,6 +200,7 @@ class ParticipantesDetalleController extends Controller
                 ...($usaNumeracion ? [$importePolera] : [$p['importeTaller'] ?? 0]),
                 $p['importeTotal'] ?? $p['importe'],
                 $p['promoCodigo'] ?? '', $p['promoDescuento'] ?? 0,
+                ...($mostrarGrupal ? [$p['descuentoGrupal'] ?? 0] : []),
                 $p['numeroDocumento'],
                 ...($usaNumeracion ? [] : [$p['alias'] ?? '']),
                 $p['nombre'], $p['apellido'],

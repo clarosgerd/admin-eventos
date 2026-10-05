@@ -172,4 +172,23 @@ class ParticipantesDetalleCsvTest extends TestCase
 
         $this->assertNotContains('POLERA', $csv['encabezados']);
     }
+    public function test_muestra_descuento_grupal_de_la_inscripcion_cuando_el_evento_lo_tiene(): void
+    {
+        $csv = $this->csvDe('Carrera de Ruta', $this->participante([
+            'eventoConGrupal' => true, 'descuentoGrupal' => 150,
+        ]));
+
+        $posicion = array_search('DESCUENTO_GRUPAL', $csv['encabezados'], true);
+        $this->assertNotFalse($posicion);
+        $this->assertSame('150', $csv['fila'][$posicion]);
+    }
+
+    public function test_sin_inscripcion_grupal_no_muestra_la_columna(): void
+    {
+        $csv = $this->csvDe('Congreso / No aplica', $this->participante([
+            'eventoConGrupal' => false, 'importeTaller' => 0, 'tipoPago' => 'EFECTIVO',
+        ]));
+
+        $this->assertNotContains('DESCUENTO_GRUPAL', $csv['encabezados']);
+    }
 }

@@ -73,6 +73,9 @@
                 <th class="px-3 py-2 font-semibold text-right">Taller</th>
                 <th class="px-3 py-2 font-semibold text-right">Total</th>
                 <th class="px-3 py-2 font-semibold">Descuento</th>
+                @if ($mostrarGrupal)
+                    <th class="px-3 py-2 font-semibold text-right">Desc. grupal</th>
+                @endif
                 <th class="px-3 py-2 font-semibold">CI</th>
                 <th class="px-3 py-2 font-semibold">Nombre</th>
                 <th class="px-3 py-2 font-semibold">Apellido</th>
@@ -111,6 +114,9 @@
                             <span class="text-slate-400">—</span>
                         @endif
                     </td>
+                    @if ($mostrarGrupal)
+                        <td class="px-3 py-2 text-right">${{ number_format($p['descuentoGrupal'] ?? 0, 2) }}</td>
+                    @endif
                     <td class="px-3 py-2">{{ $p['numeroDocumento'] }}</td>
                     <td class="px-3 py-2">{{ $p['nombre'] }}</td>
                     <td class="px-3 py-2">{{ $p['apellido'] }}</td>
@@ -143,7 +149,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td class="px-3 py-2 text-slate-500" colspan="{{ ($usaNumeracion ? 17 : 16) + ($mostrarEquipo ? 1 : 0) }}">No hay inscritos con estos filtros.</td></tr>
+                <tr><td class="px-3 py-2 text-slate-500" colspan="{{ ($usaNumeracion ? 17 : 16) + ($mostrarEquipo ? 1 : 0) + ($mostrarPolera ? 1 : 0) + ($mostrarGrupal ? 1 : 0) }}">No hay inscritos con estos filtros.</td></tr>
             @endforelse
         </tbody>
     </table>
