@@ -38,7 +38,7 @@
                 <th class="px-4 py-2">Precio USD</th>
                 <th class="px-4 py-2">Staff asignado</th>
                 <th class="px-4 py-2">Ponentes vinculados</th>
-                <th class="px-4 py-2"></th>
+                <th class="sticky right-0 bg-slate-50 px-4 py-2"></th>
             </tr>
         </thead>
         <tbody>
@@ -52,7 +52,13 @@
                     $ponentesDisponiblesParaEsta = collect($ponentesDisponibles)->reject(fn ($p) => in_array($p['id'], $ponentesVinculadosIds));
                 @endphp
                 <tr class="border-t border-slate-100 align-top">
-                    <td class="px-4 py-2 font-semibold">{{ $sesion['titulo'] }}</td>
+                    <td class="px-4 py-2 font-semibold">
+                        {{ $sesion['titulo'] }}
+                        {{-- Acceso directo a la acreditación: visible sin mover la tabla a la derecha. --}}
+                        <div class="mt-1 text-xs font-normal">
+                            <a href="{{ route('sesiones.acreditacion.index', [$evento['id'], $sesion['id']]) }}" class="text-brand-600 hover:underline">Acreditación ›</a>
+                        </div>
+                    </td>
                     {{-- Congresos con talleres (18/08/2026) — columna Taller --}}
                     <td class="px-4 py-2">
                         @if (!empty($sesion['taller_id']))
@@ -161,7 +167,7 @@
                             <span class="text-xs text-slate-400">No hay participantes de un form_type "Ponente" inscritos.</span>
                         @endif
                     </td>
-                    <td class="px-4 py-2 text-right space-x-2 whitespace-nowrap">
+                    <td class="sticky right-0 bg-white px-4 py-2 text-right space-x-2 whitespace-nowrap shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.15)]">
                         <a href="#edit-sesion-{{ $sesion['id'] }}" class="text-brand-600 hover:underline">Editar</a>
                         <a href="{{ route('sesiones.acreditacion.index', [$evento['id'], $sesion['id']]) }}" class="text-brand-600 hover:underline">
                             Acreditar
