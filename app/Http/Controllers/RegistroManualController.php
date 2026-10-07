@@ -102,19 +102,66 @@ class RegistroManualController extends Controller
 
         $indices = array_flip($header);
         $participantes = [];
+        // Errores de lectura (06/10/2026) — antes, una sola celda con
+        // caracteres que no son UTF-8 (típico al exportar un CSV desde
+        // Excel en español como "CSV" en vez de "CSV UTF-8") hacía que
+        // json_encode() fallara al armar el envío a ApiRestEvent
+        // (GuzzleHttp\Exception\InvalidArgumentException: "Malformed UTF-8
+        // characters"), tumbando el archivo COMPLETO con un error genérico
+        // antes de que se creara una sola inscripción. Ahora se intenta
+        // recuperar el valor (Windows-1252 es la codificación casi segura
+        // en ese caso); si no se puede, esa fila queda en $erroresLectura
+        // y el resto del archivo se sigue procesando — mismo criterio que
+        // ApiRestEvent ya aplica fila por fila (ver reglasFilaCarga()).
+        $erroresLectura = [];
+        $filasReales = [];
+        $fila = 1; // la fila 1 es el encabezado, ya consumido arriba
         while (($row = fgetcsv($handle)) !== false) {
+            $fila++;
             if (count(array_filter($row, fn ($v) => trim((string) $v) !== '')) === 0) {
                 continue; // fila completamente vacía, se ignora
             }
             $item = [];
+            $columnaInvalida = null;
             foreach (self::COLUMNAS as $columna) {
-                $item[$columna] = trim((string) ($row[$indices[$columna]] ?? ''));
+                $valor = trim((string) ($row[$indices[$columna]] ?? ''));
+                if ($valor !== '' && !mb_check_encoding($valor, 'UTF-8')) {
+                    $convertido = mb_convert_encoding($valor, 'UTF-8', 'Windows-1252');
+                    if (mb_check_encoding($convertido, 'UTF-8')) {
+                        $valor = $convertido;
+                    } else {
+                        $columnaInvalida = $columna;
+                        break;
+                    }
+                }
+                $item[$columna] = $valor;
             }
+            if ($columnaInvalida !== null) {
+                $erroresLectura[] = [
+                    'fila' => $fila,
+                    'numero_documento' => $item['numero_documento'] ?? null,
+                    'error' => "La columna \"{$columnaInvalida}\" tiene caracteres con una codificación que no se pudo leer. Volvé a guardar el archivo como CSV UTF-8.",
+                ];
+                continue;
+            }
+            // La fila real del CSV, guardada por posición en $participantes
+            // (no el índice del array: cuando alguna fila se omite más
+            // arriba por error de lectura, la posición y la fila real del
+            // archivo dejan de coincidir) — se usa abajo para corregir los
+            // números de fila que devuelve ApiRestEvent, que los calcula
+            // sobre el array que le llega, ya sin las filas omitidas acá.
+            $filasReales[] = $fila;
             $participantes[] = $item;
         }
         fclose($handle);
 
         if (empty($participantes)) {
+            if (!empty($erroresLectura)) {
+                return redirect()->route('registro-manual.index', $evento)
+                    ->with('status', '0 inscripción(es) creada(s). ' . count($erroresLectura) . ' fila(s) con error — ver detalle abajo.')
+                    ->with('registroManualReporte', ['creados' => [], 'errores' => $erroresLectura]);
+            }
+
             return back()->withErrors(['general' => 'El archivo no tiene filas con datos.']);
         }
 
@@ -136,8 +183,20 @@ class RegistroManualController extends Controller
             return back()->withErrors($this->extractErrors($response));
         }
 
-        $creados = $response->json('creados') ?? [];
-        $errores = $response->json('errores') ?? [];
+        // ApiRestEvent numera 'fila' por la posición dentro del array que le
+        // llegó (índice + 2) — se traduce de vuelta a la fila real del CSV
+        // con $filasReales, guardado arriba en el mismo orden en que se
+        // armó $participantes.
+        $remapFila = function (array $entry) use ($filasReales): array {
+            $posicion = ($entry['fila'] ?? 2) - 2;
+            $entry['fila'] = $filasReales[$posicion] ?? $entry['fila'];
+
+            return $entry;
+        };
+
+        $creados = array_map($remapFila, $response->json('creados') ?? []);
+        $errores = array_merge($erroresLectura, array_map($remapFila, $response->json('errores') ?? []));
+        usort($errores, fn ($a, $b) => $a['fila'] <=> $b['fila']);
 
         $status = count($creados) . ' inscripción(es) creada(s), pendiente(s) de pago.';
         if (!empty($errores)) {
