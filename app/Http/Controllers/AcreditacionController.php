@@ -73,6 +73,30 @@ class AcreditacionController extends Controller
         return response()->json($response->json(), $response->status());
     }
 
+    /**
+     * Búsqueda por nombre/apellido (07/10/2026) — pedido real del
+     * organizador: con una carga masiva de "ponentes" sin ticket físico en
+     * mano, el staff en la puerta no siempre tiene el QR/referencia a
+     * mano. Devuelve una LISTA de coincidencias (ver
+     * RegistrationController::checkinBuscarPorNombre en ApiRestEvent); la
+     * vista reusa lookup()/buscarReferencia() para abrir el detalle
+     * completo de la que elija el staff.
+     */
+    public function buscarPorNombre(Request $request, int $evento, ApiRestEventClient $client): JsonResponse
+    {
+        $this->assertCanViewEvento($evento);
+
+        $q = trim((string) $request->input('q', ''));
+
+        $response = $client->forward('GET', '/event/'.$evento.'/checkin-buscar', query: ['q' => $q]);
+
+        if (!$response) {
+            return response()->json(['success' => false, 'error' => 'No se pudo conectar con el servidor.'], 502);
+        }
+
+        return response()->json($response->json(), $response->status());
+    }
+
     public function checkin(Request $request, int $evento, int $participante, ApiRestEventClient $client): JsonResponse
     {
         $this->assertCanViewEvento($evento);

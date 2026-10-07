@@ -56,6 +56,22 @@
     </form>
 </section>
 
+{{-- Búsqueda por nombre/apellido (07/10/2026) — para cuando el staff no
+     tiene el QR/referencia a mano (ej. ponentes sin ticket físico). Puede
+     haber más de una coincidencia, a diferencia de la búsqueda por
+     referencia — se listan y al elegir una se reusa buscarReferencia(). --}}
+<section class="bg-white rounded-lg shadow p-5 mb-6">
+    <h2 class="font-bold mb-3 text-sm">O buscar por nombre y apellido</h2>
+    <form id="formNombre" class="flex gap-2 flex-wrap" onsubmit="event.preventDefault(); buscarPorNombre(document.getElementById('inputNombre').value);">
+        <input type="text" id="inputNombre" placeholder="ej. Alvaro Justiniano"
+               class="flex-1 min-w-[200px] border border-slate-300 rounded-md px-3 py-2 text-sm">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-md">
+            Buscar
+        </button>
+    </form>
+    <div id="resultadoNombreLista" class="mt-3 space-y-1"></div>
+</section>
+
 {{-- Resultado de la búsqueda --}}
 <section id="resultadoSection" class="bg-white rounded-lg shadow p-5" style="display:none;">
     <h2 class="font-bold mb-1 text-sm">Resultado</h2>
@@ -76,6 +92,7 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 const ACREDITACION_LOOKUP_URL = @json(route('acreditacion.lookup', $evento['id']));
+const ACREDITACION_BUSCAR_URL = @json(route('acreditacion.buscar', $evento['id']));
 const ACREDITACION_CHECKIN_URL_BASE = @json(route('acreditacion.checkin', [$evento['id'], '__PARTICIPANTE__']));
 // Gafete por demanda (23/09/2026) — un participante puntual, ver
 // EventoController::gafetePdfParticipante() en este repo.
@@ -96,6 +113,11 @@ async function patchJson(url) {
         method: 'PATCH',
         headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
     });
+    return { status: res.status, data: await res.json() };
+}
+
+async function getJson(url) {
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
     return { status: res.status, data: await res.json() };
 }
 
@@ -126,6 +148,52 @@ async function buscarReferencia(referencia) {
     }
 
     renderParticipantes(data);
+}
+
+const ESTADO_PAGO_LISTA = {
+    paid: { label: 'Pagado', cls: 'text-green-700' },
+    pending: { label: 'Pago pendiente', cls: 'text-amber-700' },
+    error: { label: 'Pago con error', cls: 'text-red-700' },
+    cancelada: { label: 'Cancelada', cls: 'text-slate-400' },
+};
+
+async function buscarPorNombre(q) {
+    q = (q || '').trim();
+    const listaEl = document.getElementById('resultadoNombreLista');
+    if (q.length < 2) {
+        listaEl.innerHTML = '<p class="text-sm text-amber-700">Escribí al menos 2 letras.</p>';
+        return;
+    }
+    listaEl.innerHTML = '<p class="text-sm text-slate-500">Buscando…</p>';
+
+    const { status, data } = await getJson(ACREDITACION_BUSCAR_URL + '?q=' + encodeURIComponent(q));
+
+    if (status !== 200 || !data.success) {
+        listaEl.innerHTML = `<p class="text-sm text-red-600">${escHtml(data.error || 'No se pudo buscar.')}</p>`;
+        return;
+    }
+
+    const resultados = data.resultados || [];
+    if (!resultados.length) {
+        listaEl.innerHTML = '<p class="text-sm text-slate-500">Sin coincidencias.</p>';
+        return;
+    }
+
+    listaEl.innerHTML = '';
+    resultados.forEach(r => {
+        const estado = ESTADO_PAGO_LISTA[r.pagoStatus] || { label: r.pagoStatus, cls: 'text-slate-500' };
+        const fila = document.createElement('button');
+        fila.type = 'button';
+        fila.className = 'w-full text-left border border-slate-200 rounded-md px-3 py-2 text-sm hover:bg-slate-50 flex items-center justify-between gap-2 flex-wrap';
+        fila.innerHTML = `<span><span class="font-semibold">${escHtml(r.nombre)} ${escHtml(r.apellido)}</span>
+            <span class="text-xs text-slate-400 font-mono">· ${escHtml(r.referencia)}</span></span>
+            <span class="text-xs ${estado.cls}">${r.checkedInAt ? '✓ Ya acreditado' : estado.label}</span>`;
+        fila.onclick = () => {
+            buscarReferencia(r.referencia);
+            document.getElementById('resultadoSection').scrollIntoView({ behavior: 'smooth' });
+        };
+        listaEl.appendChild(fila);
+    });
 }
 
 // Etiqueta + color por estado de un pago adicional — 'pending'/'error' se
