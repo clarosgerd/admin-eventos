@@ -83,11 +83,18 @@
                 const tipo = tipoLabels[m.tipo] || m.tipo;
                 const disabled = m.anulable ? '' : 'disabled';
                 const opacidad = m.anulable ? '' : 'opacity-50';
+                // Observaciones (07/10/2026) — nota libre del cajero,
+                // texto escapado acá mismo (este archivo no tiene un
+                // escHtml() propio, a diferencia de index.php).
+                const obsTxt = (m.observaciones || '').replace(/[&<>"']/g, c => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+                }[c]));
+                const obsHtml = obsTxt ? `<br><span class="text-xs text-slate-400 italic">${obsTxt}</span>` : '';
                 return `<label class="flex items-start gap-2 text-sm border border-slate-200 rounded-md p-2 ${opacidad}">
                     <input type="radio" name="movimiento_id" value="${m.id}" ${disabled} class="mt-1">
                     <span>
                         <strong>${tipo}</strong> — ${Number(m.monto).toFixed(2)} (${m.metodoPago})<br>
-                        <span class="text-xs text-slate-500">${fecha}${m.anulable ? '' : ' — ya anulado o no anulable'}</span>
+                        <span class="text-xs text-slate-500">${fecha}${m.anulable ? '' : ' — ya anulado o no anulable'}</span>${obsHtml}
                     </span>
                 </label>`;
             }).join('');
@@ -192,6 +199,15 @@
                 const etiqueta = etiquetas[metodo] || 'en efectivo';
                 if (!confirm(`¿Confirmás el cobro ${etiqueta} de esta inscripción?`)) return;
 
+                // Observaciones (07/10/2026) — nota libre y opcional, para
+                // cualquier método de pago. Un prompt() en vez de un campo
+                // en la fila para no tocar el resto de esta pantalla (lista
+                // en vivo que se vuelve a dibujar en cada buscar()) — el
+                // flujo sigue siendo "un click" para el caso común (cajero
+                // con cola de gente), el prompt solo pide una línea y se
+                // puede dejar vacío con Cancelar o aceptando en blanco.
+                const observaciones = prompt('Observaciones (opcional) — Enter para dejar en blanco:', '') || '';
+
                 // Deshabilitar los botones de la fila (uno por método), no
                 // solo el clickeado — evita un doble cobro si el cajero
                 // apreta otro mientras la request está en vuelo.
@@ -208,7 +224,7 @@
                             'Accept': 'application/json',
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ metodo_pago: metodo }),
+                        body: JSON.stringify({ metodo_pago: metodo, observaciones: observaciones }),
                     });
                     const data = await resp.json();
                     if (data.success) {

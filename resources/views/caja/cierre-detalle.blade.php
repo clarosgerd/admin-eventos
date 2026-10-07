@@ -106,6 +106,11 @@
                         @if (!empty($m['motivo']))
                             <div class="text-xs text-slate-500 font-normal mt-0.5">{{ $m['motivo'] }}</div>
                         @endif
+                        {{-- Observaciones (07/10/2026) — nota libre y opcional,
+                             para cualquier método de pago. --}}
+                        @if (!empty($m['observaciones']))
+                            <div class="text-xs text-slate-400 font-normal italic mt-0.5">{{ $m['observaciones'] }}</div>
+                        @endif
                     </td>
                     <td class="px-3 py-2">
                         @if ($m['registrationReferencia'])

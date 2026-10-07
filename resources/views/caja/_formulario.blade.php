@@ -310,6 +310,18 @@
                 <p id="cortesiaAviso" class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-2" style="display:none">
                     El total de esta inscripción queda en <strong>Bs 0.00</strong> — la categoría/talleres elegidos se conservan igual, solo no se cobra nada.
                 </p>
+
+                {{-- Observaciones (07/10/2026) — nota libre y opcional,
+                     para cualquier método de pago (Efectivo/QR/Depósito/
+                     Organizador/Cortesía). Campo plano con `name`, viaja
+                     con el resto del <form> normal: no toca
+                     participante_json/totales_json ni el JS de cálculo. --}}
+                <div class="mt-3">
+                    <label class="block text-xs font-semibold mb-1" for="f_observaciones">Observaciones (opcional)</label>
+                    <textarea id="f_observaciones" name="observaciones" rows="2" maxlength="1000"
+                              placeholder="Ej.: pagó con billete de Bs 200, se le dio el vuelto."
+                              class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></textarea>
+                </div>
             </div>
         @endif
     </div>

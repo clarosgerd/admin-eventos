@@ -76,6 +76,9 @@ class CajaController extends Controller
             'totales'       => json_decode((string) $request->input('totales_json'), true) ?? [],
             // Método de pago en Caja (18/09/2026) — Efectivo o QR.
             'metodo_pago'   => $request->input('metodo_pago', 'EFECTIVO'),
+            // Observaciones (07/10/2026) — nota libre y opcional, para
+            // cualquier método de pago.
+            'observaciones' => $request->input('observaciones'),
         ]);
 
         if (!$response || !$response->json('success')) {
@@ -129,6 +132,9 @@ class CajaController extends Controller
         $response = $client->forward('POST', "/registrations/{$referencia}/caja/cobrar-pendiente", body: [
             // Método de pago en Caja (18/09/2026) — Efectivo o QR.
             'metodo_pago' => $request->input('metodo_pago', 'EFECTIVO'),
+            // Observaciones (07/10/2026) — nota libre y opcional, para
+            // cualquier método de pago.
+            'observaciones' => $request->input('observaciones'),
         ]);
 
         return response()->json($response?->json() ?? ['success' => false, 'error' => 'No se pudo conectar con el servidor.'], $response?->status() ?? 502);
@@ -202,6 +208,13 @@ class CajaController extends Controller
             // ApiRestEvent lo exige solo cuando el request de verdad quita
             // un taller ya cobrado (ver ActualizarInscripcionPagadaAction).
             $body['motivo'] = $request->input('motivo');
+            // Observaciones (07/10/2026) — nota libre y opcional, para
+            // cualquier método de pago. Solo tiene sentido junto al resto
+            // de este bloque (edición de una inscripción YA pagada, la
+            // única que cobra un adicional real) — editarPendiente() no
+            // cobra nada, ver CajaController::editarPendiente() en
+            // ApiRestEvent.
+            $body['observaciones'] = $request->input('observaciones');
         }
 
         $response = $client->forward('PATCH', $path, body: $body);
