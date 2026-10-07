@@ -73,7 +73,14 @@ class RegistroManualController extends Controller
     {
         $request->validate([
             'form_types_id' => ['required', 'integer'],
-            'categoria' => ['required', 'string'],
+            // 'categoria' (07/10/2026) — deja de ser obligatoria: un tipo de
+            // formulario sin categoría (Staff, Ponente, o cualquier otro
+            // armado así desde "Tipo de formulario" → requiere categoría,
+            // ej. "GAFETES STANDS") no tiene nada que elegir acá; la vista
+            // oculta el <select> en ese caso (ver registro-manual.blade.php).
+            // ApiRestEvent valida que si el tipo SÍ requiere categoría, esta
+            // llegue igual (ver RegistrationController::importarBulk()).
+            'categoria' => ['nullable', 'string'],
             'csv' => ['required', 'file', 'mimes:csv,txt', 'max:4096'],
         ]);
 

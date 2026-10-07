@@ -97,4 +97,35 @@ class RegistroManualControllerTest extends TestCase
         $this->assertSame([2, 3], array_column($reporte['creados'], 'fila'));
         $this->assertSame([4], array_column($reporte['errores'], 'fila'));
     }
+
+    /**
+     * 'categoria' (07/10/2026) deja de ser obligatoria — un tipo de
+     * formulario sin categoría (Staff, Ponente, "GAFETES STANDS", etc.)
+     * no manda nada en ese campo porque la vista oculta el <select>. Antes
+     * esta validación en sí misma ('categoria' => 'required') ya bloqueaba
+     * el envío del formulario completo para ese caso.
+     */
+    public function test_sin_categoria_el_envio_funciona_igual(): void
+    {
+        Http::fake(['*/event/7/registro-manual/bulk' => Http::response([
+            'success' => true,
+            'creados' => [['fila' => 2, 'numero_documento' => 'ABC001', 'referencia' => 'LA-TEST0001']],
+            'errores' => [],
+        ], 200)]);
+
+        $csv = self::COLUMNAS . "\n" . $this->filaCsv('Ana');
+        $archivo = UploadedFile::fake()->createWithContent('lote.csv', $csv);
+
+        $response = $this->comoSuperAdmin()->post('/eventos/7/registro-manual', [
+            'form_types_id' => 5,
+            // sin 'categoria' — equivalente a un <select> deshabilitado/oculto.
+            'csv' => $archivo,
+        ]);
+
+        $response->assertRedirect(route('registro-manual.index', 7));
+        $reporte = $response->getSession()->get('registroManualReporte');
+        $this->assertCount(1, $reporte['creados']);
+
+        Http::assertSent(fn ($request) => ($request['categoria'] ?? null) === null);
+    }
 }
