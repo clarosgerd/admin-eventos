@@ -85,4 +85,32 @@ class CajaMetodosPagoTest extends TestCase
         $this->assertStringContainsString('75.50', $html);
         $this->assertStringContainsString('30.00', $html);
     }
+
+    /**
+     * Impresión del detalle de un turno (07/10/2026) — pedido real del
+     * usuario: hasta esta fecha no había botón ni estilos de impresión,
+     * un Ctrl+P imprimía con todo el menú del panel alrededor. Mismo
+     * patrón que caja/eticket.blade.php (botón + @media print que oculta
+     * todo salvo .cierre-imprimible).
+     */
+    public function test_cierre_detalle_tiene_boton_de_imprimir_y_estilos_de_impresion(): void
+    {
+        Http::fake([
+            '*/event/7' => Http::response(['eventos' => ['id' => 7, 'name' => 'Congreso']], 200),
+            '*/event/7/caja/turnos/9' => Http::response(['success' => true, 'turno' => [
+                'id' => 9, 'cajeroId' => 1, 'cajeroNombre' => 'Ana', 'fondoInicial' => 100,
+                'abiertoAt' => now()->toIso8601String(), 'cerradoAt' => null, 'estado' => 'abierto',
+                'montoEsperado' => null, 'montoContado' => null, 'diferencia' => null, 'totalCobrado' => 0,
+                'totalEfectivo' => 0, 'totalQr' => 0, 'totalDeposito' => 0, 'totalOrganizador' => 0,
+                'totalCortesia' => 0, 'movimientos' => [],
+            ]], 200),
+        ]);
+
+        $html = $this->comoAdmin()->get('/eventos/7/caja/cierres/9')->assertOk()->getContent();
+
+        $this->assertStringContainsString('onclick="window.print()"', $html);
+        $this->assertStringContainsString('class="cierre-imprimible"', $html);
+        $this->assertStringContainsString('@media print', $html);
+        $this->assertStringContainsString('no-print', $html);
+    }
 }

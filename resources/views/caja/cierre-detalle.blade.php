@@ -12,9 +12,27 @@
     ];
 @endphp
 
-<div class="mb-4">
+{{-- Impresión (07/10/2026) — mismo patrón que caja/eticket.blade.php:
+     .no-print se oculta en pantalla de impresión, .cierre-imprimible es lo
+     ÚNICO visible al imprimir (oculta el menú/sidebar del panel sin tener
+     que tocar el layout). --}}
+<div class="mb-4 no-print flex items-center justify-between">
     <a href="{{ route('caja.cierres', $evento['id']) }}" class="text-sm text-brand-600 hover:underline">&larr; Volver a cierres de caja</a>
+    <button type="button" onclick="window.print()" class="bg-brand-600 hover:bg-brand-700 text-white rounded-md px-4 py-2 text-sm font-semibold">
+        🖨️ Imprimir
+    </button>
 </div>
+
+<style>
+    @media print {
+        body * { visibility: hidden; }
+        .cierre-imprimible, .cierre-imprimible * { visibility: visible; }
+        .cierre-imprimible { position: absolute; left: 0; top: 0; width: 100%; }
+        .no-print { display: none !important; }
+    }
+</style>
+
+<div class="cierre-imprimible">
 <h1 class="text-lg font-bold mb-1">Detalle de turno</h1>
 <p class="text-sm text-slate-500 mb-5">{{ $evento['name'] ?? '' }} — {{ $turno['cajeroNombre'] ?? ('#'.$turno['cajeroId']) }}</p>
 
@@ -129,5 +147,6 @@
             @endforelse
         </tbody>
     </table>
+</div>
 </div>
 @endsection
