@@ -86,6 +86,15 @@
     <div id="resultadoParticipantes" class="space-y-2"></div>
 </section>
 
+{{-- Imprimir gafete directo (08/10/2026) — pedido real del usuario: un
+     click que mande el gafete directo al diálogo de impresión del
+     navegador, sin pasar por una pestaña nueva. El PDF ya se sirve
+     'inline' en las dos capas (ApiRestEvent y el proxy de acá), así que
+     un iframe oculto puede cargarlo y disparar su propio print() — mismo
+     origen, misma sesión, sin problema de CORS. Un solo iframe reusado
+     en cada click, no uno por participante. --}}
+<iframe id="gafeteImprimirFrame" style="display:none"></iframe>
+
 {{-- El layout (layouts/app.blade.php) no tiene @yield('scripts')/@stack —
      el script va acá adentro, mismo criterio que usa elascenso-blade para
      páginas que necesitan JS de terceros sin bundler. --}}
@@ -276,12 +285,48 @@ function renderParticipantes(data) {
             linkGafete.className = 'text-sm text-brand-600 hover:underline whitespace-nowrap';
             linkGafete.textContent = '🖨 Imprimir gafete';
             accion.appendChild(linkGafete);
+
+            const btnImprimirDirecto = document.createElement('button');
+            btnImprimirDirecto.type = 'button';
+            btnImprimirDirecto.className = 'text-sm text-brand-600 hover:underline whitespace-nowrap';
+            btnImprimirDirecto.textContent = '🖨️ Imprimir directo';
+            btnImprimirDirecto.onclick = () => imprimirGafeteDirecto(p.id);
+            accion.appendChild(btnImprimirDirecto);
         }
 
         card.appendChild(accion);
 
         listEl.appendChild(card);
     });
+}
+
+/**
+ * Imprimir gafete directo (08/10/2026) — carga el mismo PDF que ya usa
+ * "Imprimir gafete" en un iframe oculto y, al terminar de cargar, llama a
+ * su propio print() — abre el diálogo de impresión del navegador ya
+ * posicionado sobre el gafete, sin pestaña nueva ni click extra dentro
+ * del visor de PDF.
+ */
+function imprimirGafeteDirecto(participanteId) {
+    const frame = document.getElementById('gafeteImprimirFrame');
+    const url = GAFETE_PDF_URL_BASE.replace('__PARTICIPANTE__', participanteId);
+
+    frame.onload = () => {
+        // Margen chico — onload del iframe no garantiza que el visor de
+        // PDF embebido terminó de renderizar en todos los navegadores.
+        setTimeout(() => {
+            try {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+            } catch (e) {
+                // Fallback si el navegador bloquea el print del iframe
+                // (ej. Safari viejo) — mismo comportamiento que ya existe
+                // hoy con "Imprimir gafete".
+                window.open(url, '_blank');
+            }
+        }, 300);
+    };
+    frame.src = url;
 }
 
 async function acreditarParticipante(participanteId, cardEl) {

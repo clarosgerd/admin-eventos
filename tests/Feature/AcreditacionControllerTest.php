@@ -51,4 +51,27 @@ class AcreditacionControllerTest extends TestCase
 
         $this->getJson('/eventos/7/acreditacion/buscar?q=justiniano')->assertStatus(403);
     }
+
+    /**
+     * Imprimir gafete directo (08/10/2026) — pedido real del usuario:
+     * además del link "Imprimir gafete" (pestaña nueva, sin cambios), un
+     * iframe oculto reusable + función que lo manda directo al diálogo de
+     * impresión del navegador. Smoke test de render — el comportamiento
+     * real del iframe/print() no es verificable con PHPUnit.
+     */
+    public function test_la_pantalla_trae_el_iframe_y_la_funcion_de_imprimir_directo(): void
+    {
+        Http::fake([
+            '*/event/7' => Http::response(['eventos' => ['id' => 7, 'name' => 'Congreso']], 200),
+            '*/event/7/participantes' => Http::response(['participantes' => []], 200),
+        ]);
+
+        $html = $this->comoSuperAdmin()->get('/eventos/7/acreditacion')->assertOk()->getContent();
+
+        $this->assertStringContainsString('id="gafeteImprimirFrame"', $html);
+        $this->assertStringContainsString('function imprimirGafeteDirecto', $html);
+        $this->assertStringContainsString('🖨️ Imprimir directo', $html);
+        // El link existente ("Imprimir gafete", pestaña nueva) sigue intacto.
+        $this->assertStringContainsString('🖨 Imprimir gafete', $html);
+    }
 }
