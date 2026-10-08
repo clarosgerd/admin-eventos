@@ -35,6 +35,11 @@ class CajaObservacionesTest extends TestCase
 
         $this->assertStringContainsString('name="observaciones"', $html);
         $this->assertStringContainsString('id="f_observaciones"', $html);
+        // autocomplete="off" (08/10/2026) — bug real: sin esto, el
+        // navegador autocompletaba solo lo último tipeado por el cajero en
+        // la inscripción siguiente, y podía quedar guardado en otra
+        // persona sin que nadie lo tipeara a propósito.
+        $this->assertStringContainsString('autocomplete="off"', $html);
     }
 
     public function test_store_nueva_reenvia_observaciones(): void

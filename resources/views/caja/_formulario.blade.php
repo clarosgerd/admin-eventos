@@ -318,7 +318,13 @@
                      participante_json/totales_json ni el JS de cálculo. --}}
                 <div class="mt-3">
                     <label class="block text-xs font-semibold mb-1" for="f_observaciones">Observaciones (opcional)</label>
+                    {{-- autocomplete="off" (08/10/2026) — bug real reportado
+                         por el usuario: sin esto, el navegador recuerda lo
+                         último tipeado acá y lo autocompleta solo en la
+                         inscripción siguiente; si el cajero no se da cuenta,
+                         queda guardado en una persona distinta. --}}
                     <textarea id="f_observaciones" name="observaciones" rows="2" maxlength="1000"
+                              autocomplete="off"
                               placeholder="Ej.: pagó con billete de Bs 200, se le dio el vuelto."
                               class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></textarea>
                 </div>
