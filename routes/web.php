@@ -93,6 +93,8 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::get('/eventos/{evento}/caja/cierres', [CajaController::class, 'cierres'])->name('caja.cierres');
     // Detalle de un turno (27/08/2026) — drill-down de movimientos.
     Route::get('/eventos/{evento}/caja/cierres/{turno}', [CajaController::class, 'cierreDetalle'])->name('caja.cierres.detalle');
+    // CSV del detalle de un turno (08/10/2026) — ver CajaController::cierreCsv().
+    Route::get('/eventos/{evento}/caja/cierres/{turno}/csv', [CajaController::class, 'cierreCsv'])->name('caja.cierres.csv');
 
     // Publicar: alcanzable por super_admin y por un admin scoped a su
     // propio evento — el scoping real lo valida ApiRestEvent

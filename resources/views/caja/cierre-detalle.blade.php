@@ -16,11 +16,20 @@
      .no-print se oculta en pantalla de impresión, .cierre-imprimible es lo
      ÚNICO visible al imprimir (oculta el menú/sidebar del panel sin tener
      que tocar el layout). --}}
-<div class="mb-4 no-print flex items-center justify-between">
+<div class="mb-4 no-print flex items-center justify-between gap-2 flex-wrap">
     <a href="{{ route('caja.cierres', $evento['id']) }}" class="text-sm text-brand-600 hover:underline">&larr; Volver a cierres de caja</a>
-    <button type="button" onclick="window.print()" class="bg-brand-600 hover:bg-brand-700 text-white rounded-md px-4 py-2 text-sm font-semibold">
-        🖨️ Imprimir
-    </button>
+    <div class="flex items-center gap-2">
+        {{-- Descargar CSV (08/10/2026) — mismos datos que la tabla de abajo
+             (+motivo/observaciones), pedido real del usuario junto con
+             "Imprimir". Ver CajaController::cierreCsv(). --}}
+        <a href="{{ route('caja.cierres.csv', [$evento['id'], $turno['id']]) }}"
+           class="bg-white border border-slate-300 hover:bg-slate-50 rounded-md px-4 py-2 text-sm font-semibold">
+            ⬇️ Descargar CSV
+        </a>
+        <button type="button" onclick="window.print()" class="bg-brand-600 hover:bg-brand-700 text-white rounded-md px-4 py-2 text-sm font-semibold">
+            🖨️ Imprimir
+        </button>
+    </div>
 </div>
 
 <style>

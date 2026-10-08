@@ -112,5 +112,39 @@ class CajaMetodosPagoTest extends TestCase
         $this->assertStringContainsString('class="cierre-imprimible"', $html);
         $this->assertStringContainsString('@media print', $html);
         $this->assertStringContainsString('no-print', $html);
+        $this->assertStringContainsString(route('caja.cierres.csv', [7, 9]), $html);
+    }
+
+    /**
+     * Descargar CSV del cierre (08/10/2026) — pedido real del usuario,
+     * junto con "Imprimir". Mismos datos que la tabla de movimientos
+     * (+motivo/observaciones). Ver CajaController::cierreCsv().
+     */
+    public function test_cierre_csv_descarga_los_movimientos_con_motivo_y_observaciones(): void
+    {
+        Http::fake([
+            '*/event/7' => Http::response(['eventos' => ['id' => 7, 'name' => 'Congreso']], 200),
+            '*/event/7/caja/turnos/9' => Http::response(['success' => true, 'turno' => [
+                'id' => 9, 'cajeroId' => 1, 'cajeroNombre' => 'Ana', 'fondoInicial' => 100,
+                'abiertoAt' => '2026-10-08T10:00:00-04:00', 'cerradoAt' => null, 'estado' => 'abierto',
+                'montoEsperado' => null, 'montoContado' => null, 'diferencia' => null, 'totalCobrado' => 50,
+                'totalEfectivo' => 50, 'totalQr' => 0, 'totalDeposito' => 0, 'totalOrganizador' => 0,
+                'totalCortesia' => 0,
+                'movimientos' => [[
+                    'id' => 1, 'tipo' => 'inscripcion_nueva', 'monto' => 50, 'metodoPago' => 'EFECTIVO',
+                    'motivo' => null, 'observaciones' => 'Pagó con billete de Bs 200.',
+                    'registrationReferencia' => 'LA-TEST', 'createdAt' => '2026-10-08T10:05:00-04:00', 'anulable' => true,
+                ]],
+            ]], 200),
+        ]);
+
+        $response = $this->comoAdmin()->get('/eventos/7/caja/cierres/9/csv');
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $contenido = $response->getContent();
+        $this->assertStringContainsString('LA-TEST', $contenido);
+        $this->assertStringContainsString('Inscripción nueva', $contenido);
+        $this->assertStringContainsString('Pagó con billete de Bs 200.', $contenido);
     }
 }

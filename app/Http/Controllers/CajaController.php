@@ -6,6 +6,7 @@ use App\Services\ApiRestEventClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
@@ -285,6 +286,71 @@ class CajaController extends Controller
         return view('caja.cierre-detalle', [
             'evento' => $this->fetchEvento($evento, $client),
             'turno'  => $response->json('turno'),
+        ]);
+    }
+
+    /**
+     * CSV del detalle de un turno (08/10/2026) — pedido real del usuario,
+     * junto con "Imprimir": una fila por movimiento, mismos datos que la
+     * tabla de cierre-detalle.blade.php (incluye motivo/observaciones,
+     * que la impresión ya mostraba pero el CSV es más fácil de pasar a
+     * una planilla). Reusa el mismo endpoint que cierreDetalle(), sin
+     * volver a calcular nada.
+     */
+    public function cierreCsv(int $evento, int $turno, ApiRestEventClient $client): Response
+    {
+        $response = $client->forward('GET', "/event/{$evento}/caja/turnos/{$turno}");
+
+        abort_if(!$response || !$response->json('success'), $response?->status() ?? 502, $response?->json('error') ?? 'No se pudo generar el archivo.');
+
+        $eventoData = $this->fetchEvento($evento, $client);
+        $t = $response->json('turno');
+
+        $tipoLabels = [
+            'inscripcion_nueva' => 'Inscripción nueva',
+            'cobro_pendiente'   => 'Cobro pendiente',
+            'edicion_pagada'    => 'Edición pagada',
+            'anulacion'         => 'Anulación',
+        ];
+
+        $handle = fopen('php://temp', 'w+');
+        fwrite($handle, "\xEF\xBB\xBF");
+
+        fputcsv($handle, ['Evento', $eventoData['name'] ?? '']);
+        fputcsv($handle, ['Cajero', $t['cajeroNombre'] ?? ('#'.$t['cajeroId'])]);
+        fputcsv($handle, ['Abierto', $t['abiertoAt'] ?? '']);
+        fputcsv($handle, ['Cerrado', $t['cerradoAt'] ?? '']);
+        fputcsv($handle, ['Fondo inicial', $t['fondoInicial'] ?? 0]);
+        fputcsv($handle, ['Esperado', $t['montoEsperado'] ?? '']);
+        fputcsv($handle, ['Contado', $t['montoContado'] ?? '']);
+        fputcsv($handle, ['Diferencia', $t['diferencia'] ?? '']);
+        fputcsv($handle, ['Efectivo', $t['totalEfectivo'] ?? 0]);
+        fputcsv($handle, ['QR', $t['totalQr'] ?? 0]);
+        fputcsv($handle, ['Depósito', $t['totalDeposito'] ?? 0]);
+        fputcsv($handle, ['Organizador', $t['totalOrganizador'] ?? 0]);
+        fputcsv($handle, ['Cortesía', $t['totalCortesia'] ?? 0]);
+        fputcsv($handle, []);
+
+        fputcsv($handle, ['fecha_hora', 'tipo', 'referencia', 'metodo_pago', 'monto', 'motivo', 'observaciones']);
+        foreach ($t['movimientos'] ?? [] as $m) {
+            fputcsv($handle, [
+                $m['createdAt'] ?? '',
+                $tipoLabels[$m['tipo']] ?? $m['tipo'],
+                $m['registrationReferencia'] ?? '',
+                $m['metodoPago'] ?? '',
+                $m['monto'] ?? 0,
+                $m['motivo'] ?? '',
+                $m['observaciones'] ?? '',
+            ]);
+        }
+
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"cierre-caja-turno-{$turno}.csv\"",
         ]);
     }
 
