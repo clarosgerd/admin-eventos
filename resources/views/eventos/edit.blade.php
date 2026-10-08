@@ -411,6 +411,28 @@
                         </span>
                     </label>
                 </div>
+                {{-- Interruptor por evento del certificado automático de
+                     asistencia a sesiones (07/10/2026) — pedido real del
+                     organizador: antes solo se podía apagar comentando la
+                     tarea programada entera en routes/console.php (todos
+                     los congresos a la vez). Default true (checked):
+                     ningún evento existente cambia de comportamiento salvo
+                     que alguien lo destilde. Ver
+                     EnviarCertificadosCongresoAction::handle() en
+                     ApiRestEvent — no afecta "Certificados (PDF)" (descarga
+                     manual, mecanismo aparte). --}}
+                <div class="col-span-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold">
+                        <input type="checkbox" name="certificadoAsistenciaActivo" value="1"
+                               {{ ($evento['certificadoAsistenciaActivo'] ?? true) ? 'checked' : '' }}>
+                        Enviar certificado automático de asistencia a sesiones
+                        <span class="font-normal text-slate-500">
+                            (al cerrar este congreso, manda por correo el certificado a cada participante que
+                            asistió a alguna sesión — desmarcá para que este evento no lo envíe. No afecta la
+                            descarga manual de "Certificados (PDF)")
+                        </span>
+                    </label>
+                </div>
 
                 <div class="col-span-2">
                     <label class="block text-sm font-semibold mb-1">

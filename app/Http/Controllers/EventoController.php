@@ -170,6 +170,13 @@ class EventoController extends Controller
         // que usdPrecioFijo (se configuran después, en la pestaña de edición
         // del evento ya creado). Default false/null.
         $payload['certificadoSoloNombre'] = $request->boolean('certificadoSoloNombre');
+        // Interruptor por evento del certificado automático de asistencia a
+        // sesiones (07/10/2026) — sin checkbox en create.blade.php a
+        // propósito (se configura después, en la pestaña de edición), pero
+        // a diferencia de los demás flags de este bloque el default acá es
+        // TRUE, no false: el envío automático debe seguir funcionando
+        // igual que siempre salvo que alguien lo apague a mano.
+        $payload['certificadoAsistenciaActivo'] = true;
         $payload['gafeteConfig'] = null;
 
         $response = $client->forward('POST', '/event', body: $payload);
@@ -402,6 +409,11 @@ class EventoController extends Controller
         // ancho presente) — así vuelve al tamaño estándar en vez de guardar
         // un JSON incompleto.
         $payload['certificadoSoloNombre'] = $request->boolean('certificadoSoloNombre');
+        // Interruptor por evento del certificado automático de asistencia a
+        // sesiones (07/10/2026) — checkbox real: se manda siempre (igual
+        // que certificadoSoloNombre) para que destildearlo también
+        // persista, ya que un checkbox no tildado no viaja en el POST.
+        $payload['certificadoAsistenciaActivo'] = $request->boolean('certificadoAsistenciaActivo');
         $payload['gafeteConfig'] = $request->filled('gafeteWidthCm') ? [
             // tipo (23/09/2026) — 'completo' (default) o 'label' (solo QR,
             // impresora de etiquetas). Ver plan/memoria del proyecto.

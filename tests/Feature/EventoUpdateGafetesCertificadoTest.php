@@ -97,6 +97,45 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
     }
 
     /**
+     * Interruptor por evento del certificado automático de asistencia a
+     * sesiones (07/10/2026) — checkbox real en update(): se manda siempre
+     * (igual que certificadoSoloNombre) para que destildearlo también
+     * persista.
+     */
+    public function test_update_manda_certificado_asistencia_activo_tildado_y_destildado(): void
+    {
+        Http::fake(['*/event/1' => Http::response(['success' => true], 200)]);
+
+        $this->withAdminSession()->put('/eventos/1', [
+            'name' => 'Evento Test',
+            'certificadoAsistenciaActivo' => '1',
+        ]);
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/event/1') && $request['certificadoAsistenciaActivo'] === true);
+
+        $this->withAdminSession()->put('/eventos/1', [
+            'name' => 'Evento Test',
+        ]);
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/event/1') && $request['certificadoAsistenciaActivo'] === false);
+    }
+
+    /**
+     * Sin checkbox en create.blade.php (se configura después, en edición) —
+     * a diferencia de certificadoSoloNombre (default false), este flag
+     * siempre se manda en TRUE al crear: el envío automático debe seguir
+     * funcionando igual que siempre salvo que alguien lo apague a mano.
+     */
+    public function test_store_manda_certificado_asistencia_activo_en_true(): void
+    {
+        Http::fake(['*/event' => Http::response(['success' => true], 201)]);
+
+        $this->withAdminSession()->post('/eventos', ['name' => 'Evento Nuevo']);
+
+        Http::assertSent(fn ($request) => $request->method() === 'POST' && str_ends_with($request->url(), '/event') && $request['certificadoAsistenciaActivo'] === true);
+    }
+
+    /**
      * Smoke test de renderizado real (no `php -l`, que trivialmente pasa en
      * cualquier .blade.php sin `<?php` literal), con datos de CIACRUZ
      * (evento real id=1) capturados en vivo de ApiRestEvent local —
@@ -120,6 +159,7 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Certificado solo con nombre');
+        $response->assertSee('Enviar certificado automático de asistencia a sesiones');
         $response->assertSee('Tamaño de gafete');
     }
 
