@@ -24,6 +24,41 @@ class WhatsappCuentaControllerTest extends TestCase
         return $this;
     }
 
+    /**
+     * Bug real (09/10/2026): form.blade.php usaba {{ '{{1}}' }} para
+     * mostrar literalmente la sintaxis de variable de plantilla de Meta —
+     * Blade confunde esas llaves anidadas (parse error, 500 real en
+     * local). Ningún test anterior rendereaba esta vista de verdad
+     * (store()/update() solo afirman sobre el request saliente, nunca
+     * sobre el HTML) — por eso se coló. Fix: @{{1}} (escape de Blade).
+     */
+    public function test_create_renderiza_sin_error_y_muestra_el_ejemplo_de_plantilla(): void
+    {
+        Http::fake(['*/organizadores' => Http::response(['success' => true, 'data' => []], 200)]);
+
+        $html = $this->comoSuperAdmin()->get('/whatsapp-cuentas/create')->assertOk()->getContent();
+
+        $this->assertStringContainsString('{{1}}', $html);
+        $this->assertStringNotContainsString('@{{1}}', $html);
+    }
+
+    public function test_edit_renderiza_sin_error_con_una_cuenta_existente(): void
+    {
+        Http::fake([
+            '*/organizadores' => Http::response(['success' => true, 'data' => []], 200),
+            '*/whatsapp-cuentas/1' => Http::response(['success' => true, 'data' => [
+                'id' => 1, 'organizadorId' => null, 'nombre' => 'Cuenta Test',
+                'phoneNumberId' => '123', 'businessAccountId' => null,
+                'templateName' => 'notificacion_sistema', 'templateLang' => 'es', 'activo' => true,
+            ]], 200),
+        ]);
+
+        $html = $this->comoSuperAdmin()->get('/whatsapp-cuentas/1/edit')->assertOk()->getContent();
+
+        $this->assertStringContainsString('Cuenta Test', $html);
+        $this->assertStringContainsString('{{1}}', $html);
+    }
+
     public function test_index_lista_las_cuentas(): void
     {
         Http::fake(['*/whatsapp-cuentas' => Http::response(['success' => true, 'data' => [

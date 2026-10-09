@@ -11,7 +11,7 @@
 <div class="bg-white rounded-lg shadow p-6 max-w-lg">
     <p class="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-md p-3 mb-4">
         El organizador tiene que traer su propia cuenta de WhatsApp Business ya aprobada por Meta, con UNA plantilla
-        de utilidad aprobada con un solo parámetro de texto (ej. cuerpo: <code class="bg-white px-1 rounded">{{ '{{1}}' }}</code>).
+        de utilidad aprobada con un solo parámetro de texto (ej. cuerpo: <code class="bg-white px-1 rounded">@{{1}}</code>).
         Ese parámetro es donde viaja el mensaje completo (confirmación de pago, recordatorio, etc.) — no hace falta
         aprobar una plantilla distinta por cada tipo de aviso.
     </p>
