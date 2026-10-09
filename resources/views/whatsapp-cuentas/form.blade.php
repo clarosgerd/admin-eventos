@@ -9,9 +9,19 @@
 </p>
 
 <div class="bg-white rounded-lg shadow p-6 max-w-lg">
+    {{-- Corrección 09/10/2026 — Meta dejó de aceptar una variable posicional
+         suelta ({{1}}): "La plantilla contiene parámetros variables con
+         formato incorrecto" al intentar aprobarla. Ahora exige una variable
+         CON NOMBRE y texto fijo antes/después — ver
+         WhatsappCloudApiService::NOMBRE_PARAMETRO (ApiRestEvent), que manda
+         siempre "mensaje" como parameter_name. --}}
     <p class="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-md p-3 mb-4">
         El organizador tiene que traer su propia cuenta de WhatsApp Business ya aprobada por Meta, con UNA plantilla
-        de utilidad aprobada con un solo parámetro de texto (ej. cuerpo: <code class="bg-white px-1 rounded">@{{1}}</code>).
+        de utilidad aprobada con un solo parámetro de texto <strong>con nombre</strong> — el sistema siempre manda
+        el parámetro con el nombre <code class="bg-white px-1 rounded">mensaje</code>, así que el cuerpo de la
+        plantilla en Meta tiene que usar exactamente esa variable, con texto fijo antes y después (no puede quedar
+        pegada al principio ni al final). Ejemplo de cuerpo a copiar en Meta:
+        <code class="bg-white px-1 rounded block mt-1">Pass2Go: @{{mensaje}}<br>Gracias por confiar en nosotros.</code>
         Ese parámetro es donde viaja el mensaje completo (confirmación de pago, recordatorio, etc.) — no hace falta
         aprobar una plantilla distinta por cada tipo de aviso.
     </p>

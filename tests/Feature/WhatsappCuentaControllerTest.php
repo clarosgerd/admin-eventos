@@ -31,6 +31,11 @@ class WhatsappCuentaControllerTest extends TestCase
      * local). Ningún test anterior rendereaba esta vista de verdad
      * (store()/update() solo afirman sobre el request saliente, nunca
      * sobre el HTML) — por eso se coló. Fix: @{{1}} (escape de Blade).
+     *
+     * Corrección 09/10/2026: Meta dejó de aceptar esa variable posicional
+     * suelta ({{1}}) — ahora exige una con nombre. El ejemplo del form
+     * pasó a {{mensaje}}, ver WhatsappCloudApiService::NOMBRE_PARAMETRO
+     * (ApiRestEvent).
      */
     public function test_create_renderiza_sin_error_y_muestra_el_ejemplo_de_plantilla(): void
     {
@@ -38,8 +43,8 @@ class WhatsappCuentaControllerTest extends TestCase
 
         $html = $this->comoSuperAdmin()->get('/whatsapp-cuentas/create')->assertOk()->getContent();
 
-        $this->assertStringContainsString('{{1}}', $html);
-        $this->assertStringNotContainsString('@{{1}}', $html);
+        $this->assertStringContainsString('{{mensaje}}', $html);
+        $this->assertStringNotContainsString('@{{mensaje}}', $html);
     }
 
     public function test_edit_renderiza_sin_error_con_una_cuenta_existente(): void
@@ -56,7 +61,7 @@ class WhatsappCuentaControllerTest extends TestCase
         $html = $this->comoSuperAdmin()->get('/whatsapp-cuentas/1/edit')->assertOk()->getContent();
 
         $this->assertStringContainsString('Cuenta Test', $html);
-        $this->assertStringContainsString('{{1}}', $html);
+        $this->assertStringContainsString('{{mensaje}}', $html);
     }
 
     public function test_index_lista_las_cuentas(): void
