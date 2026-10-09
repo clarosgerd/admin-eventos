@@ -111,6 +111,15 @@ class OrganizadorController extends Controller
         // activo=0, nunca un checkbox vacío que no mande nada.
         $data['activo'] = $request->boolean('activo');
 
+        // WhatsApp Business API oficial por organizador (08/10/2026) — el
+        // <select> siempre manda un valor (nunca queda "sin seleccionar"),
+        // así que no hace falta un default acá; solo se incluye si vino en
+        // el request (el form de alta todavía no lo tiene, igual que
+        // sip-bancos no se configura al crear el organizador).
+        if ($request->filled('whatsapp_canal')) {
+            $data['whatsapp_canal'] = $request->input('whatsapp_canal');
+        }
+
         return $data;
     }
 

@@ -15,6 +15,7 @@ use App\Http\Controllers\GeneroController;
 use App\Http\Controllers\RelacionContactoController;
 use App\Http\Controllers\SexoController;
 use App\Http\Controllers\SipBancoController;
+use App\Http\Controllers\WhatsappCuentaController;
 use App\Http\Controllers\SyncExternoConfigController;
 use App\Http\Controllers\SubtipoEventoController;
 use App\Http\Controllers\TipoEventoController;
@@ -316,6 +317,9 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
         // reales). Ver ApiRestEvent/brain/api_rest_event/
         // PLAN-SIP-MULTIBANCO-28082026.md.
         Route::resource('sip-bancos', SipBancoController::class)->except(['show']);
+        // WhatsApp Business API oficial por organizador (08/10/2026) —
+        // credenciales reales, mismo criterio de sensibilidad que sip-bancos.
+        Route::resource('whatsapp-cuentas', WhatsappCuentaController::class)->except(['show']);
         Route::get('/auditoria', [AuditLogController::class, 'index'])->name('auditoria.index');
         Route::get('/eventos/create', [EventoController::class, 'create'])->name('eventos.create');
         Route::post('/eventos', [EventoController::class, 'store'])->name('eventos.store');
