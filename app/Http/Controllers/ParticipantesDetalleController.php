@@ -156,6 +156,13 @@ class ParticipantesDetalleController extends Controller
         // categoría del participante, CATEGORIA = grupo de edad recalculado.
         // Congreso: IMPORTE_TALLER y DEN. (título = alias) antes de NOMBRE.
         // IMPORTE_TOTAL no cambia en ningún caso (sigue = importe + polera + taller).
+        // CORREO / OBSERVACIONES_CAJA (11/10/2026, pedido del usuario) —
+        // CORREO es el campo correo del participante (ya lo trae
+        // ParticipanteExportData); OBSERVACIONES_CAJA no es la columna
+        // OBSERVACIONES de arriba (esa queda en blanco a propósito, formato
+        // legacy) — es la nota libre que el cajero escribió al cobrar
+        // (CajaMovimiento::observaciones), concatenada si hay más de un
+        // movimiento. Vacío si la inscripción nunca pasó por Caja.
         $preguntas = collect($participantes[0]['respuestas'] ?? [])->values();
 
         // Equipo: solo en carreras, y solo si algún formulario del evento tiene el flag has_team.
@@ -180,10 +187,10 @@ class ParticipantesDetalleController extends Controller
             ...($usaNumeracion ? ['ALIAS'] : []),
             ...($mostrarEquipo ? ['EQUIPO'] : []),
             ...($mostrarPolera ? ['POLERA'] : []),
-            'SEXO', 'CELULAR', 'FECHA_INSCRIPCION', 'REFERENCIA', 'NACIMIENTO',
+            'SEXO', 'CELULAR', 'CORREO', 'FECHA_INSCRIPCION', 'REFERENCIA', 'NACIMIENTO',
             ...($usaNumeracion ? ['DISTANCIA', 'CATEGORIA'] : ['CATEGORIA']),
             'EDAD_FECHA', 'EDAD_FIN_DE_ANIO', 'EDAD_HOY',
-            'FORMA DE PAGO', 'OBSERVACIONES',
+            'FORMA DE PAGO', 'OBSERVACIONES', 'OBSERVACIONES_CAJA',
             ...$preguntas->map(fn ($r) => mb_strtoupper($r['etiqueta']))->all(),
         ]);
         foreach ($participantes as $i => $p) {
@@ -207,12 +214,13 @@ class ParticipantesDetalleController extends Controller
                 ...($usaNumeracion ? [$p['alias'] ?? ''] : []),
                 ...($mostrarEquipo ? [$p['equipo'] ?? ''] : []),
                 ...($mostrarPolera ? [$this->tallaPolera($p['polera'] ?? null)] : []),
-                $p['genero'], $p['telefono'],
+                $p['genero'], $p['telefono'], $p['correo'] ?? '',
                 $p['fechaInscripcion'], $p['referencia'], $p['fechaNacimiento'],
                 ...($usaNumeracion ? [$distancia, $p['categoriaRecalculada'] ?? ''] : [$distancia]),
                 $edadEvento, $edadFinDeAnio, $edadHoy,
                 $this->formaPagoLabel($p['tipoPago'] ?? null),
                 '',
+                $p['observacionesCaja'] ?? '',
                 ...collect($p['respuestas'] ?? [])->pluck('valor')->all(),
             ]);
         }
