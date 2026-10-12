@@ -955,10 +955,25 @@
         const ft = formTypeActual();
         let inscripcion = 0;
         let inscripcionUsd = 0;
+        // Precio ABSOLUTO de categoría (11/10/2026, bug real confirmado:
+        // LA-2B6689CA) — `inscripcion` más abajo se convierte en un DELTA
+        // en edición pagada, y nunca debe usarse para persistir
+        // participante.precioCategoria/subtotal. Sin cambio de categoría,
+        // el precio absoluto real sigue siendo PRECIO_ANTERIOR (lo que
+        // esta persona pagó de verdad, en el período que corría cuando se
+        // inscribió) — NO el precio vigente de hoy, que puede ser otro
+        // período. Mandar el delta (0) ahí hacía que
+        // SnapshotInscripcionPagadaData::recalcular() (ApiRestEvent), al
+        // no reconocer 0 como un precio real, cayera al precio vigente de
+        // HOY como mejor estimación — silenciosamente subía/bajaba el
+        // precio de categoría de alguien cuya categoría nunca se tocó,
+        // solo porque Caja editó un taller.
+        let inscripcionAbsoluta = 0;
         if (ft) {
             if (ft.requiereCategoria) {
                 const opt = document.getElementById('categoria')?.selectedOptions?.[0];
                 inscripcion = opt ? Number(opt.dataset.precio || 0) : 0;
+                inscripcionAbsoluta = inscripcion;
                 inscripcionUsd = (opt && opt.dataset.precioUsd !== '') ? Number(opt.dataset.precioUsd) : 0;
 
                 // Edición de inscripción pagada (17/09/2026) — "Inscripción"
@@ -973,12 +988,19 @@
                 // de arriesgar un cálculo con datos incompletos.
                 if (ES_EDICION_PAGADA && PRECIO_ANTERIOR !== null) {
                     const categoriaId = document.getElementById('categoria')?.value || null;
-                    inscripcion = (categoriaId === String(CATEGORIA_ANTERIOR))
-                        ? 0
-                        : Math.round((inscripcion - Number(PRECIO_ANTERIOR)) * 100) / 100;
+                    if (categoriaId === String(CATEGORIA_ANTERIOR)) {
+                        inscripcion = 0;
+                        inscripcionAbsoluta = Number(PRECIO_ANTERIOR);
+                    } else {
+                        inscripcion = Math.round((inscripcionAbsoluta - Number(PRECIO_ANTERIOR)) * 100) / 100;
+                        // inscripcionAbsoluta ya queda en el precio vigente
+                        // de la categoría NUEVA (correcto: sí cambió de
+                        // verdad, el precio real de hoy es el que aplica).
+                    }
                 }
             } else {
                 inscripcion = Number(ft.precio_base || 0);
+                inscripcionAbsoluta = inscripcion;
             }
         }
 
@@ -1094,7 +1116,7 @@
         document.getElementById('r_total').textContent = esCortesia ? '0.00' : (USD_PRECIO_FIJO ? totalUsd : total).toFixed(2);
 
         return {
-            inscripcion, donacion, souvenirs: souvenirsTotal, talleres: talleresTotal, fee,
+            inscripcion, inscripcionAbsoluta, donacion, souvenirs: souvenirsTotal, talleres: talleresTotal, fee,
             descuento, descuento_registrante: 0, grand_total: total,
             moneda_pago: USD_PRECIO_FIJO ? 'USD' : 'BOB',
             tipo_cambio_aplicado: null,
@@ -1201,11 +1223,16 @@
             talleres: collectSelectedTalleres(),
             answers: [],
             categoria: categoriaSelect && categoriaSelect.value ? categoriaSelect.value : '0',
-            precioCategoria: totales.inscripcion,
+            // precioCategoria/subtotal (11/10/2026, fix bug real
+            // LA-2B6689CA) — precio ABSOLUTO, nunca el delta
+            // (`totales.inscripcion`, que en edición pagada es 0 cuando la
+            // categoría no cambió). Ver comentario de inscripcionAbsoluta
+            // en calcular().
+            precioCategoria: totales.inscripcionAbsoluta,
             donacion: totales.donacion,
             promoDescuento: totales.descuento,
             promoCodigo: document.getElementById('f_promoCodigo')?.value || '',
-            subtotal: totales.inscripcion,
+            subtotal: totales.inscripcionAbsoluta,
             equipoId: document.getElementById('f_equipoId')?.value ? Number(document.getElementById('f_equipoId').value) : null,
             quiereDelivery: !!document.getElementById('f_quiereDelivery')?.checked,
             deliveryLat: document.getElementById('f_deliveryLat')?.value ? Number(document.getElementById('f_deliveryLat').value) : null,
