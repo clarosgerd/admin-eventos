@@ -49,6 +49,8 @@ use App\Http\Controllers\PromoCodeReporteController;
 use App\Http\Controllers\AsistenciaSesionController;
 use App\Http\Controllers\SesionCongresoController;
 use App\Http\Controllers\TallerCongresoController;
+use App\Http\Controllers\TallerPricePeriodController;
+use App\Http\Controllers\TallerComboController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RegistroManualController;
 use App\Http\Controllers\ReporteTrazabilidadController;
@@ -294,6 +296,20 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::post('/eventos/{evento}/talleres', [TallerCongresoController::class, 'store'])->name('talleres.store');
     Route::put('/eventos/{evento}/talleres/{taller}', [TallerCongresoController::class, 'update'])->name('talleres.update');
     Route::delete('/eventos/{evento}/talleres/{taller}', [TallerCongresoController::class, 'destroy'])->name('talleres.destroy');
+
+    // Precios por período de un taller (12/10/2026, pedido del usuario) —
+    // mismo criterio que categorias.periodos.*.
+    Route::get('/eventos/{evento}/talleres/{taller}/periodos', [TallerPricePeriodController::class, 'index'])->name('talleres.periodos.index');
+    Route::post('/eventos/{evento}/talleres/{taller}/periodos', [TallerPricePeriodController::class, 'store'])->name('talleres.periodos.store');
+    Route::put('/eventos/{evento}/talleres/{taller}/periodos/{tallerPricePeriod}', [TallerPricePeriodController::class, 'update'])->name('talleres.periodos.update');
+    Route::delete('/eventos/{evento}/talleres/{taller}/periodos/{tallerPricePeriod}', [TallerPricePeriodController::class, 'destroy'])->name('talleres.periodos.destroy');
+
+    // Combos de talleres (12/10/2026, pedido del usuario) — "Taller A +
+    // Taller B por el precio de 1" o "por $300 fijo".
+    Route::get('/eventos/{evento}/taller-combos', [TallerComboController::class, 'index'])->name('taller-combos.index');
+    Route::post('/eventos/{evento}/taller-combos', [TallerComboController::class, 'store'])->name('taller-combos.store');
+    Route::put('/eventos/{evento}/taller-combos/{tallerCombo}', [TallerComboController::class, 'update'])->name('taller-combos.update');
+    Route::delete('/eventos/{evento}/taller-combos/{tallerCombo}', [TallerComboController::class, 'destroy'])->name('taller-combos.destroy');
 
     // Sync de resultados desde ChronoTrack — ver
     // brain/groovy-chasing-ladybug.md Parte B. Mismo criterio de permisos
