@@ -86,7 +86,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div><label class="block text-xs font-semibold mb-1">Nombre *</label>
                 <input type="text" id="f_nombre" value="{{ $prefill['nombre'] ?? '' }}" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
-            <div><label class="block text-xs font-semibold mb-1">Apellido *</label>
+            <div id="f_apellidoGroup"><label class="block text-xs font-semibold mb-1">Apellido *</label>
                 <input type="text" id="f_apellido" value="{{ $prefill['apellido'] ?? '' }}" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
             <div id="f_aliasGroup">
                 <label class="block text-xs font-semibold mb-1" id="f_aliasLabel">Alias</label>
@@ -108,7 +108,7 @@
                 </select>
                 <input type="text" id="f_aliasTituloOtro" placeholder="Especificar título" style="display:none" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm mt-1">
             </div>
-            <div><label class="block text-xs font-semibold mb-1">Género *</label>
+            <div id="f_generoGroup"><label class="block text-xs font-semibold mb-1">Género *</label>
                 {{-- Bug real 25/08/2026 (reportado por el usuario: "muchas
                      personas de sexo femenino registraron masculino") — este
                      select no tenía opción vacía ni `required`, y "Masculino"
@@ -141,19 +141,19 @@
                     <p id="personaFoundBanner" class="text-xs text-brand-700 mt-1" style="display:none"></p>
                 @endif
             </div>
-            <div><label class="block text-xs font-semibold mb-1">Día nac. *</label>
+            <div class="f-campo-nacimiento"><label class="block text-xs font-semibold mb-1">Día nac. *</label>
                 <input type="number" min="1" max="31" id="f_nacDia" value="{{ $prefill['nacimientoDia'] ?? '' }}" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
-            <div><label class="block text-xs font-semibold mb-1">Mes nac. *</label>
+            <div class="f-campo-nacimiento"><label class="block text-xs font-semibold mb-1">Mes nac. *</label>
                 <input type="number" min="1" max="12" id="f_nacMes" value="{{ $prefill['nacimientoMes'] ?? '' }}" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
-            <div><label class="block text-xs font-semibold mb-1">Año nac. *</label>
+            <div class="f-campo-nacimiento"><label class="block text-xs font-semibold mb-1">Año nac. *</label>
                 <input type="number" min="1900" max="{{ date('Y') }}" id="f_nacAnio" value="{{ $prefill['nacimientoAnio'] ?? '' }}" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
             <div><label class="block text-xs font-semibold mb-1">Correo *</label>
                 <input type="email" id="f_correo" value="{{ $prefill['correo'] ?? '' }}" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
-            <div><label class="block text-xs font-semibold mb-1">Teléfono</label>
+            <div id="f_telefonoGroup"><label class="block text-xs font-semibold mb-1">Teléfono</label>
                 <input type="text" id="f_telefono" value="{{ $prefill['telefono'] ?? '' }}" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
-            <div><label class="block text-xs font-semibold mb-1">Dirección</label>
+            <div id="f_direccionGroup"><label class="block text-xs font-semibold mb-1">Dirección</label>
                 <input type="text" id="f_direccion" value="{{ $prefill['direccion'] ?? '' }}" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
-            <div><label class="block text-xs font-semibold mb-1">Ciudad</label>
+            <div id="f_ciudadGroup"><label class="block text-xs font-semibold mb-1">Ciudad</label>
                 <input type="text" id="f_ciudad" value="{{ $prefill['ciudad'] ?? '' }}" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
         </div>
     </div>
@@ -423,6 +423,59 @@
         // a ejecutarse nunca, no solo esta función.
         const pre = @json($prefill['categoria'] ?? null);
         if (pre) select.value = String(pre);
+    }
+
+    // Campos ocultables por form_type (13/10/2026, pedido del usuario:
+    // "los formularios de caja deberian ser iguales a lo que se configuro
+    // en el admin") — mismo mecanismo que ya usa el formulario público
+    // (elascenso/event/index.php: CAMPOS_OCULTABLES_IDS/APELLIDO_NEUTRO/
+    // GENERO_NEUTRO/NACIMIENTO_NEUTRO/applyCamposOcultos()), portado acá
+    // porque Caja lo ignoraba por completo — los 7 campos quedaban siempre
+    // visibles y varios `required` a nivel HTML, aunque el form_type (ej.
+    // staff/ponente) los tuviera marcados como ocultos en admin-eventos.
+    const CAMPOS_OCULTABLES_GROUPS = {
+        apellido:   ['f_apellidoGroup'],
+        alias:      ['f_aliasGroup'],
+        genero:     ['f_generoGroup'],
+        nacimiento: null, // usa la clase .f-campo-nacimiento, ver abajo
+        telefono:   ['f_telefonoGroup'],
+        direccion:  ['f_direccionGroup'],
+        ciudad:     ['f_ciudadGroup'],
+    };
+    const CAMPOS_OCULTABLES_REQUIRED_IDS = {
+        apellido:   ['f_apellido'],
+        genero:     ['f_genero'],
+        nacimiento: ['f_nacDia', 'f_nacMes', 'f_nacAnio'],
+    };
+    const APELLIDO_NEUTRO   = '-';
+    const GENERO_NEUTRO     = 'Otro';
+    const NACIMIENTO_NEUTRO = { dia: 1, mes: 1, anio: 1900 };
+
+    function campoOculto(ft, campo) {
+        return !!(ft && ft.camposOcultos && ft.camposOcultos.includes(campo));
+    }
+
+    function applyCamposOcultos(ft) {
+        Object.keys(CAMPOS_OCULTABLES_GROUPS).forEach(campo => {
+            const oculto = campoOculto(ft, campo);
+            const groupIds = CAMPOS_OCULTABLES_GROUPS[campo];
+            if (groupIds) {
+                groupIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = oculto ? 'none' : '';
+                });
+            } else if (campo === 'nacimiento') {
+                document.querySelectorAll('.f-campo-nacimiento').forEach(el => { el.style.display = oculto ? 'none' : ''; });
+            }
+            // Un input oculto no puede seguir siendo `required` a nivel
+            // HTML, o el navegador bloquea el submit con un campo
+            // invisible marcado obligatorio (distinto del formulario
+            // público, donde estos inputs nunca tuvieron `required` nativo).
+            (CAMPOS_OCULTABLES_REQUIRED_IDS[campo] || []).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.required = !oculto;
+            });
+        });
     }
 
     function renderEquipoDelivery(ft) {
@@ -701,6 +754,13 @@
     // servidor, ver ValidarSeleccionesTallerAction en ApiRestEvent).
     // ────────────────────────────────────────────────────────────
     function getEventTalleres() {
+        // Staff/ponente/expositor nunca se inscriben como asistentes a
+        // talleres (13/10/2026, mismo criterio que elascenso/event/index.php
+        // — ver comentario ahí) — sin esto, Caja dejaba elegir talleres
+        // para estos form_types y el alta se rechazaba con 422 del lado
+        // de ApiRestEvent (FormType::sinTalleres()), un callejón sin salida.
+        const ft = formTypeActual();
+        if (ft && (ft.esExpositor || ft.esStaff || ft.esPonente)) return [];
         return (EVENTO.talleres || []).filter(t => t.activo !== false);
     }
 
@@ -1225,6 +1285,7 @@
     function actualizarSecciones() {
         const ft = formTypeActual();
         renderCategoria(ft);
+        applyCamposOcultos(ft);
         renderEquipoDelivery(ft);
         renderContactoEmergencia(ft);
         toggleAliasTituloMode(ft);
@@ -1277,25 +1338,32 @@
         }
 
         const totales = calcular();
+        const ft = formTypeActual();
         const categoriaSelect = document.getElementById('categoria');
+        // Valores neutros para campos ocultos (13/10/2026) — mismo
+        // criterio que applyCamposOcultos()/saveParticipant() en
+        // elascenso/event/index.php: la BD exige apellido/género/fecha de
+        // nacimiento (NOT NULL), así que un campo oculto manda un
+        // sentinel neutro en vez de lo que haya quedado en el input
+        // (vacío, o lo que sea que tenía antes de ocultarse).
         const participante = {
             nombre: document.getElementById('f_nombre').value,
-            apellido: document.getElementById('f_apellido').value,
-            alias: document.getElementById('f_alias').value,
-            genero: document.getElementById('f_genero').value,
+            apellido: campoOculto(ft, 'apellido') ? APELLIDO_NEUTRO : document.getElementById('f_apellido').value,
+            alias: campoOculto(ft, 'alias') ? '' : document.getElementById('f_alias').value,
+            genero: campoOculto(ft, 'genero') ? GENERO_NEUTRO : document.getElementById('f_genero').value,
             tipoDocumento: document.getElementById('f_tipoDocumento').value,
             numeroDocumento: document.getElementById('f_numeroDocumento').value,
             polera: '', precioPolera: 0,
-            nacimiento: {
+            nacimiento: campoOculto(ft, 'nacimiento') ? { ...NACIMIENTO_NEUTRO } : {
                 dia: Number(document.getElementById('f_nacDia').value),
                 mes: Number(document.getElementById('f_nacMes').value),
                 anio: Number(document.getElementById('f_nacAnio').value),
             },
-            edad: Math.max(0, new Date().getFullYear() - Number(document.getElementById('f_nacAnio').value || 0)),
+            edad: campoOculto(ft, 'nacimiento') ? 0 : Math.max(0, new Date().getFullYear() - Number(document.getElementById('f_nacAnio').value || 0)),
             correo: document.getElementById('f_correo').value,
-            direccion: document.getElementById('f_direccion').value,
-            ciudad: document.getElementById('f_ciudad').value,
-            telefono: document.getElementById('f_telefono').value,
+            direccion: campoOculto(ft, 'direccion') ? '' : document.getElementById('f_direccion').value,
+            ciudad: campoOculto(ft, 'ciudad') ? '' : document.getElementById('f_ciudad').value,
+            telefono: campoOculto(ft, 'telefono') ? '' : document.getElementById('f_telefono').value,
             contacto_emergencia: {
                 nombre: document.getElementById('f_ceNombre').value,
                 celular: document.getElementById('f_ceCelular').value,
