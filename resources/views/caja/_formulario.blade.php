@@ -717,6 +717,79 @@
         return new Set(PREFILL_TALLERES.map(x => Number(x.sesionCongresoId)));
     }
 
+    /**
+     * Combos de talleres por categoría (13/10/2026, bug real confirmado:
+     * "Taller 1 + Taller 2" tenía un combo cargado a Bs1.00 para la
+     * categoría del participante, pero Caja cobraba Bs2.00 — el "Resumen
+     * de cobro" nunca implementó combos, a diferencia del formulario
+     * público (ver resolverCombosTallerJS en elascenso/event/index.php,
+     * réplica EXACTA de este mismo algoritmo). El backend
+     * (CrearInscripcionAction/RegistrationService) siempre recalculó el
+     * precio real con combo aplicado — el número que mostraba y cobraba
+     * Caja simplemente no coincidía con lo que quedaba persistido.
+     * ApiRestEvent sigue siendo la única autoridad real, esto es preview.
+     */
+    function precioComboParaCategoriaJS(combo, categoriaId) {
+        const precios = combo.precios || [];
+        let defaultPrecio = null;
+        for (const p of precios) {
+            if (p.categoriaId === null) { defaultPrecio = Number(p.precio); continue; }
+            if (categoriaId !== null && categoriaId !== undefined && String(p.categoriaId) === String(categoriaId)) {
+                return Number(p.precio);
+            }
+        }
+        return defaultPrecio;
+    }
+
+    function resolverCombosTallerJS(selecciones, categoriaId) {
+        const combos = (EVENTO.tallerCombos || [])
+            .filter(c => c.vigente)
+            .map(c => ({ ...c, _precioResuelto: precioComboParaCategoriaJS(c, categoriaId) }))
+            .filter(c => c._precioResuelto !== null);
+        if (!combos.length || !selecciones.length) return selecciones;
+
+        const indicePorTaller = {};
+        selecciones.forEach((s, i) => {
+            const tid = s.taller_id;
+            if (!(tid in indicePorTaller) || s.unit_price < selecciones[indicePorTaller[tid]].unit_price) {
+                indicePorTaller[tid] = i;
+            }
+        });
+
+        const candidatos = [];
+        combos.forEach(combo => {
+            const tallerIds = (combo.tallerIds || []).slice().sort((a, b) => a - b);
+            if (!tallerIds.length || !tallerIds.every(tid => tid in indicePorTaller)) return;
+            const suma = tallerIds.reduce((a, tid) => a + selecciones[indicePorTaller[tid]].unit_price, 0);
+            candidatos.push({ combo, tallerIds, suma, ahorro: suma - combo._precioResuelto });
+        });
+        candidatos.sort((a, b) => (b.ahorro - a.ahorro) || (a.combo.id - b.combo.id));
+
+        const consumidos = new Set();
+        candidatos.forEach(c => {
+            if (c.tallerIds.some(tid => consumidos.has(tid))) return;
+
+            const descuentoTotal = Math.max(0, Math.round(c.ahorro * 100) / 100);
+            const indices = c.tallerIds.map(tid => indicePorTaller[tid]);
+            let acumulado = 0;
+            indices.forEach((idx, pos) => {
+                const unit = selecciones[idx].unit_price;
+                let discount;
+                if (pos === indices.length - 1) discount = Math.round((descuentoTotal - acumulado) * 100) / 100;
+                else if (c.suma > 0) discount = Math.round((descuentoTotal * unit / c.suma) * 100) / 100;
+                else discount = 0;
+                acumulado += discount;
+
+                selecciones[idx].discount = discount;
+                selecciones[idx].total = Math.round((unit - discount) * 100) / 100;
+                selecciones[idx].taller_combo_id = c.combo.id;
+            });
+            c.tallerIds.forEach(tid => consumidos.add(tid));
+        });
+
+        return selecciones;
+    }
+
     function collectSelectedTalleres() {
         const talleres = getEventTalleres();
         const porId = Object.fromEntries(talleres.map(t => [String(t.id), t]));
@@ -741,9 +814,13 @@
                 hora_inicio: (sesion.horaInicio || '').slice(0, 5),
                 hora_fin: (sesion.horaFin || '').slice(0, 5),
                 unit_price: unitPrice,
+                discount: 0,
+                total: unitPrice,
+                taller_combo_id: null,
             });
         });
-        return out;
+        const categoriaIdActual = document.getElementById('categoria')?.value || null;
+        return resolverCombosTallerJS(out, categoriaIdActual);
     }
 
     function timeToMinutes(t) {
@@ -826,10 +903,12 @@
         removidos.forEach(t => lineas.push(`− Se quita: ${t.tallerNombre || ('Taller #' + t.tallerId)} (Bs ${Number(t.total || 0).toFixed(2)})`));
         agregados.forEach(a => {
             const nombre = talleresPorSesion[Number(a.sesion_congreso_id)]?.taller?.nombre || ('Taller #' + a.taller_id);
-            lineas.push(`+ Se agrega: ${nombre} (Bs ${Number(a.unit_price || 0).toFixed(2)})`);
+            lineas.push(`+ Se agrega: ${nombre} (Bs ${Number(a.total ?? a.unit_price ?? 0).toFixed(2)})`);
         });
         const removidoTotal = removidos.reduce((sum, t) => sum + Number(t.total || 0), 0);
-        const agregadoTotal = agregados.reduce((sum, a) => sum + Number(a.unit_price || 0), 0);
+        // Combos de talleres (13/10/2026) — mismo criterio que
+        // talleresAgregadoTotal en calcular(): sumar `total` post-combo.
+        const agregadoTotal = agregados.reduce((sum, a) => sum + Number(a.total ?? a.unit_price ?? 0), 0);
         const diferencia = Math.round((agregadoTotal - removidoTotal) * 100) / 100;
         lineas.push(`<strong>Diferencia por talleres: Bs ${diferencia.toFixed(2)} ${diferencia < 0 ? '(devolución)' : diferencia > 0 ? '(a cobrar)' : ''}</strong>`);
 
@@ -1028,7 +1107,10 @@
         const talleresParaTotal = ES_EDICION_PAGADA
             ? talleresSeleccionados.filter(s => !TALLERES_ANTERIORES_IDS.has(Number(s.sesion_congreso_id)))
             : talleresSeleccionados;
-        const talleresAgregadoTotal = talleresParaTotal.reduce((sum, s) => sum + Number(s.unit_price || 0), 0);
+        // Combos de talleres (13/10/2026) — sumar `total` (post-descuento
+        // de combo, resuelto por resolverCombosTallerJS() en
+        // collectSelectedTalleres()), no `unit_price` crudo.
+        const talleresAgregadoTotal = talleresParaTotal.reduce((sum, s) => sum + Number(s.total ?? s.unit_price ?? 0), 0);
         // Quitar/cambiar un taller ya pagado (29/09/2026, solo Caja) — mismo
         // criterio que el backend (ActualizarInscripcionPagadaAction): resta
         // el precio YA PAGADO (persistido en PREFILL_TALLERES, no
