@@ -34,6 +34,7 @@
         <thead class="bg-slate-50 text-left">
             <tr>
                 <th class="px-4 py-2">Nombre</th>
+                <th class="px-4 py-2">Categoría</th>
                 <th class="px-4 py-2">Precio</th>
                 <th class="px-4 py-2">Precio USD <span class="font-normal text-slate-400">(opc.)</span></th>
                 <th class="px-4 py-2">Desde</th>
@@ -47,6 +48,17 @@
                     <td class="px-4 py-2">
                         <input type="text" name="nombre" value="{{ $periodo['nombre'] }}" required
                                form="periodo-form-{{ $periodo['id'] }}" class="border border-slate-300 rounded px-2 py-1 w-32">
+                    </td>
+                    <td class="px-4 py-2">
+                        {{-- Período por categoría (13/10/2026) — opcional; sin
+                             elegir, sigue siendo general (aplica a cualquier
+                             categoría sin período propio). --}}
+                        <select name="category_id" form="periodo-form-{{ $periodo['id'] }}" class="border border-slate-300 rounded px-2 py-1 text-sm">
+                            <option value="">— General —</option>
+                            @foreach ($categorias as $categoria)
+                                <option value="{{ $categoria['id'] }}" @selected(($periodo['categoriaId'] ?? null) == $categoria['id'])>{{ $categoria['name'] }}</option>
+                            @endforeach
+                        </select>
                     </td>
                     <td class="px-4 py-2">
                         <input type="number" step="0.01" min="0" name="price" value="{{ $periodo['price'] }}" required
@@ -79,7 +91,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Sin períodos cargados — se cobra el precio base tal cual.</td></tr>
+                <tr><td colspan="7" class="px-4 py-6 text-center text-slate-400">Sin períodos cargados — se cobra el precio base tal cual.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -92,6 +104,19 @@
         <div>
             <label class="block text-sm font-medium mb-1">Nombre</label>
             <input type="text" name="nombre" required class="border border-slate-300 rounded px-2 py-1.5 w-full" placeholder="Preventa">
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">Categoría <span class="font-normal text-slate-400">(opcional)</span></label>
+            <select name="category_id" class="border border-slate-300 rounded px-2 py-1.5 w-full">
+                <option value="">— General (todas las categorías) —</option>
+                @foreach ($categorias as $categoria)
+                    <option value="{{ $categoria['id'] }}">{{ $categoria['name'] }}</option>
+                @endforeach
+            </select>
+            <p class="text-xs text-slate-400 mt-1">
+                Con una categoría elegida, este período solo afecta a esa categoría (nunca mira el general como
+                respaldo). Sin elegir, sigue siendo general.
+            </p>
         </div>
         <div>
             <label class="block text-sm font-medium mb-1">Precio</label>

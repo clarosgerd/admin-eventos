@@ -20,17 +20,24 @@ class TallerPricePeriodController extends Controller
         $response = $client->forward('GET', "/event/{$evento}/talleres/{$taller}");
         $tallerData = $response?->json('data') ?? [];
 
+        // Categorías del evento (13/10/2026) — para poblar el <select> de
+        // categoría del form de períodos, mismo patrón que
+        // TallerComboController::index() para precios por categoría.
+        $eventoResponse = $client->forward('GET', "/event/{$evento}");
+        $categorias = ($eventoResponse?->json('eventos') ?? [])['categories'] ?? [];
+
         return view('eventos.talleres.periodos', [
-            'eventoId'  => $evento,
-            'tallerId'  => $taller,
-            'taller'    => $tallerData,
-            'periodos'  => $tallerData['periodos'] ?? [],
+            'eventoId'   => $evento,
+            'tallerId'   => $taller,
+            'taller'     => $tallerData,
+            'periodos'   => $tallerData['periodos'] ?? [],
+            'categorias' => $categorias,
         ]);
     }
 
     public function store(Request $request, int $evento, int $taller, ApiRestEventClient $client): RedirectResponse
     {
-        $response = $client->forward('POST', "/taller/{$taller}/periodos", body: $request->only('nombre', 'price', 'price_usd', 'fecha_desde', 'fecha_hasta'));
+        $response = $client->forward('POST', "/taller/{$taller}/periodos", body: $request->only('nombre', 'category_id', 'price', 'price_usd', 'fecha_desde', 'fecha_hasta'));
 
         if (!$response || !$response->json('success')) {
             return back()->withErrors($this->extractErrors($response));
@@ -41,7 +48,7 @@ class TallerPricePeriodController extends Controller
 
     public function update(Request $request, int $evento, int $taller, int $tallerPricePeriod, ApiRestEventClient $client): RedirectResponse
     {
-        $response = $client->forward('PUT', "/taller-price-period/{$tallerPricePeriod}", body: $request->only('nombre', 'price', 'price_usd', 'fecha_desde', 'fecha_hasta'));
+        $response = $client->forward('PUT', "/taller-price-period/{$tallerPricePeriod}", body: $request->only('nombre', 'category_id', 'price', 'price_usd', 'fecha_desde', 'fecha_hasta'));
 
         if (!$response || !$response->json('success')) {
             return back()->withErrors($this->extractErrors($response));
