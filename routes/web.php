@@ -51,6 +51,7 @@ use App\Http\Controllers\SesionCongresoController;
 use App\Http\Controllers\TallerCongresoController;
 use App\Http\Controllers\TallerPricePeriodController;
 use App\Http\Controllers\TallerComboController;
+use App\Http\Controllers\TallerComboPrecioController;
 use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RegistroManualController;
 use App\Http\Controllers\ReporteTrazabilidadController;
@@ -310,6 +311,11 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::post('/eventos/{evento}/taller-combos', [TallerComboController::class, 'store'])->name('taller-combos.store');
     Route::put('/eventos/{evento}/taller-combos/{tallerCombo}', [TallerComboController::class, 'update'])->name('taller-combos.update');
     Route::delete('/eventos/{evento}/taller-combos/{tallerCombo}', [TallerComboController::class, 'destroy'])->name('taller-combos.destroy');
+
+    // Precio por categoría de un combo (13/10/2026, pedido del usuario).
+    Route::post('/eventos/{evento}/taller-combos/{tallerCombo}/precios', [TallerComboPrecioController::class, 'store'])->name('taller-combos.precios.store');
+    Route::put('/eventos/{evento}/taller-combos/{tallerCombo}/precios/{tallerComboPrecio}', [TallerComboPrecioController::class, 'update'])->name('taller-combos.precios.update');
+    Route::delete('/eventos/{evento}/taller-combos/{tallerCombo}/precios/{tallerComboPrecio}', [TallerComboPrecioController::class, 'destroy'])->name('taller-combos.precios.destroy');
 
     // Sync de resultados desde ChronoTrack — ver
     // brain/groovy-chasing-ladybug.md Parte B. Mismo criterio de permisos

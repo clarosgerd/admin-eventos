@@ -33,9 +33,12 @@ class TallerComboController extends Controller
         $combos = $combosResponse?->json('data') ?? [];
 
         return view('eventos.talleres.combos', [
-            'evento'   => $eventoData,
-            'talleres' => $talleres,
-            'combos'   => $combos,
+            'evento'     => $eventoData,
+            'talleres'   => $talleres,
+            'combos'     => $combos,
+            // Precio por categoría (13/10/2026) — categorías del evento
+            // para poblar el <select> del form de precios.
+            'categorias' => $eventoData['categories'] ?? [],
         ]);
     }
 
@@ -43,8 +46,11 @@ class TallerComboController extends Controller
     {
         $this->assertCanViewEvento($evento);
 
+        // El precio no viaja acá (13/10/2026) — el mismo combo puede
+        // costar distinto según la categoría, se carga aparte vía
+        // TallerComboPrecioController una vez creado el combo.
         $response = $client->forward('POST', "/event/{$evento}/taller-combos", body: $request->only(
-            'nombre', 'precio_combo', 'price_usd_combo', 'fecha_desde', 'fecha_hasta', 'activo', 'taller_ids'
+            'nombre', 'fecha_desde', 'fecha_hasta', 'activo', 'taller_ids'
         ));
 
         if (!$response || !$response->json('success')) {
@@ -59,7 +65,7 @@ class TallerComboController extends Controller
         $this->assertCanViewEvento($evento);
 
         $response = $client->forward('PUT', "/taller-combo/{$tallerCombo}", body: $request->only(
-            'nombre', 'precio_combo', 'price_usd_combo', 'fecha_desde', 'fecha_hasta', 'activo', 'taller_ids'
+            'nombre', 'fecha_desde', 'fecha_hasta', 'activo', 'taller_ids'
         ));
 
         if (!$response || !$response->json('success')) {

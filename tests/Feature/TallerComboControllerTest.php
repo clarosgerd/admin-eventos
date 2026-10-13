@@ -25,16 +25,22 @@ class TallerComboControllerTest extends TestCase
     private function fakeEventoYTalleres(): void
     {
         Http::fake([
-            '*/event/7' => Http::response(['eventos' => ['id' => 7, 'name' => 'Congreso'], 'success' => true], 200),
+            '*/event/7' => Http::response(['eventos' => [
+                'id' => 7, 'name' => 'Congreso',
+                'categories' => [['id' => 90, 'name' => 'Especialistas'], ['id' => 91, 'name' => 'Residentes']],
+            ], 'success' => true], 200),
             '*/event/7/talleres' => Http::response(['success' => true, 'data' => [
                 ['id' => 11, 'nombre' => 'Taller A'],
                 ['id' => 12, 'nombre' => 'Taller B'],
             ]], 200),
             '*/event/7/taller-combos' => Http::response(['success' => true, 'data' => [
                 [
-                    'id' => 1, 'eventoId' => 7, 'nombre' => 'Combo A+B', 'precioCombo' => 100,
-                    'priceUsdCombo' => null, 'fechaDesde' => null, 'fechaHasta' => null,
+                    'id' => 1, 'eventoId' => 7, 'nombre' => 'Combo A+B',
+                    'fechaDesde' => null, 'fechaHasta' => null,
                     'activo' => true, 'vigente' => true, 'tallerIds' => [11, 12],
+                    'precios' => [
+                        ['id' => 5, 'categoriaId' => 90, 'categoriaNombre' => 'Especialistas', 'precio' => 1000],
+                    ],
                 ],
             ]], 200),
         ]);
@@ -49,14 +55,16 @@ class TallerComboControllerTest extends TestCase
         $this->assertStringContainsString('Combo A+B', $html);
         $this->assertStringContainsString('Taller A', $html);
         $this->assertStringContainsString('Taller B', $html);
+        $this->assertStringContainsString('Especialistas', $html);
+        $this->assertStringContainsString('1,000.00', $html);
     }
 
-    public function test_store_reenvia_el_payload_con_taller_ids(): void
+    public function test_store_reenvia_el_payload_con_taller_ids_sin_precio(): void
     {
         Http::fake(['*/event/7/taller-combos' => Http::response(['success' => true, 'data' => []], 201)]);
 
         $this->comoSuperAdmin()->post('/eventos/7/taller-combos', [
-            'nombre' => 'Combo A+B', 'precio_combo' => 100,
+            'nombre' => 'Combo A+B',
             'taller_ids' => ['11', '12'], 'activo' => '1',
         ])->assertRedirect();
 
@@ -64,7 +72,8 @@ class TallerComboControllerTest extends TestCase
             return str_contains($request->url(), '/event/7/taller-combos')
                 && $request->method() === 'POST'
                 && $request['nombre'] === 'Combo A+B'
-                && $request['taller_ids'] === ['11', '12'];
+                && $request['taller_ids'] === ['11', '12']
+                && ! array_key_exists('precio_combo', $request->data());
         });
     }
 
@@ -73,7 +82,7 @@ class TallerComboControllerTest extends TestCase
         Http::fake(['*/taller-combo/1' => Http::response(['success' => true, 'data' => []], 200)]);
 
         $this->comoSuperAdmin()->put('/eventos/7/taller-combos/1', [
-            'nombre' => 'Combo A+B', 'precio_combo' => 90,
+            'nombre' => 'Combo A+B',
             'taller_ids' => ['11', '12'],
         ])->assertRedirect();
 
