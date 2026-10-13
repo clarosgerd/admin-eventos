@@ -22,7 +22,7 @@ class TallerComboPrecioController extends Controller
     {
         $this->assertCanViewEvento($evento);
 
-        $response = $client->forward('POST', "/taller-combo/{$tallerCombo}/precios", body: $request->only('category_id', 'precio'));
+        $response = $client->forward('POST', "/taller-combo/{$tallerCombo}/precios", body: $request->only('category_id', 'precio', 'price_usd'));
 
         if (!$response || !$response->json('success')) {
             return back()->withInput()->withErrors($this->extractErrors($response));
@@ -35,7 +35,7 @@ class TallerComboPrecioController extends Controller
     {
         $this->assertCanViewEvento($evento);
 
-        $response = $client->forward('PUT', "/taller-combo-precio/{$tallerComboPrecio}", body: $request->only('category_id', 'precio'));
+        $response = $client->forward('PUT', "/taller-combo-precio/{$tallerComboPrecio}", body: $request->only('category_id', 'precio', 'price_usd'));
 
         if (!$response || !$response->json('success')) {
             return back()->withInput()->withErrors($this->extractErrors($response));

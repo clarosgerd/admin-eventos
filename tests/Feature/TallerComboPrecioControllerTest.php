@@ -49,6 +49,17 @@ class TallerComboPrecioControllerTest extends TestCase
         Http::assertSent(fn ($request) => str_contains($request->url(), '/taller-combo/1/precios') && $request['precio'] === '900');
     }
 
+    public function test_store_reenvia_price_usd(): void
+    {
+        Http::fake(['*/taller-combo/1/precios' => Http::response(['success' => true, 'data' => []], 201)]);
+
+        $this->comoSuperAdmin()->post('/eventos/7/taller-combos/1/precios', [
+            'category_id' => '90', 'precio' => '1000', 'price_usd' => '45',
+        ])->assertRedirect();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/taller-combo/1/precios') && $request['price_usd'] === '45');
+    }
+
     public function test_update_reenvia_al_endpoint_correcto(): void
     {
         Http::fake(['*/taller-combo-precio/5' => Http::response(['success' => true, 'data' => []], 200)]);

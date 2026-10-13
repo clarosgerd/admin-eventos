@@ -57,6 +57,9 @@
                             <div class="text-xs">
                                 {{ $precio['categoriaNombre'] ?? 'Todas las demás categorías' }}:
                                 <strong>Bs {{ number_format($precio['precio'], 2) }}</strong>
+                                @if (!is_null($precio['priceUsd'] ?? null))
+                                    <span class="text-slate-400">·</span> US$ {{ number_format($precio['priceUsd'], 2) }}
+                                @endif
                             </div>
                         @empty
                             <span class="text-xs text-amber-600">Sin precios — no se ofrece a nadie todavía</span>
@@ -157,6 +160,7 @@
             <tr>
                 <th class="px-2 py-1">Categoría</th>
                 <th class="px-2 py-1">Precio</th>
+                <th class="px-2 py-1">Precio USD <span class="font-normal text-slate-400">(opc.)</span></th>
                 <th class="px-2 py-1"></th>
             </tr>
         </thead>
@@ -168,6 +172,10 @@
                     </td>
                     <td class="px-2 py-1">
                         <input type="number" step="0.01" min="0" name="precio" value="{{ $precio['precio'] }}" required
+                               form="combo-precio-form-{{ $precio['id'] }}" class="border border-slate-300 rounded px-2 py-1 w-24">
+                    </td>
+                    <td class="px-2 py-1">
+                        <input type="number" step="0.01" min="0" name="price_usd" value="{{ $precio['priceUsd'] }}" placeholder="opc."
                                form="combo-precio-form-{{ $precio['id'] }}" class="border border-slate-300 rounded px-2 py-1 w-24">
                     </td>
                     <td class="px-2 py-1 text-right space-x-2 whitespace-nowrap">
@@ -187,7 +195,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="3" class="px-2 py-3 text-center text-slate-400 text-xs">Sin precios cargados — este combo no se ofrece a nadie todavía.</td></tr>
+                <tr><td colspan="4" class="px-2 py-3 text-center text-slate-400 text-xs">Sin precios cargados — este combo no se ofrece a nadie todavía.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -205,6 +213,10 @@
         <div>
             <label class="block text-xs font-medium mb-1">Precio</label>
             <input type="number" step="0.01" min="0" name="precio" required class="border border-slate-300 rounded px-2 py-1.5 w-24">
+        </div>
+        <div>
+            <label class="block text-xs font-medium mb-1">Precio USD <span class="font-normal text-slate-400">(opc.)</span></label>
+            <input type="number" step="0.01" min="0" name="price_usd" placeholder="Solo modo Precio USD fijo" class="border border-slate-300 rounded px-2 py-1.5 w-24">
         </div>
         <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-1.5 rounded-md">
             + Agregar

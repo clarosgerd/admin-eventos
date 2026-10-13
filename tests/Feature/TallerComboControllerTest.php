@@ -39,7 +39,7 @@ class TallerComboControllerTest extends TestCase
                     'fechaDesde' => null, 'fechaHasta' => null,
                     'activo' => true, 'vigente' => true, 'tallerIds' => [11, 12],
                     'precios' => [
-                        ['id' => 5, 'categoriaId' => 90, 'categoriaNombre' => 'Especialistas', 'precio' => 1000],
+                        ['id' => 5, 'categoriaId' => 90, 'categoriaNombre' => 'Especialistas', 'precio' => 1000, 'priceUsd' => null],
                     ],
                 ],
             ]], 200),
