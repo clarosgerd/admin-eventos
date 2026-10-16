@@ -368,6 +368,15 @@
     const ES_EDICION_PAGADA = MODO === 'editar' && PAGO_STATUS === 'paid';
     const PRECIO_ANTERIOR = @json($prefill['precioCategoria'] ?? null);
     const CATEGORIA_ANTERIOR = @json($prefill['categoria'] ?? null);
+    // PROMOCODIGO_ANTERIOR (16/10/2026, bug real reportado por el usuario) —
+    // mismo criterio que CATEGORIA_ANTERIOR: promoAplicable() no sabía
+    // distinguir "código ajeno ya agotado" de "el código propio de esta
+    // misma inscripción", y bloqueaba/arruinaba el descuento al editar una
+    // inscripción pagada que ya traía su propio código. ApiRestEvent ya
+    // libera y vuelve a consumir el cupo de esta inscripción en la edición
+    // (RegistrationService::releasePromoCodes()), así que acá alcanza con
+    // no tratar el código propio como "ya usado".
+    const PROMOCODIGO_ANTERIOR = @json($prefill['promoCodigo'] ?? null);
     const TALLERES_ANTERIORES_IDS = new Set((PREFILL_TALLERES || []).map(t => Number(t.sesionCongresoId)));
     // Cargo de edición (17/09/2026, mismo incidente) — fijo por form_type,
     // cobrado siempre por ActualizarInscripcionPagadaAction en cualquier
@@ -1093,7 +1102,8 @@
         if (!codigo) { if (msg) msg.textContent = ''; return null; }
         const promo = (EVENTO.promoCodes || []).find(p => p.promo_code === codigo);
         if (!promo) { if (msg) { msg.textContent = 'Código no encontrado.'; msg.className = 'text-xs mt-1 text-red-600'; } return null; }
-        if (promo.usado) { if (msg) { msg.textContent = 'Este código ya fue usado.'; msg.className = 'text-xs mt-1 text-red-600'; } return null; }
+        const esMismoCodigoQueYaTenia = !!PROMOCODIGO_ANTERIOR && PROMOCODIGO_ANTERIOR.toLowerCase() === codigo.toLowerCase();
+        if (promo.usado && !esMismoCodigoQueYaTenia) { if (msg) { msg.textContent = 'Este código ya fue usado.'; msg.className = 'text-xs mt-1 text-red-600'; } return null; }
         if (msg) { msg.textContent = 'Código válido.'; msg.className = 'text-xs mt-1 text-green-600'; }
         return promo;
     }
