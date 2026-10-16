@@ -4,7 +4,9 @@
 
 @section('content')
 @php
-    $p = $registro['participantes'][0] ?? [];
+    $participantes = $registro['participantes'] ?? [];
+    $participanteIndex = $participanteIndex ?? 0;
+    $p = $participantes[$participanteIndex] ?? [];
     $pagoStatus = $registro['pago_status'] ?? 'pending';
     $ftActual = collect($evento['formTypes'] ?? [])->firstWhere('id', $registro['form_types_id'] ?? null);
     $costoEdicion = $ftActual['costo_edicion'] ?? 0;
@@ -26,6 +28,23 @@
     ApiRestEvent hoy — si la inscripción ya tenía ítems del kit y siguen aplicando, volvé a
     marcarlos.
 </p>
+
+{{-- Múltiples participantes (16/10/2026) — esta pantalla edita UN
+     participante a la vez; con 2+ en la misma inscripción, elegí a cuál
+     antes de tocar nada (cambiar de participante sin guardar descarta lo
+     tipeado, como cualquier navegación). --}}
+@if (count($participantes) > 1)
+    <div class="bg-white rounded-lg shadow p-4 mb-5">
+        <label class="block text-xs font-semibold mb-1">Editando al participante</label>
+        <select onchange="location.href = this.value" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm">
+            @foreach ($participantes as $i => $part)
+                <option value="{{ route('caja.editar', [$evento['id'], $referencia]) }}?participante={{ $i }}" {{ $i === $participanteIndex ? 'selected' : '' }}>
+                    {{ ($i + 1) }}. {{ trim(($part['nombre'] ?? '').' '.($part['apellido'] ?? '')) ?: 'Participante '.($i + 1) }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+@endif
 
 @include('caja._formulario', [
     'modo' => 'editar',
@@ -66,5 +85,6 @@
     'costoEdicion' => $costoEdicion,
     'actionUrl' => route('caja.editar.store', [$evento['id'], $referencia]),
     'pagoStatus' => $pagoStatus,
+    'participanteIndex' => $participanteIndex,
 ])
 @endsection

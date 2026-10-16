@@ -163,12 +163,29 @@ class CajaController extends Controller
         return response()->json($response?->json() ?? ['success' => false, 'error' => 'No se pudo conectar con el servidor.'], $response?->status() ?? 502);
     }
 
-    public function editar(int $evento, string $referencia, ApiRestEventClient $client): View
+    public function editar(Request $request, int $evento, string $referencia, ApiRestEventClient $client): View
     {
         $eventoData = $this->fetchEvento($evento, $client);
         $registro = $client->forward('GET', "/registrations/{$referencia}")?->json('data');
 
-        return view('caja.editar', ['evento' => $eventoData, 'registro' => $registro, 'referencia' => $referencia]);
+        // Múltiples participantes (16/10/2026, bug real reportado por el
+        // usuario: una inscripción con 2 personas solo mostraba a la
+        // primera al editar desde Caja) — la pantalla sigue editando UN
+        // participante a la vez (mismo formulario que el alta), pero ahora
+        // con un selector de a cuál de los N editar. `?participante=` es
+        // el índice (0-based) dentro de $registro['participantes'].
+        $totalParticipantes = count($registro['participantes'] ?? []);
+        $participanteIndex = (int) $request->query('participante', 0);
+        if ($participanteIndex < 0 || $participanteIndex >= max(1, $totalParticipantes)) {
+            $participanteIndex = 0;
+        }
+
+        return view('caja.editar', [
+            'evento' => $eventoData,
+            'registro' => $registro,
+            'referencia' => $referencia,
+            'participanteIndex' => $participanteIndex,
+        ]);
     }
 
     /**
@@ -195,7 +212,7 @@ class CajaController extends Controller
             : "/registrations/{$referencia}/caja/editar-pendiente";
 
         $body = [
-            'participantes' => [json_decode((string) $request->input('participante_json'), true) ?? []],
+            'participantes' => $this->reconstruirParticipantes($request, $referencia, $client),
             'totales'       => json_decode((string) $request->input('totales_json'), true) ?? [],
         ];
         if ($esPagada) {
@@ -359,6 +376,49 @@ class CajaController extends Controller
         $response = $client->forward('GET', "/event/{$evento}");
 
         return $response?->json('eventos') ?? [];
+    }
+
+    /**
+     * Múltiples participantes en Caja (16/10/2026, bug real reportado por
+     * el usuario) — el formulario sigue editando UN participante a la vez,
+     * pero ApiRestEvent exige el array COMPLETO de participantes en cada
+     * edición (no permite agregar/quitar, los correlaciona por posición —
+     * ver ActualizarInscripcionPagadaAction/ActualizarInscripcionAction).
+     * Se trae el registro actual fresco (evita depender de un hidden-input
+     * armado al cargar la página, que el cliente podría manipular), se
+     * reemplaza SOLO la posición editada con lo que mandó el formulario, y
+     * el resto se re-arma a partir del mismo shape que ya devuelve
+     * ParticipanteResource — es ~idéntico al que acepta el PUT/PATCH
+     * (mismo round-trip resource→payload que ya hace el autoservicio
+     * público en `editParticipant()`, index.php). La única discrepancia
+     * real es 'talleres': camelCase en la salida (tallerId/sesionCongresoId)
+     * vs snake_case que exige la entrada (taller_id/sesion_congreso_id).
+     */
+    private function reconstruirParticipantes(Request $request, string $referencia, ApiRestEventClient $client): array
+    {
+        $registroActual = $client->forward('GET', "/registrations/{$referencia}")?->json('data');
+        $participantesActuales = $registroActual['participantes'] ?? [];
+
+        $participanteIndex = (int) $request->input('participante_index', 0);
+        if ($participanteIndex < 0 || $participanteIndex >= max(1, count($participantesActuales))) {
+            $participanteIndex = 0;
+        }
+
+        $participantes = [];
+        foreach ($participantesActuales as $idx => $p) {
+            if ($idx === $participanteIndex) {
+                $participantes[] = json_decode((string) $request->input('participante_json'), true) ?? [];
+                continue;
+            }
+
+            $p['talleres'] = array_map(fn (array $t) => [
+                'taller_id' => $t['tallerId'],
+                'sesion_congreso_id' => $t['sesionCongresoId'],
+            ], $p['talleres'] ?? []);
+            $participantes[] = $p;
+        }
+
+        return $participantes;
     }
 
     private function extractErrors($response): array

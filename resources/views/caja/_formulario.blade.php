@@ -7,7 +7,9 @@
 
     Variables esperadas: $evento (array), $modo ('nueva'|'editar'),
     $formTypeFijo (int|null), $prefill (array|null), $costoEdicion
-    (float|null), $actionUrl (string), $pagoStatus ('pending'|'paid'|null).
+    (float|null), $actionUrl (string), $pagoStatus ('pending'|'paid'|null),
+    $participanteIndex (int|null, solo 'editar' — qué posición de
+    $registro['participantes'] se está editando).
 --}}
 @php
     $prefill ??= [];
@@ -18,6 +20,11 @@
     @csrf
     @if ($modo === 'editar')
         <input type="hidden" name="pago_status" value="{{ $pagoStatus }}">
+        {{-- Múltiples participantes (16/10/2026) — le dice a
+             CajaController::storeEditar() qué posición del array de
+             participantes está editando este submit (el resto se
+             reconstruye intacto, ver reconstruirParticipantes()). --}}
+        <input type="hidden" name="participante_index" value="{{ $participanteIndex ?? 0 }}">
     @endif
     <input type="hidden" name="participante_json" id="participante_json">
     <input type="hidden" name="totales_json" id="totales_json">
