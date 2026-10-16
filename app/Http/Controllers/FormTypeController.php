@@ -29,6 +29,12 @@ class FormTypeController extends Controller
             $request->only(self::FIELDS),
             [
                 'event_id'           => $evento,
+                // Activo (16/10/2026) — default `checked` en el <form> de
+                // alta (mismo criterio que requiere_categoria): la columna
+                // nace en `true` en la BD y RegistrationService la apaga
+                // sola cuando el cupo se llena (reactivarla es decisión
+                // manual del organizador, ver ListaEsperaController).
+                'activo'             => $request->boolean('activo'),
                 'requiere_categoria' => $request->boolean('requiere_categoria'),
                 'has_team'           => $request->boolean('has_team'),
                 'has_delivery'       => $request->boolean('has_delivery'),
@@ -80,6 +86,8 @@ class FormTypeController extends Controller
         $payload = array_merge(
             $request->only(self::FIELDS),
             [
+                // Activo (16/10/2026) — ver store().
+                'activo'             => $request->boolean('activo'),
                 'requiere_categoria' => $request->boolean('requiere_categoria'),
                 'has_team'           => $request->boolean('has_team'),
                 'has_delivery'       => $request->boolean('has_delivery'),

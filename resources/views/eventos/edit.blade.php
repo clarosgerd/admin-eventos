@@ -819,6 +819,10 @@
                     </div>
                     <div class="flex flex-wrap gap-4">
                         <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="activo" value="1" {{ ($formType['activo'] ?? true) ? 'checked' : '' }}>
+                            Activo <span class="text-slate-400">(acepta inscripciones nuevas; se desactiva solo cuando se llena el cupo — reactivarlo acá es una decisión manual, ej. si subiste el cupo)</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
                             <input type="checkbox" name="requiere_categoria" value="1" data-requiere-categoria {{ ($formType['requiereCategoria'] ?? true) ? 'checked' : '' }}>
                             Requiere categoría
                         </label>
@@ -1167,6 +1171,10 @@
                     <input type="color" name="color" value="#00bad2" class="w-full h-8 border border-slate-300 rounded">
                 </div>
                 <div class="flex flex-wrap gap-4">
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="activo" value="1" checked>
+                        Activo <span class="text-slate-400">(acepta inscripciones nuevas; se desactiva solo cuando se llena el cupo)</span>
+                    </label>
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="requiere_categoria" value="1" data-requiere-categoria checked>
                         Requiere categoría
