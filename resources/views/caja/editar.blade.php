@@ -43,6 +43,7 @@
         'correo' => $p['correo'] ?? '',
         'direccion' => $p['direccion'] ?? '',
         'ciudad' => $p['ciudad'] ?? '',
+        'pais' => $p['pais'] ?? '',
         'telefono' => $p['telefono'] ?? '',
         'contactoNombre' => $p['contacto_emergencia']['nombre'] ?? '',
         'contactoCelular' => $p['contacto_emergencia']['celular'] ?? '',

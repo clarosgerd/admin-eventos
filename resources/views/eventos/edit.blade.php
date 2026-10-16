@@ -898,6 +898,10 @@
                             Ciudad
                         </label>
                         <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="campos_ocultos[]" value="pais" {{ in_array('pais', $camposOcultos) ? 'checked' : '' }}>
+                            País
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
                             <input type="checkbox" name="campos_ocultos[]" value="telefono" {{ in_array('telefono', $camposOcultos) ? 'checked' : '' }}>
                             Teléfono
                         </label>
@@ -1248,6 +1252,10 @@
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="campos_ocultos[]" value="ciudad">
                         Ciudad
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="campos_ocultos[]" value="pais">
+                        País
                     </label>
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="campos_ocultos[]" value="telefono">

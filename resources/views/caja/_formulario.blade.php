@@ -155,6 +155,8 @@
                 <input type="text" id="f_direccion" value="{{ $prefill['direccion'] ?? '' }}" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
             <div id="f_ciudadGroup"><label class="block text-xs font-semibold mb-1">Ciudad</label>
                 <input type="text" id="f_ciudad" value="{{ $prefill['ciudad'] ?? '' }}" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
+            <div id="f_paisGroup"><label class="block text-xs font-semibold mb-1">País</label>
+                <input type="text" id="f_pais" value="{{ $prefill['pais'] ?? '' }}" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"></div>
         </div>
     </div>
 
@@ -450,6 +452,7 @@
         telefono:   ['f_telefonoGroup'],
         direccion:  ['f_direccionGroup'],
         ciudad:     ['f_ciudadGroup'],
+        pais:       ['f_paisGroup'],
     };
     const CAMPOS_OCULTABLES_REQUIRED_IDS = {
         apellido:   ['f_apellido'],
@@ -636,6 +639,7 @@
         document.getElementById('f_correo').value = persona.correo || '';
         document.getElementById('f_direccion').value = persona.direccion || '';
         document.getElementById('f_ciudad').value = persona.ciudad || '';
+        document.getElementById('f_pais').value = persona.pais || '';
         document.getElementById('f_telefono').value = persona.telefono || '';
         if (persona.nacimiento) {
             document.getElementById('f_nacDia').value = persona.nacimiento.dia || '';
@@ -1381,6 +1385,7 @@
             correo: document.getElementById('f_correo').value,
             direccion: campoOculto(ft, 'direccion') ? '' : document.getElementById('f_direccion').value,
             ciudad: campoOculto(ft, 'ciudad') ? '' : document.getElementById('f_ciudad').value,
+            pais: campoOculto(ft, 'pais') ? '' : document.getElementById('f_pais').value,
             telefono: campoOculto(ft, 'telefono') ? '' : document.getElementById('f_telefono').value,
             contacto_emergencia: {
                 nombre: document.getElementById('f_ceNombre').value,
