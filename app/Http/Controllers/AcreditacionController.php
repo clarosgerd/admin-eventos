@@ -111,22 +111,27 @@ class AcreditacionController extends Controller
     }
 
     /**
-     * Corregir nombre/apellido de un participante en el momento de la
-     * acreditación (18/10/2026, pedido real del usuario) — mismo problema
-     * que ya resolvió `delivery` en su POS de entrega, pero acá no hace
-     * falta el mecanismo de link firmado de `delivery` (pensado para un POS
-     * sin sesión): esta pantalla ya corre autenticada y ya conoce el
+     * Corregir datos de un participante en el momento de la acreditación
+     * (18-19/10/2026, pedido real del usuario) — mismo problema que ya
+     * resolvió `delivery` en su POS de entrega, pero acá no hace falta el
+     * mecanismo de link firmado de `delivery` (pensado para un POS sin
+     * sesión): esta pantalla ya corre autenticada y ya conoce el
      * `participante_id` real, así que reusa derecho el mismo endpoint
      * whitelisteado que ya usa `ParticipantesController::update()`
      * (`PATCH /participantes/{participante}` en ApiRestEvent,
      * `UpdateParticipanteRequest`), solo que acá responde JSON en vez de
      * redirect para no recargar la pantalla de Acreditación.
+     *
+     * Mismos campos que `delivery` ofrece en su popup equivalente —
+     * `categoria` queda explícitamente afuera a propósito: es intocable
+     * desde este endpoint (decisión de precio/negocio, ver
+     * `UpdateParticipanteRequest`), confirmado con el usuario.
      */
     public function editarDatos(Request $request, int $evento, int $participante, ApiRestEventClient $client): JsonResponse
     {
         $this->assertCanViewEvento($evento);
 
-        $data = $request->only(['nombre', 'apellido']);
+        $data = $request->only(['nombre', 'apellido', 'genero', 'fecha_nacimiento']);
 
         $response = $client->forward('PATCH', "/participantes/{$participante}", body: $data);
 

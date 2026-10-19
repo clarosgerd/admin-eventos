@@ -103,6 +103,39 @@ class AcreditacionControllerTest extends TestCase
         });
     }
 
+    /**
+     * Ampliado (19/10/2026, pedido real del usuario) — mismos campos que ya
+     * ofrece delivery en su popup equivalente. categoria queda afuera a
+     * propósito (intocable desde este endpoint).
+     */
+    public function test_editar_datos_tambien_reenvia_genero_y_fecha_nacimiento(): void
+    {
+        Http::fake(['*/participantes/55' => Http::response(['success' => true], 200)]);
+
+        $this->comoSuperAdmin()->patchJson('/eventos/7/acreditacion/55/editar-datos', [
+            'genero' => 'Femenino',
+            'fecha_nacimiento' => '1995-01-01',
+        ])->assertStatus(200);
+
+        Http::assertSent(function ($request) {
+            return $request->data() === ['genero' => 'Femenino', 'fecha_nacimiento' => '1995-01-01'];
+        });
+    }
+
+    public function test_editar_datos_no_reenvia_categoria(): void
+    {
+        Http::fake(['*/participantes/55' => Http::response(['success' => true], 200)]);
+
+        $this->comoSuperAdmin()->patchJson('/eventos/7/acreditacion/55/editar-datos', [
+            'nombre' => 'Ana',
+            'categoria' => 999,
+        ])->assertStatus(200);
+
+        Http::assertSent(function ($request) {
+            return $request->data() === ['nombre' => 'Ana'];
+        });
+    }
+
     public function test_editar_datos_sin_acceso_al_evento_devuelve_403(): void
     {
         $this->withSession([

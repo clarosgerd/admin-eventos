@@ -110,6 +110,18 @@
                 <label class="block text-xs font-medium text-slate-600 mb-1">Apellido</label>
                 <input type="text" id="ed_apellido" class="w-full border border-slate-300 rounded-md px-3 py-2">
             </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Sexo</label>
+                <select id="ed_genero" class="w-full border border-slate-300 rounded-md px-3 py-2">
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Fecha de nacimiento</label>
+                <input type="date" id="ed_fecha_nacimiento" class="w-full border border-slate-300 rounded-md px-3 py-2">
+            </div>
         </div>
         <p id="ed_error" class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2 mt-3" hidden></p>
         <div class="flex justify-end gap-2 mt-4">
@@ -356,6 +368,8 @@ function abrirEditarDatos(id) {
 
     document.getElementById('ed_nombre').value = item.nombre || '';
     document.getElementById('ed_apellido').value = item.apellido || '';
+    document.getElementById('ed_genero').value = item.genero || 'Masculino';
+    document.getElementById('ed_fecha_nacimiento').value = item.fechaNacimiento || '';
     document.getElementById('ed_error').hidden = true;
     document.getElementById('ed_guardar').disabled = false;
     editarDatosModal.showModal();
@@ -376,11 +390,15 @@ async function guardarEditarDatos() {
 
     const nombre = document.getElementById('ed_nombre').value.trim();
     const apellido = document.getElementById('ed_apellido').value.trim();
+    const genero = document.getElementById('ed_genero').value;
+    const fechaNacimiento = document.getElementById('ed_fecha_nacimiento').value;
 
     // Solo se manda lo que realmente cambió.
     const cambios = {};
     if (nombre && nombre !== (item.nombre || '')) cambios.nombre = nombre;
     if (apellido && apellido !== (item.apellido || '')) cambios.apellido = apellido;
+    if (genero && genero !== (item.genero || '')) cambios.genero = genero;
+    if (fechaNacimiento && fechaNacimiento !== (item.fechaNacimiento || '')) cambios.fecha_nacimiento = fechaNacimiento;
 
     if (!Object.keys(cambios).length) {
         cerrarEditarDatos();
@@ -399,6 +417,10 @@ async function guardarEditarDatos() {
         return;
     }
 
+    // item.fechaNacimiento es camelCase (lo que trae el lookup) pero el PATCH
+    // envía fecha_nacimiento (snake_case, lo que espera UpdateParticipanteRequest)
+    // — se normaliza acá para que el próximo diff compare contra lo mismo.
+    if ('fecha_nacimiento' in cambios) item.fechaNacimiento = cambios.fecha_nacimiento;
     Object.assign(item, cambios);
     const card = document.getElementById('participante-' + id);
     const nombreEl = card?.querySelector('.nombre-participante');
