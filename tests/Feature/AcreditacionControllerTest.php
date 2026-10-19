@@ -74,4 +74,42 @@ class AcreditacionControllerTest extends TestCase
         // El link existente ("Imprimir gafete", pestaña nueva) sigue intacto.
         $this->assertStringContainsString('🖨 Imprimir gafete', $html);
     }
+
+    /**
+     * Editar nombre/apellido en el momento (18/10/2026) — ver
+     * AcreditacionController::editarDatos(). Reusa el mismo endpoint
+     * whitelisteado que ya usa ParticipantesController::update()
+     * (PATCH /participantes/{participante} en ApiRestEvent).
+     */
+    public function test_editar_datos_reenvia_nombre_y_apellido_y_devuelve_el_resultado(): void
+    {
+        Http::fake(['*/participantes/55' => Http::response([
+            'success' => true,
+            'message' => 'Participante actualizado.',
+            'participante' => ['id' => 55, 'nombre' => 'Ana', 'apellido' => 'Pérez'],
+        ], 200)]);
+
+        $response = $this->comoSuperAdmin()->patchJson('/eventos/7/acreditacion/55/editar-datos', [
+            'nombre' => 'Ana',
+            'apellido' => 'Pérez',
+        ]);
+
+        $response->assertStatus(200)->assertJson(['success' => true]);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/participantes/55')
+                && $request->method() === 'PATCH'
+                && $request->data() === ['nombre' => 'Ana', 'apellido' => 'Pérez'];
+        });
+    }
+
+    public function test_editar_datos_sin_acceso_al_evento_devuelve_403(): void
+    {
+        $this->withSession([
+            'admin_token' => 'fake-token',
+            'admin_user' => ['id' => 1, 'rol' => 'admin', 'evento_id' => 99, 'eventoIds' => [99]],
+        ]);
+
+        $this->patchJson('/eventos/7/acreditacion/55/editar-datos', ['nombre' => 'Ana'])->assertStatus(403);
+    }
 }

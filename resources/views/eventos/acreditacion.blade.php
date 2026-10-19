@@ -95,6 +95,30 @@
      en cada click, no uno por participante. --}}
 <iframe id="gafeteImprimirFrame" style="display:none"></iframe>
 
+{{-- Editar nombre/apellido en el momento (18/10/2026) — mismo problema que
+     ya resolvió `delivery` en su POS de entrega, mismo patrón de popup
+     (dialog nativo, solo lo que cambió se envía). --}}
+<dialog id="editarDatosModal" class="rounded-xl p-0 w-full max-w-md backdrop:bg-black/40">
+    <form method="dialog" class="p-5" onsubmit="return false;">
+        <h2 class="text-lg font-semibold mb-3">Editar datos</h2>
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Nombre</label>
+                <input type="text" id="ed_nombre" class="w-full border border-slate-300 rounded-md px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Apellido</label>
+                <input type="text" id="ed_apellido" class="w-full border border-slate-300 rounded-md px-3 py-2">
+            </div>
+        </div>
+        <p id="ed_error" class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2 mt-3" hidden></p>
+        <div class="flex justify-end gap-2 mt-4">
+            <button type="button" onclick="cerrarEditarDatos()" class="px-4 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-sm">Cancelar</button>
+            <button type="button" id="ed_guardar" onclick="guardarEditarDatos()" class="px-4 py-2 rounded-md bg-brand-600 hover:bg-brand-700 text-white text-sm">Guardar</button>
+        </div>
+    </form>
+</dialog>
+
 {{-- El layout (layouts/app.blade.php) no tiene @yield('scripts')/@stack —
      el script va acá adentro, mismo criterio que usa elascenso-blade para
      páginas que necesitan JS de terceros sin bundler. --}}
@@ -103,6 +127,7 @@
 const ACREDITACION_LOOKUP_URL = @json(route('acreditacion.lookup', $evento['id']));
 const ACREDITACION_BUSCAR_URL = @json(route('acreditacion.buscar', $evento['id']));
 const ACREDITACION_CHECKIN_URL_BASE = @json(route('acreditacion.checkin', [$evento['id'], '__PARTICIPANTE__']));
+const ACREDITACION_EDITAR_DATOS_URL_BASE = @json(route('acreditacion.editar-datos', [$evento['id'], '__PARTICIPANTE__']));
 // Gafete por demanda (23/09/2026) — un participante puntual, ver
 // EventoController::gafetePdfParticipante() en este repo.
 const GAFETE_PDF_URL_BASE = @json(route('eventos.gafete-pdf-participante', [$evento['id'], '__PARTICIPANTE__']));
@@ -121,6 +146,15 @@ async function patchJson(url) {
     const res = await fetch(url, {
         method: 'PATCH',
         headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
+    });
+    return { status: res.status, data: await res.json() };
+}
+
+async function patchJsonBody(url, body) {
+    const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
+        body: JSON.stringify(body),
     });
     return { status: res.status, data: await res.json() };
 }
@@ -250,6 +284,8 @@ function renderParticipantes(data) {
     }
 
     data.participantes.forEach(p => {
+        participantesPorId[p.id] = p;
+
         const card = document.createElement('div');
         card.className = 'border border-slate-200 rounded-md p-3 flex items-center justify-between gap-3 flex-wrap';
         card.id = 'participante-' + p.id;
@@ -258,12 +294,20 @@ function renderParticipantes(data) {
             ? '<br><span class="text-xs text-slate-500">Talleres: ' + p.talleres.map(t => escHtml(t.tallerNombre || '')).join(', ') + '</span>'
             : '';
         const info = document.createElement('div');
-        info.innerHTML = `<span class="font-semibold text-sm">${escHtml(p.nombre)} ${escHtml(p.apellido)}</span>
+        info.innerHTML = `<span class="font-semibold text-sm nombre-participante">${escHtml(p.nombre)} ${escHtml(p.apellido)}</span>
             <span class="text-xs text-slate-500"> · Categoría: ${escHtml(p.categoria)}</span>${talleresTxt}`;
         card.appendChild(info);
 
         const accion = document.createElement('div');
         accion.className = 'flex items-center gap-2 flex-wrap';
+
+        const btnEditar = document.createElement('button');
+        btnEditar.type = 'button';
+        btnEditar.className = 'text-sm text-brand-600 hover:underline whitespace-nowrap';
+        btnEditar.textContent = '✏️ Editar datos';
+        btnEditar.onclick = () => abrirEditarDatos(p.id);
+        accion.appendChild(btnEditar);
+
         if (p.checkedInAt) {
             accion.innerHTML = `<span class="text-sm text-green-700 font-semibold">✓ Ya acreditado</span>`;
         } else if (!pagado) {
@@ -298,6 +342,69 @@ function renderParticipantes(data) {
 
         listEl.appendChild(card);
     });
+}
+
+// Editar nombre/apellido en el momento (18/10/2026) ─────────────────────
+let participantesPorId = {};
+let editarDatosParticipanteId = null;
+const editarDatosModal = document.getElementById('editarDatosModal');
+
+function abrirEditarDatos(id) {
+    const item = participantesPorId[id];
+    if (!item) return;
+    editarDatosParticipanteId = id;
+
+    document.getElementById('ed_nombre').value = item.nombre || '';
+    document.getElementById('ed_apellido').value = item.apellido || '';
+    document.getElementById('ed_error').hidden = true;
+    document.getElementById('ed_guardar').disabled = false;
+    editarDatosModal.showModal();
+}
+
+function cerrarEditarDatos() {
+    editarDatosModal.close();
+    editarDatosParticipanteId = null;
+}
+
+async function guardarEditarDatos() {
+    if (!editarDatosParticipanteId) return;
+    const id = editarDatosParticipanteId;
+    const item = participantesPorId[id] || {};
+    const errorEl = document.getElementById('ed_error');
+    const guardarBtn = document.getElementById('ed_guardar');
+    errorEl.hidden = true;
+
+    const nombre = document.getElementById('ed_nombre').value.trim();
+    const apellido = document.getElementById('ed_apellido').value.trim();
+
+    // Solo se manda lo que realmente cambió.
+    const cambios = {};
+    if (nombre && nombre !== (item.nombre || '')) cambios.nombre = nombre;
+    if (apellido && apellido !== (item.apellido || '')) cambios.apellido = apellido;
+
+    if (!Object.keys(cambios).length) {
+        cerrarEditarDatos();
+        return;
+    }
+
+    guardarBtn.disabled = true;
+    const url = ACREDITACION_EDITAR_DATOS_URL_BASE.replace('__PARTICIPANTE__', id);
+    const { status, data } = await patchJsonBody(url, cambios);
+    guardarBtn.disabled = false;
+
+    if (status !== 200 || !data.success) {
+        const primerError = data.errors ? Object.values(data.errors)[0]?.[0] : null;
+        errorEl.textContent = data.error || primerError || data.message || 'No se pudo guardar el cambio.';
+        errorEl.hidden = false;
+        return;
+    }
+
+    Object.assign(item, cambios);
+    const card = document.getElementById('participante-' + id);
+    const nombreEl = card?.querySelector('.nombre-participante');
+    if (nombreEl) nombreEl.textContent = `${item.nombre} ${item.apellido}`;
+
+    cerrarEditarDatos();
 }
 
 /**

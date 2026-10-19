@@ -221,6 +221,8 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     // Búsqueda por nombre/apellido (07/10/2026) — ver AcreditacionController::buscarPorNombre().
     Route::get('/eventos/{evento}/acreditacion/buscar', [AcreditacionController::class, 'buscarPorNombre'])->name('acreditacion.buscar');
     Route::patch('/eventos/{evento}/acreditacion/{participante}', [AcreditacionController::class, 'checkin'])->name('acreditacion.checkin');
+    // Editar nombre/apellido en el momento (18/10/2026) — ver AcreditacionController::editarDatos().
+    Route::patch('/eventos/{evento}/acreditacion/{participante}/editar-datos', [AcreditacionController::class, 'editarDatos'])->name('acreditacion.editar-datos');
 
     // SmartStand (25/09/2026) — empresas expositoras del evento: ranking por
     // leads capturados, alta/edición, reenvío de credenciales y detalle.
