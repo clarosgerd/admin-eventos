@@ -425,14 +425,14 @@ class EventoController extends Controller
         // comporta exactamente igual que el `gafeteConfig: null` de antes en
         // ese campo puntual.
         //
-        // Los 4 boolean() van SIN default (= false si el checkbox no viaja),
+        // Los 5 boolean() van SIN default (= false si el checkbox no viaja),
         // igual que certificadoSoloNombre/certificadoAsistenciaActivo —
         // nunca `, true`: un checkbox real destildado tampoco viaja en el
         // POST, así que un default `true` acá haría imposible apagarlo desde
         // el formulario real. El "default true" que preserva el
         // comportamiento de eventos que nunca pasaron por este formulario
         // vive solo del lado de ApiRestEvent (gafeteDims(), al LEER un
-        // gafete_config guardado antes de que estos 4 campos existieran) —
+        // gafete_config guardado antes de que estos 5 campos existieran) —
         // acá siempre se manda explícito, en los 2 sentidos.
         $gafeteConfig = [
             'tipo'        => $request->input('gafeteTipo', 'completo'),
@@ -443,6 +443,7 @@ class EventoController extends Controller
             'mostrar_descripcion_categoria'     => $request->boolean('gafeteMostrarDescripcionCategoria'),
             'mostrar_descripcion_staff_ponente' => $request->boolean('gafeteMostrarDescripcionStaffPonente'),
             'mostrar_referencia'                => $request->boolean('gafeteMostrarReferencia'),
+            'mostrar_pais'                       => $request->boolean('gafeteMostrarPais'),
         ];
         if ($request->filled('gafeteWidthCm')) {
             $gafeteConfig['width_cm'] = (float) $request->input('gafeteWidthCm');

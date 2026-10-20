@@ -46,6 +46,7 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
             'gafeteMostrarDescripcionCategoria' => '1',
             'gafeteMostrarDescripcionStaffPonente' => '1',
             'gafeteMostrarReferencia' => '1',
+            'gafeteMostrarPais' => '1',
         ]);
 
         Http::assertSent(function ($request) {
@@ -59,6 +60,7 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
                     'mostrar_descripcion_categoria' => true,
                     'mostrar_descripcion_staff_ponente' => true,
                     'mostrar_referencia' => true,
+                    'mostrar_pais' => true,
                     'width_cm' => 8.0, 'height_cm' => 6.0,
                 ];
         });
@@ -103,19 +105,19 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
     }
 
     /**
-     * gafeteConfig sin ancho/alto ni ningún checkbox cargado (19/10/2026,
-     * cambio real): antes se mandaba `null` entero; ahora los 4 checkboxes
+     * gafeteConfig sin ancho/alto ni ningún checkbox cargado (19-20/10/2026,
+     * cambio real): antes se mandaba `null` entero; ahora los 5 checkboxes
      * de campos del gafete necesitan persistir aunque no se toque el
      * tamaño, así que siempre se manda un array — sin width_cm/height_cm
-     * (esas dos claves solo entran si vienen llenas) y con los 4 toggles en
+     * (esas dos claves solo entran si vienen llenas) y con los 5 toggles en
      * `false` (mismo criterio que certificadoSoloNombre: ausente = false,
      * nunca un default `true` server-side — ver comentario en update()).
-     * En el formulario real esto no pasa así para los 3 que ya se
+     * En el formulario real esto no pasa así para los 4 que ya se
      * imprimían: edit.blade.php los renderiza pre-tildados (`?? true`) para
      * un evento sin configurar, así que un submit real SÍ los manda en
      * `true` salvo que el organizador los destilde a mano.
      */
-    public function test_update_sin_tocar_nada_del_gafete_manda_los_4_toggles_en_false(): void
+    public function test_update_sin_tocar_nada_del_gafete_manda_los_5_toggles_en_false(): void
     {
         Http::fake([
             '*/event/1' => Http::response(['success' => true], 200),
@@ -134,12 +136,13 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
                     'mostrar_descripcion_categoria' => false,
                     'mostrar_descripcion_staff_ponente' => false,
                     'mostrar_referencia' => false,
+                    'mostrar_pais' => false,
                 ];
         });
     }
 
-    /** Los 4 checkboxes de campos del gafete se mandan siempre, tildados o no. */
-    public function test_update_manda_los_4_toggles_de_campos_del_gafete(): void
+    /** Los 5 checkboxes de campos del gafete se mandan siempre, tildados o no. */
+    public function test_update_manda_los_5_toggles_de_campos_del_gafete(): void
     {
         Http::fake(['*/event/1' => Http::response(['success' => true], 200)]);
 
@@ -147,6 +150,7 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
             'name' => 'Evento Test',
             'gafeteMostrarTitulo' => '1',
             'gafeteMostrarDescripcionCategoria' => '1',
+            'gafeteMostrarPais' => '1',
             // Descripción staff/ponente y referencia quedan sin tildar (no se mandan).
         ]);
 
@@ -156,7 +160,8 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
             return $cfg['mostrar_titulo'] === true
                 && $cfg['mostrar_descripcion_categoria'] === true
                 && $cfg['mostrar_descripcion_staff_ponente'] === false
-                && $cfg['mostrar_referencia'] === false;
+                && $cfg['mostrar_referencia'] === false
+                && $cfg['mostrar_pais'] === true;
         });
     }
 
@@ -225,11 +230,12 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
         $response->assertSee('Certificado solo con nombre');
         $response->assertSee('Enviar certificado automático de asistencia a sesiones');
         $response->assertSee('Tamaño de gafete');
-        // Campos del gafete parametrizables por evento (19/10/2026).
+        // Campos del gafete parametrizables por evento (19-20/10/2026).
         $response->assertSee('Mostrar título/alias');
         $response->assertSee('Mostrar descripción de categoría');
         $response->assertSee('Mostrar descripción de staff/ponente');
         $response->assertSee('Mostrar referencia');
+        $response->assertSee('Mostrar país');
     }
 
     /**

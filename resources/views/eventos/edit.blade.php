@@ -491,9 +491,9 @@
                     </div>
                     <p class="text-xs text-slate-500 mt-1">"Solo QR" ignora Por fila/Papel/Orientación — imprime una pegatina por página, del tamaño exacto configurado.</p>
 
-                    {{-- Campos del gafete parametrizables por evento (19/10/2026) —
+                    {{-- Campos del gafete parametrizables por evento (19-20/10/2026) —
                          pedido real del usuario. mostrar_titulo es una pieza nueva
-                         (default sin tildar: nunca se imprimió antes); las otras 3
+                         (default sin tildar: nunca se imprimió antes); las otras 4
                          ya se imprimían siempre, default tildadas para no cambiar
                          el comportamiento de ningún evento existente. Ver
                          EventoController::gafeteDims()/construirItemGafete() en
@@ -518,6 +518,11 @@
                             <input type="checkbox" name="gafeteMostrarReferencia" value="1"
                                    {{ ($evento['gafeteConfig']['mostrar_referencia'] ?? true) ? 'checked' : '' }}>
                             Mostrar referencia
+                        </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="gafeteMostrarPais" value="1"
+                                   {{ ($evento['gafeteConfig']['mostrar_pais'] ?? true) ? 'checked' : '' }}>
+                            Mostrar país
                         </label>
                     </div>
                 </div>
