@@ -39,6 +39,13 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
             'gafetePerRow' => '2',
             'gafetePaper' => 'letter',
             'gafeteOrientation' => 'portrait',
+            // Simula el formulario real: edit.blade.php renderiza estos 3
+            // pre-tildados (`?? true`) para no cambiar el comportamiento de
+            // un evento existente, así que un submit sin tocarlos igual los
+            // manda en '1' — mostrar_titulo queda sin tildar a propósito.
+            'gafeteMostrarDescripcionCategoria' => '1',
+            'gafeteMostrarDescripcionStaffPonente' => '1',
+            'gafeteMostrarReferencia' => '1',
         ]);
 
         Http::assertSent(function ($request) {
@@ -47,8 +54,12 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
                 && $request['certificadoSoloNombre'] === true
                 && $request['gafeteConfig'] === [
                     'tipo' => 'completo',
-                    'width_cm' => 8.0, 'height_cm' => 6.0, 'per_row' => 2,
-                    'paper' => 'letter', 'orientation' => 'portrait',
+                    'per_row' => 2, 'paper' => 'letter', 'orientation' => 'portrait',
+                    'mostrar_titulo' => false,
+                    'mostrar_descripcion_categoria' => true,
+                    'mostrar_descripcion_staff_ponente' => true,
+                    'mostrar_referencia' => true,
+                    'width_cm' => 8.0, 'height_cm' => 6.0,
                 ];
         });
     }
@@ -74,12 +85,37 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
     }
 
     /**
-     * Checkbox destildeado (no viaja en el POST) y ancho de gafete vacío —
-     * ambos deben persistir como false/null, no quedar ausentes del
-     * payload (si no, el checkbox nunca se podría "apagar" una vez
-     * prendido).
+     * Checkbox destildeado (no viaja en el POST) — debe persistir como
+     * false, no quedar ausente del payload (si no, el checkbox nunca se
+     * podría "apagar" una vez prendido).
      */
-    public function test_update_sin_checkbox_ni_ancho_manda_false_y_null(): void
+    public function test_update_sin_checkbox_manda_false(): void
+    {
+        Http::fake([
+            '*/event/1' => Http::response(['success' => true], 200),
+        ]);
+
+        $this->withAdminSession()->put('/eventos/1', [
+            'name' => 'Evento Test',
+        ]);
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/event/1') && $request['certificadoSoloNombre'] === false);
+    }
+
+    /**
+     * gafeteConfig sin ancho/alto ni ningún checkbox cargado (19/10/2026,
+     * cambio real): antes se mandaba `null` entero; ahora los 4 checkboxes
+     * de campos del gafete necesitan persistir aunque no se toque el
+     * tamaño, así que siempre se manda un array — sin width_cm/height_cm
+     * (esas dos claves solo entran si vienen llenas) y con los 4 toggles en
+     * `false` (mismo criterio que certificadoSoloNombre: ausente = false,
+     * nunca un default `true` server-side — ver comentario en update()).
+     * En el formulario real esto no pasa así para los 3 que ya se
+     * imprimían: edit.blade.php los renderiza pre-tildados (`?? true`) para
+     * un evento sin configurar, así que un submit real SÍ los manda en
+     * `true` salvo que el organizador los destilde a mano.
+     */
+    public function test_update_sin_tocar_nada_del_gafete_manda_los_4_toggles_en_false(): void
     {
         Http::fake([
             '*/event/1' => Http::response(['success' => true], 200),
@@ -91,8 +127,36 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
 
         Http::assertSent(function ($request) {
             return str_contains($request->url(), '/event/1')
-                && $request['certificadoSoloNombre'] === false
-                && $request['gafeteConfig'] === null;
+                && $request['gafeteConfig'] === [
+                    'tipo' => 'completo',
+                    'per_row' => 3, 'paper' => 'a4', 'orientation' => 'landscape',
+                    'mostrar_titulo' => false,
+                    'mostrar_descripcion_categoria' => false,
+                    'mostrar_descripcion_staff_ponente' => false,
+                    'mostrar_referencia' => false,
+                ];
+        });
+    }
+
+    /** Los 4 checkboxes de campos del gafete se mandan siempre, tildados o no. */
+    public function test_update_manda_los_4_toggles_de_campos_del_gafete(): void
+    {
+        Http::fake(['*/event/1' => Http::response(['success' => true], 200)]);
+
+        $this->withAdminSession()->put('/eventos/1', [
+            'name' => 'Evento Test',
+            'gafeteMostrarTitulo' => '1',
+            'gafeteMostrarDescripcionCategoria' => '1',
+            // Descripción staff/ponente y referencia quedan sin tildar (no se mandan).
+        ]);
+
+        Http::assertSent(function ($request) {
+            $cfg = $request['gafeteConfig'];
+
+            return $cfg['mostrar_titulo'] === true
+                && $cfg['mostrar_descripcion_categoria'] === true
+                && $cfg['mostrar_descripcion_staff_ponente'] === false
+                && $cfg['mostrar_referencia'] === false;
         });
     }
 
@@ -161,6 +225,11 @@ class EventoUpdateGafetesCertificadoTest extends TestCase
         $response->assertSee('Certificado solo con nombre');
         $response->assertSee('Enviar certificado automático de asistencia a sesiones');
         $response->assertSee('Tamaño de gafete');
+        // Campos del gafete parametrizables por evento (19/10/2026).
+        $response->assertSee('Mostrar título/alias');
+        $response->assertSee('Mostrar descripción de categoría');
+        $response->assertSee('Mostrar descripción de staff/ponente');
+        $response->assertSee('Mostrar referencia');
     }
 
     /**

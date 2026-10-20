@@ -490,6 +490,36 @@
                         </div>
                     </div>
                     <p class="text-xs text-slate-500 mt-1">"Solo QR" ignora Por fila/Papel/Orientación — imprime una pegatina por página, del tamaño exacto configurado.</p>
+
+                    {{-- Campos del gafete parametrizables por evento (19/10/2026) —
+                         pedido real del usuario. mostrar_titulo es una pieza nueva
+                         (default sin tildar: nunca se imprimió antes); las otras 3
+                         ya se imprimían siempre, default tildadas para no cambiar
+                         el comportamiento de ningún evento existente. Ver
+                         EventoController::gafeteDims()/construirItemGafete() en
+                         ApiRestEvent. --}}
+                    <div class="mt-3 space-y-1">
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="gafeteMostrarTitulo" value="1"
+                                   {{ !empty($evento['gafeteConfig']['mostrar_titulo']) ? 'checked' : '' }}>
+                            Mostrar título/alias (Dr., Dra., etc.) antepuesto al nombre
+                        </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="gafeteMostrarDescripcionCategoria" value="1"
+                                   {{ ($evento['gafeteConfig']['mostrar_descripcion_categoria'] ?? true) ? 'checked' : '' }}>
+                            Mostrar descripción de categoría (participantes)
+                        </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="gafeteMostrarDescripcionStaffPonente" value="1"
+                                   {{ ($evento['gafeteConfig']['mostrar_descripcion_staff_ponente'] ?? true) ? 'checked' : '' }}>
+                            Mostrar descripción de staff/ponente
+                        </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="gafeteMostrarReferencia" value="1"
+                                   {{ ($evento['gafeteConfig']['mostrar_referencia'] ?? true) ? 'checked' : '' }}>
+                            Mostrar referencia
+                        </label>
+                    </div>
                 </div>
 
                 {{-- SmartStand (25/09/2026) — empresas expositoras: qué recibe la

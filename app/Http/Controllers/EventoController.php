@@ -404,26 +404,53 @@ class EventoController extends Controller
         // Gafetes/certificados parametrizables por evento (13/09/2026) —
         // pedido real de COLABIOCLI 2026. Mismo motivo que aceptaUsd:
         // certificadoSoloNombre se manda siempre para que destildear también
-        // persista. gafeteConfig se manda como null cuando el organizador
-        // vacía el ancho (el resto de los campos son opcionales solo con el
-        // ancho presente) — así vuelve al tamaño estándar en vez de guardar
-        // un JSON incompleto.
+        // persista.
         $payload['certificadoSoloNombre'] = $request->boolean('certificadoSoloNombre');
         // Interruptor por evento del certificado automático de asistencia a
         // sesiones (07/10/2026) — checkbox real: se manda siempre (igual
         // que certificadoSoloNombre) para que destildearlo también
         // persista, ya que un checkbox no tildado no viaja en el POST.
         $payload['certificadoAsistenciaActivo'] = $request->boolean('certificadoAsistenciaActivo');
-        $payload['gafeteConfig'] = $request->filled('gafeteWidthCm') ? [
-            // tipo (23/09/2026) — 'completo' (default) o 'label' (solo QR,
-            // impresora de etiquetas). Ver plan/memoria del proyecto.
+        // gafeteConfig (19/10/2026, cambio real): antes se mandaba como
+        // `null` entero si el organizador no cargaba el ancho — eso
+        // funcionaba cuando lo único configurable era tamaño/tipo, pero los
+        // 4 checkboxes nuevos de campos del gafete necesitan persistir aunque
+        // no se toque el ancho (un checkbox no tildado tampoco viaja en el
+        // POST, así que SIEMPRE hay que mandarlos explícitos). Por eso ahora
+        // se arma siempre un array — width_cm/height_cm solo entran si vienen
+        // llenos, así UpdateEventosRequest (gafeteConfig.width_cm "sometimes")
+        // sigue sin recibir esas claves cuando están vacías, igual que antes.
+        // Seguro: EventoController::gafeteDims() en ApiRestEvent ya resuelve
+        // cada sub-clave con `??` independiente, un array sin width_cm se
+        // comporta exactamente igual que el `gafeteConfig: null` de antes en
+        // ese campo puntual.
+        //
+        // Los 4 boolean() van SIN default (= false si el checkbox no viaja),
+        // igual que certificadoSoloNombre/certificadoAsistenciaActivo —
+        // nunca `, true`: un checkbox real destildado tampoco viaja en el
+        // POST, así que un default `true` acá haría imposible apagarlo desde
+        // el formulario real. El "default true" que preserva el
+        // comportamiento de eventos que nunca pasaron por este formulario
+        // vive solo del lado de ApiRestEvent (gafeteDims(), al LEER un
+        // gafete_config guardado antes de que estos 4 campos existieran) —
+        // acá siempre se manda explícito, en los 2 sentidos.
+        $gafeteConfig = [
             'tipo'        => $request->input('gafeteTipo', 'completo'),
-            'width_cm'    => (float) $request->input('gafeteWidthCm'),
-            'height_cm'   => (float) $request->input('gafeteHeightCm'),
             'per_row'     => (int) $request->input('gafetePerRow', 3),
             'paper'       => $request->input('gafetePaper', 'a4'),
             'orientation' => $request->input('gafeteOrientation', 'landscape'),
-        ] : null;
+            'mostrar_titulo'                    => $request->boolean('gafeteMostrarTitulo'),
+            'mostrar_descripcion_categoria'     => $request->boolean('gafeteMostrarDescripcionCategoria'),
+            'mostrar_descripcion_staff_ponente' => $request->boolean('gafeteMostrarDescripcionStaffPonente'),
+            'mostrar_referencia'                => $request->boolean('gafeteMostrarReferencia'),
+        ];
+        if ($request->filled('gafeteWidthCm')) {
+            $gafeteConfig['width_cm'] = (float) $request->input('gafeteWidthCm');
+        }
+        if ($request->filled('gafeteHeightCm')) {
+            $gafeteConfig['height_cm'] = (float) $request->input('gafeteHeightCm');
+        }
+        $payload['gafeteConfig'] = $gafeteConfig;
 
         // SmartStand (25/09/2026) — configuración de empresas expositoras del
         // evento (links de la app de escaneo + texto del correo de acceso).
