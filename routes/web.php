@@ -46,6 +46,7 @@ use App\Http\Controllers\PresupuestoCategoriaController;
 use App\Http\Controllers\PresupuestoController;
 use App\Http\Controllers\PromoCodeController;
 use App\Http\Controllers\PromoCodeReporteController;
+use App\Http\Controllers\HistorialCobrosReporteController;
 use App\Http\Controllers\AsistenciaSesionController;
 use App\Http\Controllers\SesionCongresoController;
 use App\Http\Controllers\TallerCongresoController;
@@ -267,6 +268,12 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     // PromoCodeReporteController, reachable desde la pestaña Promos del
     // editor de evento.
     Route::get('/eventos/{evento}/promo-codes-reporte', [PromoCodeReporteController::class, 'index'])->name('promocodes.reporte');
+
+    // Reporte de historial de cobros por inscripción (22/10/2026) — ver
+    // HistorialCobrosReporteController, reachable desde el dropdown
+    // "Reportes" del editor de evento.
+    Route::get('/eventos/{evento}/historial-cobros-reporte', [HistorialCobrosReporteController::class, 'index'])->name('historial-cobros.reporte');
+    Route::get('/eventos/{evento}/historial-cobros-reporte/csv', [HistorialCobrosReporteController::class, 'csvDownload'])->name('historial-cobros.reporte.csv');
 
     // Presupuesto de un evento (control financiero del organizador) —
     // mismo criterio de permisos que Numeración/Participantes: super_admin
