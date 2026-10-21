@@ -31,6 +31,9 @@ class SouvenirController extends Controller
                 // (destildado por defecto), mismo motivo del default
                 // explícito que requiere_talla/requiere_sexo arriba.
                 'es_polera'      => $request->boolean('es_polera'),
+                // Souvenir obligatorio (22/10/2026) — checkbox opt-in
+                // (destildado por defecto), mismo motivo que los de arriba.
+                'obligatorio'    => $request->boolean('obligatorio'),
             ]
         );
 
@@ -67,6 +70,9 @@ class SouvenirController extends Controller
                 // Reporte de poleras (03/09/2026) — checkbox opt-in
                 // (destildado por defecto), mismo motivo que los de arriba.
                 'es_polera'      => $request->boolean('es_polera'),
+                // Souvenir obligatorio (22/10/2026) — checkbox opt-in
+                // (destildado por defecto), mismo motivo que los de arriba.
+                'obligatorio'    => $request->boolean('obligatorio'),
             ]
         );
 

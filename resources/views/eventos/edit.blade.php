@@ -1109,6 +1109,26 @@
                                     "Talla" tildado.
                                 </p>
                             </div>
+                            {{-- Souvenir obligatorio (22/10/2026, pedido real del usuario) —
+                                 a diferencia de "Incluido en el kit" (que solo lo pre-marca,
+                                 el participante igual puede destildarlo), esto bloquea la
+                                 opción de sacarlo del formulario en elascenso/event. Sigue
+                                 siendo visible y puede requerir talla/sexo — por eso
+                                 requiere "Visible para el participante" tildado (ApiRestEvent
+                                 rechaza la combinación inversa, igual que con Talla+"Es la
+                                 polera"). --}}
+                            <div class="mt-2">
+                                <label class="text-xs flex items-center gap-1">
+                                    <input type="checkbox" name="obligatorio" form="souvenir-form-{{ $souvenir['id'] }}" value="1" @checked($souvenir['obligatorio'] ?? false)>
+                                    Obligatorio (el participante no puede destildarlo)
+                                </label>
+                                <p class="text-xs text-slate-400 mt-0.5">
+                                    A diferencia de "Incluido en el kit", esto bloquea la
+                                    opción de sacarlo del carrito — el participante sigue
+                                    eligiendo talla/sexo normal, solo que no puede quitarlo.
+                                    Requiere "Visible para el participante" tildado.
+                                </p>
+                            </div>
                             {{-- Gestionar stock aplica a CUALQUIER ítem, tenga o no talla/sexo
                                  (ej. una medalla): sin filas ahí, el ítem queda con
                                  "disponibilidad no controlada" — ver stock.blade.php. Antes este
