@@ -128,7 +128,8 @@ class EventoController extends Controller
             $request->only(
                 'name', 'description', 'longDescription', 'date', 'localTime', 'location',
                 'status', 'video', 'image', 'colorHex', 'deslinde', 'deslinde_pdf_url',
-                'tipo_evento_id', 'subtipo_evento_id', 'organizador_id', 'url_slug'
+                'tipo_evento_id', 'subtipo_evento_id', 'organizador_id', 'url_slug',
+                'fechaLimitePagoReserva'
             ),
             [
                 'categories'    => $categories,
@@ -147,6 +148,13 @@ class EventoController extends Controller
         // "integer" (nullable solo exime el valor `null` real, no "").
         if (($payload['organizador_id'] ?? null) === '') {
             $payload['organizador_id'] = null;
+        }
+
+        // Reserva de cupo con seña (22/10/2026) — mismo motivo: un
+        // <input type="date"> vacío manda '', y StoreEventosRequest valida
+        // `nullable|date` (nullable solo exime null real, no '').
+        if (($payload['fechaLimitePagoReserva'] ?? null) === '') {
+            $payload['fechaLimitePagoReserva'] = null;
         }
 
         // Inscripción en BOB y USD (18/08/2026) — ver
@@ -327,7 +335,7 @@ class EventoController extends Controller
         $payload = $request->only(
             'name', 'description', 'longDescription', 'date', 'localTime', 'location',
             'status', 'video', 'image', 'colorHex', 'chronotrackEventId', 'deslinde', 'deslinde_pdf_url',
-            'tipo_evento_id', 'subtipo_evento_id', 'organizador_id'
+            'tipo_evento_id', 'subtipo_evento_id', 'organizador_id', 'fechaLimitePagoReserva'
         );
 
         // Mismo motivo que en store(): el value="" de "Sin organizador
@@ -335,6 +343,14 @@ class EventoController extends Controller
         // si se manda tal cual — se normaliza a null real.
         if (($payload['organizador_id'] ?? null) === '') {
             $payload['organizador_id'] = null;
+        }
+
+        // Reserva de cupo con seña (22/10/2026) — mismo motivo: un
+        // <input type="date"> vaciado para volver a "sin fecha
+        // configurada" (el frontend cae a la fecha del evento) manda '',
+        // no null.
+        if (($payload['fechaLimitePagoReserva'] ?? null) === '') {
+            $payload['fechaLimitePagoReserva'] = null;
         }
 
         // Cargo de servicio (11/08/2026) — el campo del formulario es un

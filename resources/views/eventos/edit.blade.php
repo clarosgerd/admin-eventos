@@ -377,6 +377,21 @@
                     </label>
                 </div>
 
+                {{-- Reserva de cupo con seña (22/10/2026, pedido real del usuario) —
+                     fecha límite para pagar el saldo pendiente de una reserva. Vacío =
+                     elascenso/event cae a la fecha de inicio del evento como plazo
+                     (comportamiento ya implementado el 21/10/2026). --}}
+                <div class="col-span-2">
+                    <label class="block text-sm font-semibold mb-1">Fecha límite de pago de saldo (reserva de cupo)</label>
+                    <input type="date" name="fechaLimitePagoReserva"
+                           value="{{ old('fechaLimitePagoReserva', $evento['fechaLimitePagoReserva'] ?? '') }}"
+                           class="border rounded px-3 py-2 w-full max-w-xs">
+                    <p class="text-sm text-slate-500 mt-1">
+                        Si se deja vacío, el sitio público muestra la fecha de inicio del evento
+                        como plazo para completar el saldo de una reserva con seña.
+                    </p>
+                </div>
+
                 {{-- Purgar datos de Persona/Participante en inscripciones canceladas
                      (01/09/2026) — a diferencia del resto de los checkboxes de esta
                      página, este nace TILDADO por default (mantener_datos_persona
@@ -661,6 +676,15 @@
                         </label>
                         <input type="number" step="0.01" min="0" name="price_usd" value="{{ $categoria['priceUsd'] }}" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                     </div>
+                    {{-- Reserva de cupo con seña (21/10/2026) — vacío = esta
+                         categoría no ofrece reserva (comportamiento actual,
+                         el participante paga el precio completo siempre). --}}
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">
+                            Reserva <span class="font-normal text-slate-500">(seña, opc.)</span>
+                        </label>
+                        <input type="number" step="0.01" min="0" name="price_reserva" value="{{ $categoria['priceReserva'] ?? '' }}" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                    </div>
                     <div class="col-span-2">
                         <label class="block text-xs font-semibold mb-1">Descripción</label>
                         <input type="text" name="description" value="{{ $categoria['description'] }}" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
@@ -727,6 +751,10 @@
                     @if (!empty($categoria['periodo_vigente_nombre']))
                         <span class="text-red-600 font-semibold">({{ $categoria['periodo_vigente_nombre'] }})</span>
                     @endif
+                    {{-- Reserva de cupo con seña (21/10/2026). --}}
+                    @if (!empty($categoria['precio_reserva_vigente']))
+                        · Reserva: <strong>Bs {{ number_format($categoria['precio_reserva_vigente'], 2) }}</strong>
+                    @endif
                     @unless ($categoria['permiteInscripcion'] ?? true)
                         · <span class="text-amber-600 font-semibold">No permite inscripción</span>
                     @endunless
@@ -750,6 +778,9 @@
                 </div>
                 <div>
                     <input type="number" step="0.01" min="0" name="price_usd" placeholder="Precio USD (opc.)" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
+                </div>
+                <div>
+                    <input type="number" step="0.01" min="0" name="price_reserva" placeholder="Reserva (opc.)" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">
                 </div>
                 <div class="col-span-2">
                     <input type="text" name="description" placeholder="Descripción" class="w-full border border-slate-300 rounded px-2 py-1 text-sm">

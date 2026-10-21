@@ -142,6 +142,21 @@ class CajaController extends Controller
     }
 
     /**
+     * Reserva de cupo con seña (21/10/2026) — cobra el saldo que quedó
+     * pendiente de una inscripción que ya pagó solo la reserva online.
+     * Proxy puro, mismo patrón que cobrarPendiente().
+     */
+    public function cobrarSaldo(Request $request, int $evento, string $referencia, ApiRestEventClient $client): JsonResponse
+    {
+        $response = $client->forward('POST', "/registrations/{$referencia}/caja/cobrar-saldo", body: [
+            'metodo_pago' => $request->input('metodo_pago', 'EFECTIVO'),
+            'observaciones' => $request->input('observaciones'),
+        ]);
+
+        return response()->json($response?->json() ?? ['success' => false, 'error' => 'No se pudo conectar con el servidor.'], $response?->status() ?? 502);
+    }
+
+    /**
      * Anular un cobro (02/10/2026) — historia de caja_movimientos de una
      * inscripción, para que el cajero elija cuál revertir. Ver
      * resources/views/caja/buscar.blade.php.

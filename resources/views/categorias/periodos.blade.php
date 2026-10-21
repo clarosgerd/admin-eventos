@@ -25,6 +25,11 @@
             <span class="text-slate-400">·</span>
             US$ {{ number_format($categoria['precio_usd_vigente'], 2) }}
         @endif
+        {{-- Reserva de cupo con seña (21/10/2026). --}}
+        @if (!is_null($categoria['precio_reserva_vigente'] ?? null))
+            <span class="text-slate-400">·</span>
+            Reserva Bs {{ number_format($categoria['precio_reserva_vigente'], 2) }}
+        @endif
     </p>
     <p class="text-xs text-slate-400 mt-1">
         Una categoría sin ningún período acá cobra su precio base ({{ 'Bs ' . number_format($categoria['price'] ?? 0, 2) }})
@@ -45,6 +50,7 @@
                 <th class="px-4 py-2">Nombre</th>
                 <th class="px-4 py-2">Precio</th>
                 <th class="px-4 py-2">Precio USD <span class="font-normal text-slate-400">(opc.)</span></th>
+                <th class="px-4 py-2">Reserva <span class="font-normal text-slate-400">(opc.)</span></th>
                 <th class="px-4 py-2">Desde</th>
                 <th class="px-4 py-2">Hasta</th>
                 <th class="px-4 py-2"></th>
@@ -63,6 +69,11 @@
                     </td>
                     <td class="px-4 py-2">
                         <input type="number" step="0.01" min="0" name="price_usd" value="{{ $periodo['price_usd'] }}" placeholder="opc."
+                               form="periodo-form-{{ $periodo['id'] }}" class="border border-slate-300 rounded px-2 py-1 w-24">
+                    </td>
+                    {{-- Reserva de cupo con seña (21/10/2026). --}}
+                    <td class="px-4 py-2">
+                        <input type="number" step="0.01" min="0" name="price_reserva" value="{{ $periodo['price_reserva'] ?? '' }}" placeholder="opc."
                                form="periodo-form-{{ $periodo['id'] }}" class="border border-slate-300 rounded px-2 py-1 w-24">
                     </td>
                     <td class="px-4 py-2">
@@ -92,7 +103,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Sin períodos cargados — se cobra el precio base tal cual.</td></tr>
+                <tr><td colspan="7" class="px-4 py-6 text-center text-slate-400">Sin períodos cargados — se cobra el precio base tal cual.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -114,6 +125,11 @@
         <div>
             <label class="block text-sm font-medium mb-1">Precio USD <span class="font-normal text-slate-400">(opcional)</span></label>
             <input type="number" name="price_usd" step="0.01" min="0" placeholder="Solo si el evento cobra en USD fijo" class="border border-slate-300 rounded px-2 py-1.5 w-full">
+        </div>
+        {{-- Reserva de cupo con seña (21/10/2026). --}}
+        <div>
+            <label class="block text-sm font-medium mb-1">Reserva <span class="font-normal text-slate-400">(opcional, seña para este período)</span></label>
+            <input type="number" name="price_reserva" step="0.01" min="0" class="border border-slate-300 rounded px-2 py-1.5 w-full">
         </div>
         <div class="grid grid-cols-2 gap-2">
             <div>

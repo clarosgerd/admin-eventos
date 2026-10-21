@@ -44,6 +44,8 @@
     const eventoId = {{ (int) $evento['id'] }};
     const buscarUrl = @json(route('caja.buscar.resultados', $evento['id']));
     const cobrarUrlBase = @json(route('caja.cobrar-pendiente', [$evento['id'], '__REF__']));
+    // Reserva de cupo con seña (21/10/2026).
+    const cobrarSaldoUrlBase = @json(route('caja.cobrar-saldo', [$evento['id'], '__REF__']));
     const editarUrlBase = @json(route('caja.editar', [$evento['id'], '__REF__']));
     const eticketUrlBase = @json(route('caja.eticket', [$evento['id'], '__REF__']));
     const movimientosUrlBase = @json(route('caja.movimientos', [$evento['id'], '__REF__']));
@@ -159,11 +161,24 @@
                  diálogo (más rápido para el cajero con cola de gente, un
                  solo click). --}}
             const cobrarBtn = r.pago_status === 'pending'
-                ? `<button type="button" class="btn-cobrar bg-brand-600 hover:bg-brand-700 text-white rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="EFECTIVO">Efectivo</button>
-                   <button type="button" class="btn-cobrar bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="QR">QR</button>
-                   <button type="button" class="btn-cobrar bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="DEPOSITO">Depósito</button>
-                   <button type="button" class="btn-cobrar bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="ORGANIZADOR">Organizador</button>
-                   <button type="button" class="btn-cobrar bg-white border border-amber-400 text-amber-700 hover:bg-amber-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-metodo="CORTESIA">Cortesía</button>`
+                ? `<button type="button" class="btn-cobrar bg-brand-600 hover:bg-brand-700 text-white rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-url="${cobrarUrlBase.replace('__REF__', r.referencia)}" data-metodo="EFECTIVO">Efectivo</button>
+                   <button type="button" class="btn-cobrar bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-url="${cobrarUrlBase.replace('__REF__', r.referencia)}" data-metodo="QR">QR</button>
+                   <button type="button" class="btn-cobrar bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-url="${cobrarUrlBase.replace('__REF__', r.referencia)}" data-metodo="DEPOSITO">Depósito</button>
+                   <button type="button" class="btn-cobrar bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-url="${cobrarUrlBase.replace('__REF__', r.referencia)}" data-metodo="ORGANIZADOR">Organizador</button>
+                   <button type="button" class="btn-cobrar bg-white border border-amber-400 text-amber-700 hover:bg-amber-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-url="${cobrarUrlBase.replace('__REF__', r.referencia)}" data-metodo="CORTESIA">Cortesía</button>`
+                : '';
+            // Reserva de cupo con seña (21/10/2026) — mismos botones de
+            // método de pago que cobrarBtn, pero apuntando a cobrar-saldo;
+            // reusa la misma clase .btn-cobrar y su mismo handler (data-url
+            // decide a qué endpoint pega cada uno).
+            const saldoPendiente = Number(r.saldoPendiente || 0);
+            const cobrarSaldoBtn = saldoPendiente > 0
+                ? `<span class="text-xs text-amber-700 font-semibold self-center">Saldo Bs ${saldoPendiente.toFixed(2)}:</span>
+                   <button type="button" class="btn-cobrar bg-indigo-600 hover:bg-indigo-700 text-white rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-url="${cobrarSaldoUrlBase.replace('__REF__', r.referencia)}" data-metodo="EFECTIVO">Efectivo</button>
+                   <button type="button" class="btn-cobrar bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-url="${cobrarSaldoUrlBase.replace('__REF__', r.referencia)}" data-metodo="QR">QR</button>
+                   <button type="button" class="btn-cobrar bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-url="${cobrarSaldoUrlBase.replace('__REF__', r.referencia)}" data-metodo="DEPOSITO">Depósito</button>
+                   <button type="button" class="btn-cobrar bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-url="${cobrarSaldoUrlBase.replace('__REF__', r.referencia)}" data-metodo="ORGANIZADOR">Organizador</button>
+                   <button type="button" class="btn-cobrar bg-white border border-amber-400 text-amber-700 hover:bg-amber-50 rounded-md px-3 py-1.5 text-xs font-semibold" data-ref="${r.referencia}" data-url="${cobrarSaldoUrlBase.replace('__REF__', r.referencia)}" data-metodo="CORTESIA">Cortesía</button>`
                 : '';
             // Anular cobro (02/10/2026) — solo tiene sentido sobre una
             // inscripción ya pagada (hay algo real que revertir).
@@ -175,8 +190,9 @@
                     <p class="font-semibold text-sm">${p.nombre || ''} ${p.apellido || ''} — ${p.numeroDocumento || ''}</p>
                     <p class="text-xs text-slate-500">${r.referencia} — ${estado} — Total: ${total}</p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 items-center flex-wrap">
                     ${cobrarBtn}
+                    ${cobrarSaldoBtn}
                     <a href="${eticketUrl}" target="_blank" class="bg-white border border-slate-300 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold">Comprobante</a>
                     <a href="${editarUrl}" class="bg-white border border-slate-300 hover:bg-slate-50 rounded-md px-3 py-1.5 text-xs font-semibold">Editar</a>
                     ${anularBtn}
@@ -217,7 +233,7 @@
                 btn.textContent = 'Cobrando…';
 
                 try {
-                    const resp = await fetch(cobrarUrlBase.replace('__REF__', btn.dataset.ref), {
+                    const resp = await fetch(btn.dataset.url || cobrarUrlBase.replace('__REF__', btn.dataset.ref), {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,

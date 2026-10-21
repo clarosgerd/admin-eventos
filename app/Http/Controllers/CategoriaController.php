@@ -21,7 +21,7 @@ class CategoriaController extends Controller
         // ApiRestEvent lo trate como "compartida por todos los form_types"
         // en vez de rechazar la validación `nullable|integer`.
         $payload = array_merge(
-            $request->only('name', 'price', 'price_usd', 'description', 'color', 'formulario_id', 'calculo_edad_id', 'permite_inscripcion'),
+            $request->only('name', 'price', 'price_usd', 'price_reserva', 'description', 'color', 'formulario_id', 'calculo_edad_id', 'permite_inscripcion'),
             ['event_id' => $evento]
         );
         if (($payload['formulario_id'] ?? '') === '') {
@@ -53,7 +53,7 @@ class CategoriaController extends Controller
         // vacío, para poder volver una categoría ya asignada a "compartida
         // por todos los form_types" (UpdateCategoryRequest usa `sometimes`,
         // así que omitir el campo entero dejaría el valor anterior intacto).
-        $payload = $request->only('name', 'price', 'price_usd', 'description', 'color', 'formulario_id', 'calculo_edad_id', 'permite_inscripcion');
+        $payload = $request->only('name', 'price', 'price_usd', 'price_reserva', 'description', 'color', 'formulario_id', 'calculo_edad_id', 'permite_inscripcion');
         if (($payload['formulario_id'] ?? '') === '') {
             $payload['formulario_id'] = null;
         }
