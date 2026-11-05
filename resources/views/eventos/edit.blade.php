@@ -92,6 +92,9 @@
                 @endif
 
                 <p class="px-3 pt-2 pb-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wide border-t border-slate-100 mt-1">Reportes</p>
+                {{-- Reporte de acreditaciones (28/10/2026) — cuántas acreditaciones se
+                     hicieron por evento (totales, por categoría, por hora, últimos). --}}
+                <a href="{{ route('acreditaciones.reporte', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Reporte de acreditaciones</a>
                 <a href="{{ route('historial-cobros.reporte', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Historial de cobros</a>
                 <a href="{{ route('chronotrack.index', $evento['id']) }}" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Resultados / ChronoTrack</a>
                 <a href="{{ route('eventos.gafetes-pdf', $evento['id']) }}" target="_blank" class="block px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Gafetes (PDF)</a>

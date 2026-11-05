@@ -8,9 +8,14 @@
         <h1 class="text-lg font-bold">Acreditación</h1>
         <p class="text-sm text-slate-600">{{ $evento['name'] }}</p>
     </div>
-    <a href="{{ route('eventos.edit', $evento['id']) }}" class="text-sm text-brand-600 hover:underline self-center">
-        ← Volver a editar evento
-    </a>
+    <div class="flex items-center gap-3 self-center">
+        <a href="{{ route('acreditaciones.reporte', $evento['id']) }}" class="text-sm text-brand-600 hover:underline">
+            Reporte de acreditaciones →
+        </a>
+        <a href="{{ route('eventos.edit', $evento['id']) }}" class="text-sm text-brand-600 hover:underline">
+            ← Volver a editar evento
+        </a>
+    </div>
 </div>
 
 <div class="bg-white rounded-lg shadow p-4 mb-6 flex items-center justify-between flex-wrap gap-3">

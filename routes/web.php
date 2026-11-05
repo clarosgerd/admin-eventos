@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AcreditacionController;
+use App\Http\Controllers\AcreditacionesReporteController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AgendaItemController;
 use App\Http\Controllers\AuditLogController;
@@ -226,6 +227,13 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::patch('/eventos/{evento}/acreditacion/{participante}', [AcreditacionController::class, 'checkin'])->name('acreditacion.checkin');
     // Editar nombre/apellido en el momento (18/10/2026) — ver AcreditacionController::editarDatos().
     Route::patch('/eventos/{evento}/acreditacion/{participante}/editar-datos', [AcreditacionController::class, 'editarDatos'])->name('acreditacion.editar-datos');
+
+    // Reporte/dashboard de acreditaciones por evento (28/10/2026) — saber
+    // cuántas acreditaciones se hicieron, contra cuántos pagados (los
+    // únicos acreditables), por categoría, ritmo por hora y últimos
+    // acreditados. Solo la acreditación general del evento; la asistencia
+    // por sesión ya tiene su reporte en sesiones.reporte.
+    Route::get('/eventos/{evento}/acreditaciones-reporte', [AcreditacionesReporteController::class, 'index'])->name('acreditaciones.reporte');
 
     // SmartStand (25/09/2026) — empresas expositoras del evento: ranking por
     // leads capturados, alta/edición, reenvío de credenciales y detalle.
