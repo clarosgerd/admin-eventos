@@ -507,13 +507,13 @@
                     </div>
                     <p class="text-xs text-slate-500 mt-1">"Solo QR" ignora Por fila/Papel/Orientación — imprime una pegatina por página, del tamaño exacto configurado.</p>
 
-                    {{-- Campos del gafete parametrizables por evento (19-20/10/2026) —
-                         pedido real del usuario. mostrar_titulo es una pieza nueva
-                         (default sin tildar: nunca se imprimió antes); las otras 4
-                         ya se imprimían siempre, default tildadas para no cambiar
-                         el comportamiento de ningún evento existente. Ver
-                         EventoController::gafeteDims()/construirItemGafete() en
-                         ApiRestEvent. --}}
+                    {{-- Campos del gafete parametrizables por evento (19-20/10 y
+                         23/10/2026) — pedido real del usuario. mostrar_titulo es una
+                         pieza nueva (default sin tildar: nunca se imprimió antes);
+                         las otras 5 (incluye mostrar_qr) ya se imprimían siempre,
+                         default tildadas para no cambiar el comportamiento de ningún
+                         evento existente. Ver EventoController::gafeteDims()/
+                         construirItemGafete() en ApiRestEvent. --}}
                     <div class="mt-3 space-y-1">
                         <label class="flex items-center gap-2 text-sm">
                             <input type="checkbox" name="gafeteMostrarTitulo" value="1"
@@ -540,6 +540,15 @@
                                    {{ ($evento['gafeteConfig']['mostrar_pais'] ?? true) ? 'checked' : '' }}>
                             Mostrar país
                         </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="gafeteMostrarQr" value="1"
+                                   {{ ($evento['gafeteConfig']['mostrar_qr'] ?? true) ? 'checked' : '' }}>
+                            Mostrar código QR
+                        </label>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Si se destilda, el gafete solo imprime los campos de texto configurados — la
+                            acreditación en Check-in sigue funcionando por referencia o nombre.
+                        </p>
                     </div>
                 </div>
 
