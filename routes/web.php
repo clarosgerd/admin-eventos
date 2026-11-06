@@ -117,6 +117,10 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     Route::put('/eventos/{evento}', [EventoController::class, 'update'])->name('eventos.update');
     Route::delete('/eventos/{evento}', [EventoController::class, 'destroy'])->name('eventos.destroy');
 
+    // Clonar evento (23/10/2026) — ver ClonarEventoAction del lado de ApiRestEvent.
+    Route::get('/eventos/{evento}/clonar', [EventoController::class, 'clonarForm'])->name('eventos.clonar.form');
+    Route::post('/eventos/{evento}/clonar', [EventoController::class, 'clonar'])->name('eventos.clonar');
+
     Route::post('/eventos/{evento}/categorias', [CategoriaController::class, 'store'])->name('categorias.store');
     Route::put('/categorias/{categoria}', [CategoriaController::class, 'update'])->name('categorias.update');
     Route::delete('/categorias/{categoria}', [CategoriaController::class, 'destroy'])->name('categorias.destroy');

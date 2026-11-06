@@ -62,6 +62,9 @@
                             <a href="{{ route('eventos.edit', $evento['id']) }}" class="text-xs text-brand-600 hover:underline">
                                 Editar
                             </a>
+                            <a href="{{ route('eventos.clonar.form', $evento['id']) }}" class="text-xs text-brand-600 hover:underline">
+                                Clonar
+                            </a>
                             <a href="{{ route('numeracion.index', $evento['id']) }}" class="text-xs text-brand-600 hover:underline">
                                 Numeración
                             </a>

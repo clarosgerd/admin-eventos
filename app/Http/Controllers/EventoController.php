@@ -234,6 +234,42 @@ class EventoController extends Controller
     }
 
     /**
+     * Clonar evento (23/10/2026, pedido real del usuario) — toda la
+     * configuración (categorías, tipos de formulario, souvenirs, talleres,
+     * agenda, promo codes), sin ningún dato transaccional. Ver
+     * ClonarEventoAction del lado de ApiRestEvent.
+     */
+    public function clonarForm(int $evento, ApiRestEventClient $client): View
+    {
+        $this->assertCanViewEvento($evento);
+
+        $response = $client->forward('GET', "/event/{$evento}");
+        $eventoData = $response?->json('eventos');
+
+        abort_if(!$eventoData, 404);
+
+        return view('eventos.clonar', ['evento' => $eventoData]);
+    }
+
+    public function clonar(Request $request, int $evento, ApiRestEventClient $client): RedirectResponse
+    {
+        $this->assertCanViewEvento($evento);
+
+        $request->validate(['nombre' => 'required|string|max:255']);
+
+        $response = $client->forward('POST', "/event/{$evento}/clonar", body: ['nombre' => $request->input('nombre')]);
+
+        if (!$response || !$response->json('success')) {
+            return back()->withErrors(['general' => $this->extractError($response, 'No se pudo clonar el evento.')]);
+        }
+
+        $nuevoId = $response->json('eventos.id');
+
+        return redirect(route('eventos.edit', $nuevoId))
+            ->with('status', 'Evento clonado — revisá fechas y publicá cuando esté listo.');
+    }
+
+    /**
      * GET /eventos/{evento}/edit — trae el evento completo (categorías y
      * form_types con souvenirs ya vienen anidados en la respuesta de
      * ApiRestEvent, no hace falta pedirlos aparte).
