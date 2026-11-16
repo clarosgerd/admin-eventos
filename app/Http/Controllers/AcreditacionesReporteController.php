@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesEventoScope;
 use App\Services\ApiRestEventClient;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
@@ -46,6 +47,46 @@ class AcreditacionesReporteController extends Controller
             'nombresCategorias' => $response->json('nombresCategorias'),
             'porHora' => $response->json('porHora'),
             'recientes' => $response->json('recientes'),
+        ]);
+    }
+
+    /**
+     * CSV de los acreditados (13/11/2026, pedido del usuario): TODOS los
+     * acreditados del evento (no solo los 20 de "recientes"), con hora de
+     * acreditación, quién acreditó (admin_audit_logs, resuelto por
+     * AcreditacionesReporteData) y taller/sesión inscrito. Mismo patrón de
+     * exportación que HistorialCobrosReporteController::csvDownload().
+     */
+    public function csvDownload(int $evento, ApiRestEventClient $client): Response
+    {
+        $this->assertCanViewEvento($evento);
+
+        $response = $client->forward('GET', "/event/{$evento}/acreditaciones-reporte");
+        abort_if(!$response || !$response->json('success'), 502, 'No se pudo generar el archivo.');
+
+        $filas = $response->json('acreditadosDetalle') ?? [];
+
+        $handle = fopen('php://temp', 'w+');
+        fwrite($handle, "\xEF\xBB\xBF");
+        fputcsv($handle, [
+            'referencia', 'nombre', 'apellido', 'alias_titulo', 'categoria',
+            'hora_acreditacion', 'acreditado_por', 'talleres_sesiones',
+        ]);
+        foreach ($filas as $f) {
+            fputcsv($handle, [
+                $f['referencia'], $f['nombre'], $f['apellido'], $f['alias'] ?? '', $f['categoria'],
+                $f['checkedInAt'] ? \Illuminate\Support\Carbon::parse($f['checkedInAt'])->format('Y-m-d H:i:s') : '',
+                $f['acreditadoPor'],
+                $f['inscripciones'],
+            ]);
+        }
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"acreditados-evento-{$evento}.csv\"",
         ]);
     }
 }

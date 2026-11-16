@@ -238,6 +238,9 @@ Route::middleware(['admin.auth', 'admin.restrict-cajero'])->group(function () {
     // acreditados. Solo la acreditación general del evento; la asistencia
     // por sesión ya tiene su reporte en sesiones.reporte.
     Route::get('/eventos/{evento}/acreditaciones-reporte', [AcreditacionesReporteController::class, 'index'])->name('acreditaciones.reporte');
+    // CSV de los acreditados (13/11/2026) — hora de acreditación, quién
+    // acreditó y taller/sesión inscrito, ver csvDownload().
+    Route::get('/eventos/{evento}/acreditaciones-reporte/csv', [AcreditacionesReporteController::class, 'csvDownload'])->name('acreditaciones.reporte.csv');
 
     // SmartStand (25/09/2026) — empresas expositoras del evento: ranking por
     // leads capturados, alta/edición, reenvío de credenciales y detalle.

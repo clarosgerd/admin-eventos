@@ -9,6 +9,9 @@
         <p class="text-sm text-slate-600">{{ $evento['name'] }}</p>
     </div>
     <div class="flex items-center gap-3 self-center">
+        <a href="{{ route('acreditaciones.reporte.csv', $evento['id']) }}" class="text-sm bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-md hover:bg-slate-50 font-semibold">
+            ⬇ Descargar CSV de acreditados
+        </a>
         <a href="{{ route('acreditacion.index', $evento['id']) }}" class="text-sm bg-brand-600 hover:bg-brand-700 text-white font-semibold px-3 py-1.5 rounded-md">
             Ir a Acreditación →
         </a>
